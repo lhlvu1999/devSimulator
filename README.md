@@ -13,6 +13,7 @@ npm test
 npm run build
 npm run ios        # build, sync, and open the iOS project
 npm run ios:sync   # build and sync without opening Xcode
+npm run push       # push to github.com/lhlvu1999/devSimulator as lhlvu1999, then switch gh back
 ```
 
 ## The day
@@ -29,15 +30,15 @@ Payday is every 5 days. It pays company salary × level pay. Rent is $500 every 
 
 All stats except money run from 0 to 100.
 
-| Stat         | What raises it                                                                  | What lowers it                                                     | What it does                                          |
-| ------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------- |
-| Money        | Payday, clean-ticket time pay, streak tips, selling investments, blackjack wins | Rent, shop, pantry, buying investments, blackjack losses           | Pays for everything                                   |
-| Energy       | Refills to 100 each night. Coffee, energy drink, recovery pill                  | Each ticket                                                        | You need at least the ticket cost to start a ticket   |
-| Health       | +3 each night. Vitamins, recovery pill                                          | −1 per ticket, −2 more when energy drops below 25. Energy drink −4 | Scales the energy cost of every ticket                |
-| Skill        | Clean ticket: 4 × company learning. Late: 2 × learning. Half on the manager track                          | —                                                                  | Raises engineer ticket difficulty. Gates Junior and Engineer   |
-| Relationship | +1 per clean ticket (+2 on the manager track)                                                             | —                                                                  | Lowers difficulty. Teammate help at 20 and 40. Gates Engineering manager |
-| Reputation   | +1 per clean ticket (+2 at an enterprise). +4 on promotion                      | —                                                                  | Gates Senior, Staff, Principal, Director                              |
-| Mood         | +1 clean, +2 each night, +8 on promotion                                        | −2 per miss                                                        | Tracked, no effect yet                                |
+| Stat         | What raises it                                                                    | What lowers it                                                     | What it does                                                             |
+| ------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Money        | Payday, clean-ticket time pay, streak tips, selling investments, blackjack wins   | Rent, shop, pantry, buying investments, blackjack losses           | Pays for everything                                                      |
+| Energy       | Refills to 100 each night. Coffee, energy drink, recovery pill                    | Each ticket                                                        | You need at least the ticket cost to start a ticket                      |
+| Health       | +3 each night. Vitamins, recovery pill                                            | −1 per ticket, −2 more when energy drops below 25. Energy drink −4 | Scales the energy cost of every ticket                                   |
+| Skill        | Clean ticket: 4 × company learning. Late: 2 × learning. Half on the manager track | —                                                                  | Raises engineer ticket difficulty. Gates Junior and Engineer             |
+| Relationship | +1 per clean ticket (+2 on the manager track)                                     | —                                                                  | Lowers difficulty. Teammate help at 20 and 40. Gates Engineering manager |
+| Reputation   | +1 per clean ticket (+2 at an enterprise). +4 on promotion                        | —                                                                  | Gates Senior, Staff, Principal, Director                                 |
+| Mood         | +1 clean, +2 each night, +8 on promotion                                          | −2 per miss                                                        | Tracked, no effect yet                                                   |
 
 ### Health and energy cost
 
@@ -99,15 +100,15 @@ Clean tickets pay floor(seconds left ÷ 2) in cash. Every third clean in a row p
 
 ### Content pools
 
-| Game | Pool |
-| --- | --- |
-| Tidy | 10 app scenes (picnic, ticket shop, photo, music, weather, pet, recipe, chat, bank, map) |
-| Spot the bug | 6 shapes × 4 colors, random every board |
-| Wires, Ship it | Generated fresh every ticket |
-| Inbox | 28 messages, half urgent |
-| One-on-one | 16 conversations across 8 moods |
-| Sprint planning | 20 task names |
-| Roadmap | 20 features |
+| Game            | Pool                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| Tidy            | 10 app scenes (picnic, ticket shop, photo, music, weather, pet, recipe, chat, bank, map) |
+| Spot the bug    | 6 shapes × 4 colors, random every board                                                  |
+| Wires, Ship it  | Generated fresh every ticket                                                             |
+| Inbox           | 28 messages, half urgent                                                                 |
+| One-on-one      | 16 conversations across 8 moods                                                          |
+| Sprint planning | 20 task names                                                                            |
+| Roadmap         | 20 features                                                                              |
 
 The next ticket's seed is saved in the game and moves forward after every finished ticket, so closing and reopening Work deals something new. Leaving in the middle of a ticket brings the same ticket back, so a hard board can't be skipped.
 
@@ -202,6 +203,7 @@ When every milestone is met, a **Promotion review** opens on the work screen. Yo
 
 - **Pass:** new title, higher pay, the next level's games, +8 mood, +4 reputation.
 - **Fail:** a miss ends the review. Try again the next day.
+
 ## Workline
 
 The phone icon in the room opens **Workline**, a job and news feed. The red badge shows how many job posts are open.
@@ -219,13 +221,13 @@ The phone icon in the room opens **Workline**, a job and news feed. The red badg
 
 A post has one or two benefits.
 
-| Benefit         | Effect                                              |
-| --------------- | --------------------------------------------------- |
-| Remote days     | This company's ticket energy cost −3, never below 4 |
-| Learning budget | This company's learning +0.2                        |
-| Signing bonus   | Cash on joining: half the new company salary        |
-| Sign-on shares | 3 to 8 shares of the new employer on joining. Listed companies only |
-| Gym membership  | +15 health on joining                               |
+| Benefit         | Effect                                                              |
+| --------------- | ------------------------------------------------------------------- |
+| Remote days     | This company's ticket energy cost −3, never below 4                 |
+| Learning budget | This company's learning +0.2                                        |
+| Signing bonus   | Cash on joining: half the new company salary                        |
+| Sign-on shares  | 3 to 8 shares of the new employer on joining. Listed companies only |
+| Gym membership  | +15 health on joining                                               |
 
 ### Interview
 
@@ -245,10 +247,10 @@ After a passed interview, the offer screen has three choices.
 
 Leverage = 0.5 × reputation + 0.3 × skill (relationship on the manager track) + 0.2 × mood. The screen shows it as **Weak** (below 35), **Fair** (35–59), or **Strong** (60+).
 
-| Ask | Salary raise if yes | Chance of yes | If no |
-| --- | --- | --- | --- |
-| A little more | +5% | 35% + leverage × 0.6%, capped at 95% | The offer stays the same |
-| A lot more | +15% | 10% + leverage × 0.5%, capped at 95% | 40% chance the company pulls the offer and goes on the 5-day cooldown. Otherwise the offer stays the same |
+| Ask           | Salary raise if yes | Chance of yes                        | If no                                                                                                     |
+| ------------- | ------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------------------- |
+| A little more | +5%                 | 35% + leverage × 0.6%, capped at 95% | The offer stays the same                                                                                  |
+| A lot more    | +15%                | 10% + leverage × 0.5%, capped at 95% | 40% chance the company pulls the offer and goes on the 5-day cooldown. Otherwise the offer stays the same |
 
 Chances show as **Likely** (70%+), **Maybe** (40–69%), or **Long shot**. A yes also scales the signing bonus with the new salary.
 
@@ -256,6 +258,7 @@ Chances show as **Likely** (70%+), **Maybe** (40–69%), or **Long shot**. A yes
 
 - **Normal post:** you keep your title and your milestone progress.
 - **Stretch post:** you take the higher title. That counts as a promotion, so milestone progress starts fresh and no promotion review is offered that day.
+
 ## Invest
 
 Prices move once per night. Each chart shows the last 30 days.
@@ -311,6 +314,7 @@ Every payday is cash plus stock:
 | Atlas                   | 20%           |
 
 A Workline post can offer a different stock percent: the company's base × 0.8 to 1.4, rounded to 5%.
+
 ### Blackjack
 
 Bet from $10 up to all your cash. A win pays the bet. Blackjack with your first two cards pays 1.5×. A tie returns the bet. The dealer draws until 17.
