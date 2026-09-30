@@ -4471,3 +4471,116 @@ button.primary:disabled {
 .settings-toggle i.on::after {
   transform: translateX(18px);
 }
+
+/* Workline: what HR is looking for, and how your CV matches. */
+.workline-cv {
+  font-size: 0.78rem;
+  color: #3f607c;
+}
+
+.job-needs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(63, 96, 124, 0.07);
+}
+
+.job-needs-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b5e52;
+}
+
+.job-needs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.82rem;
+}
+
+.job-needs li span {
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.job-needs li.met {
+  color: #4f6f3d;
+}
+
+.job-needs li.short {
+  color: #b04848;
+}
+
+.job-needs li small {
+  color: #6b5e52;
+}
+
+.fit-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.fit-badge.fit-strong {
+  background: #6f8f5b;
+  color: #fff;
+}
+
+.fit-badge.fit-close {
+  background: rgba(230, 196, 138, 0.5);
+  color: #8a5a1c;
+}
+
+.fit-badge.fit-reach {
+  background: rgba(192, 84, 84, 0.15);
+  color: #b04848;
+}
+
+.fit-note {
+  margin-top: -2px;
+  font-size: 0.74rem;
+  text-align: center;
+  color: #6b5e52;
+}
+
+.fit-note.fit-strong {
+  color: #4f6f3d;
+}
+
+.career-discount {
+  font-size: 0.78rem;
+  font-weight: 650;
+  color: #4f6f3d;
+}
+
+.diff-chip {
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.diff-chip.diff-easy {
+  background: rgba(111, 143, 91, 0.16);
+  color: #4f6f3d;
+}
+
+.diff-chip.diff-normal {
+  background: rgba(127, 167, 201, 0.2);
+  color: #3f607c;
+}
+
+.diff-chip.diff-hard {
+  background: #3f342c;
+  color: #f6efe6;
+}

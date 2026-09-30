@@ -49,8 +49,9 @@ function ticket(patch: Partial<BoardTicket> = {}): BoardTicket {
     createdAt: 0,
     dueAt: 20,
     overdue: false,
-    urgent: false,
+        urgent: false,
     parent: null,
+    difficulty: "normal",
     ...patch,
   };
 }

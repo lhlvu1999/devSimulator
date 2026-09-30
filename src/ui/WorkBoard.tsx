@@ -12,6 +12,7 @@ import {
   type BoardTicket,
 } from "../game/board";
 import { partPlan, type CareerState } from "../game/career";
+import { DIFFICULTY_LABEL } from "../game/difficulty";
 import { WORK_GAME_LABEL } from "../game/workGames";
 
 export function WorkBoard({
@@ -163,8 +164,11 @@ function TicketCard({
     >
       <div className="ticket-top">
         <span className="ticket-key">{ticket.key}</span>
-        <span className={`ticket-type game-${ticket.game}`}>
+                <span className={`ticket-type game-${ticket.game}`}>
           {WORK_GAME_LABEL[ticket.game]}
+        </span>
+        <span className={`diff-chip diff-${ticket.difficulty}`}>
+          {DIFFICULTY_LABEL[ticket.difficulty]}
         </span>
         <span className={`prio-pill prio-${ticket.priority}`}>
           {PRIORITY_LABEL[ticket.priority]}

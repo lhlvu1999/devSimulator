@@ -2,15 +2,17 @@ import { useState } from "react";
 import { TIER_LABEL, TYPE_LABEL } from "../content/companies";
 import { deviceById } from "../content/gear";
 import {
-  careerStatus,
+    careerStatus,
   difficultyFor,
   paydayFor,
+  playerCv,
   ticketEnergyCost,
   type CareerState,
 } from "../game/career";
+import { FIT_LABEL, cvLines, cvMatch, fitOf, taskScaleFor, type Cv, type Fit } from "../game/cv";
 import type { Difficulty } from "../game/difficulty";
 import { formatMoney } from "../game/format";
-import { LEVEL_GAMES, LEVEL_TITLE } from "../game/ladder";
+import { LEVEL_GAMES, LEVEL_TITLE, levelGap, type Level } from "../game/ladder";
 import { pickGame, WORK_GAME_LABEL } from "../game/workGames";
 import {
   BENEFIT_HINT,
@@ -78,12 +80,15 @@ function CompanyBadge({ companyId }: { companyId: string }) {
 export function WorklineFeed({
   state,
   onApply,
+  onInterview,
 }: {
   state: CareerState;
   onApply: (post: JobPost) => void;
+  onInterview: (post: JobPost) => void;
 }) {
   const status = careerStatus(state);
   const cost = ticketEnergyCost(state);
+  const cv = playerCv(state);
   const current = paydayFor(state);
   const posts = state.feed.posts;
   const social = state.feed.social;
@@ -111,8 +116,15 @@ export function WorklineFeed({
         <span>
           {state.company?.name} · Payday {formatMoney(current)}
         </span>
+                <span className="workline-cv">
+          Your CV: skill {cv.skill} · {cv.experience} week{cv.experience === 1 ? "" : "s"} of
+          experience · reputation {cv.reputation}
+          {cv.certificates > 0
+            ? ` · ${cv.certificates} certificate${cv.certificates > 1 ? "s" : ""}`
+            : ""}
+        </span>
         <span className="workline-count">
-          {posts.length} job{posts.length === 1 ? "" : "s"} picked for you
+          {posts.length} job{posts.length === 1 ? "" : "s"} picked for you. HR reads your CV first.
         </span>
       </div>
       {items.length === 0 ? (
@@ -120,14 +132,17 @@ export function WorklineFeed({
       ) : null}
       {items.map((item) =>
         item.kind === "job" ? (
-          <JobCard
+                    <JobCard
             key={item.post.id}
             post={item.post}
             day={state.day}
             currentPay={current}
+            currentLevel={state.level}
+            cv={cv}
             energy={state.stats.energy}
             cost={cost}
             onApply={() => onApply(item.post)}
+            onInterview={() => onInterview(item.post)}
           />
         ) : (
           <article key={item.post.id} className="social-post">
@@ -149,21 +164,36 @@ export function WorklineFeed({
   );
 }
 
+const FIT_NOTE: Record<Fit, string> = {
+  strong: "You meet every requirement. HR will call.",
+  close: "Close. HR might call.",
+  reach: "A long shot. HR rarely calls this far off.",
+};
+
 function JobCard({
   post,
   day,
   currentPay,
+  currentLevel,
+  cv,
   energy,
   cost,
   onApply,
+  onInterview,
 }: {
   post: JobPost;
   day: number;
   currentPay: number;
+  currentLevel: Level;
+  cv: Cv;
   energy: number;
   cost: number;
   onApply: () => void;
+  onInterview: () => void;
 }) {
+  const lines = cvLines(cv, post.level);
+  const fit = fitOf(cvMatch(cv, post.level));
+  const gap = levelGap(currentLevel, post.level);
   const company = offeredCompany(post);
   if (!company) return null;
   const pay = postPay(post);
@@ -187,10 +217,10 @@ function JobCard({
           {closesText(left)}
         </span>
       </div>
-      <h3 className="job-role">
+            <h3 className="job-role">
         {LEVEL_TITLE[post.level]}
-        {post.stretch ? (
-          <span className="stretch-tag">Stretch role</span>
+        {gap > 0 ? (
+          <span className="stretch-tag">{gap === 1 ? "Step up" : `${gap} levels up`}</span>
         ) : null}
       </h3>
       <p className="job-pay">
@@ -218,16 +248,42 @@ function JobCard({
           .map((game) => WORK_GAME_LABEL[game])
           .join(", ")}
       </p>
-      <button
-        type="button"
-        className="job-apply"
-        disabled={tired}
-        onClick={onApply}
-      >
-        {tired
-          ? `Interview needs ${cost} energy`
-          : `Interview · ${interviewRounds(post)} rounds`}
-      </button>
+            {lines.length > 0 ? (
+        <div className="job-needs">
+          <span className="job-needs-head">
+            HR is looking for
+            {post.application ? null : <b className={`fit-badge fit-${fit}`}>{FIT_LABEL[fit]}</b>}
+          </span>
+          <ul>
+            {lines.map((line) => (
+              <li key={line.id} className={line.met ? "met" : "short"}>
+                <span aria-hidden="true">{line.met ? "✓" : "✗"}</span>
+                {line.label} {line.need}
+                {line.id === "experience" ? " weeks" : ""}
+                {line.met ? null : <small> · you have {line.have}</small>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+      {post.application === "rejected" ? (
+        <button type="button" className="job-apply" disabled>
+          Not moving forward
+        </button>
+      ) : post.application === "shortlisted" ? (
+        <button type="button" className="job-apply" disabled={tired} onClick={onInterview}>
+          {tired
+            ? `Interview needs ${cost} energy`
+            : `Shortlisted · Interview, ${interviewRounds(post, currentLevel)} rounds`}
+        </button>
+      ) : (
+        <>
+          <button type="button" className="job-apply" onClick={onApply}>
+            Send CV
+          </button>
+          <small className={`fit-note fit-${fit}`}>{FIT_NOTE[fit]}</small>
+        </>
+      )}
     </article>
   );
 }
@@ -259,8 +315,9 @@ function OfferScreen({
   const company = offeredCompany(offer);
   const track = trackOf(state.level);
   const power = leverage(state.stats, track);
-  const pay = postPay(offer);
+    const pay = postPay(offer);
   const before = postPay(post);
+  const taskScale = taskScaleFor(playerCv(state), offer.level);
   if (!company) return null;
 
   function ask(size: Ask) {
@@ -303,9 +360,15 @@ function OfferScreen({
           ) : null}
           <PaySplit pay={pay} />
         </strong>
-        <span>Place</span>
+                <span>Place</span>
         <strong>
           {TIER_LABEL[company.tier]} · {TYPE_LABEL[company.type]}
+        </strong>
+        <span>Next promotion</span>
+        <strong>
+          {taskScale < 1
+            ? `${Math.round((1 - taskScale) * 100)}% fewer tasks, thanks to your CV`
+            : "Tasks start from zero"}
         </strong>
       </div>
       <div className="job-benefits">
@@ -416,13 +479,10 @@ export function InterviewSession({
   const [result, setResult] = useState<"pass" | "fail" | null>(null);
   const company = offeredCompany(post);
   const device = deviceById(state.deviceId);
-  const rounds = interviewRounds(post);
+    const rounds = interviewRounds(post, state.level);
   const base = difficultyFor(state);
-  const difficulty: Difficulty = post.stretch
-    ? "hard"
-    : base === "easy"
-      ? "normal"
-      : base;
+  const difficulty: Difficulty =
+    levelGap(state.level, post.level) > 0 ? "hard" : base === "easy" ? "normal" : base;
   const picked = pickGame(seed, company?.type, LEVEL_GAMES[post.level]);
 
   if (result === "fail") {

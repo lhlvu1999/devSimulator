@@ -5,6 +5,7 @@ import {
   careerStatus,
   chooseGoal,
   createCareer,
+    applyToPost,
   declinePost,
   endDay,
   failInterview,
@@ -268,9 +269,10 @@ export function App() {
             <MarketScreen state={career} id={market} onChange={setCareer} />
           ) : null}
           {shown === "workline" ? (
-            <WorklineFeed
+                        <WorklineFeed
               state={career}
-              onApply={(post) => {
+              onApply={(post) => setCareer(applyToPost(career, post.id))}
+              onInterview={(post) => {
                 const started = startInterview(career, post.id);
                 if (started === career) return;
                 setCareer(started);

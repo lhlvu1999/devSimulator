@@ -63,7 +63,7 @@ describe("workline feed", () => {
     expect(state.feed.social.length).toBe(3);
   });
 
-  it("shows more posts and more stretch roles with a better reputation", () => {
+    it("shows more posts with a better reputation, some of them above your level", () => {
     expect(feedSize(90)).toBeGreaterThan(feedSize(10));
     const refreshed = refreshFeed(emptyFeed(), {
       day: 3,
@@ -91,9 +91,19 @@ describe("workline feed", () => {
     expect(later.posts.some((item) => item.id === post.id)).toBe(false);
   });
 
-  it("charges energy for an interview and blocks the company after a fail", () => {
-    const state = hired();
-    const post = firstPost(state);
+    it("charges energy for an interview and blocks the company after a fail", () => {
+    const hiredState = hired();
+    const post = firstPost(hiredState);
+    expect(startInterview(hiredState, post.id)).toBe(hiredState);
+    const state = {
+      ...hiredState,
+      feed: {
+        ...hiredState.feed,
+        posts: hiredState.feed.posts.map((item) =>
+          item.id === post.id ? { ...item, application: "shortlisted" as const } : item,
+        ),
+      },
+    };
     const started = startInterview(state, post.id);
     expect(started.stats.energy).toBe(
       state.stats.energy - ticketEnergyCost(state),
@@ -107,7 +117,7 @@ describe("workline feed", () => {
     ).toBe(false);
   });
 
-  it("joins the new company, keeps the title on a normal post, and applies benefits", () => {
+    it("joins the new company at the same title, starts progress fresh, and applies benefits", () => {
     const state = { ...hired(), progress: { ...hired().progress, tidy: 3 } };
     const post: JobPost = {
       ...firstPost(state),
@@ -120,7 +130,7 @@ describe("workline feed", () => {
     const joined = joinCompany(state, post);
     expect(joined.company?.id).toBe("atlas");
     expect(joined.level).toBe(state.level);
-    expect(joined.progress.tidy).toBe(3);
+        expect(joined.progress.tidy).toBe(0);
     expect(joined.stats.money).toBe(state.stats.money + post.bonusCash);
     expect(joined.holdings.ATLS).toBe(state.holdings.ATLS + post.stockUnits);
     expect(joined.company?.salary).toBe(offeredCompany(post)?.salary);

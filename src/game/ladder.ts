@@ -156,6 +156,13 @@ export function nextLevel(level: Level): Level | null {
   return track[track.indexOf(level) + 1] ?? null;
 }
 
+/** How many rungs `to` sits above `from` on the same track. Zero if it's level, lower, or on the other track. */
+export function levelGap(from: Level, to: Level): number {
+  if (trackOf(from) !== trackOf(to)) return 0;
+  const track = trackOf(from) === "manager" ? MANAGER_LEVELS : LEVELS;
+  return Math.max(0, track.indexOf(to) - track.indexOf(from));
+}
+
 export type Requirement = {
   id: string;
   label: string;
@@ -168,7 +175,10 @@ export function requirements(input: {
   progress: Progress;
   stats: Stats;
   gameLabel: Record<WorkGame, string>;
+  /** Share of the usual ticket counts this company asks for. Stat gates never change. */
+  taskScale?: number;
 }): Requirement[] {
+  const scale = input.taskScale ?? 1;
   const milestone = MILESTONES[input.level];
   if (!milestone) return [];
   const tickets = (Object.keys(milestone.tickets) as WorkGame[]).map(
@@ -176,7 +186,7 @@ export function requirements(input: {
       id: game,
       label: `Clean ${input.gameLabel[game]}`,
       have: input.progress[game],
-      need: milestone.tickets[game] ?? 0,
+            need: Math.max(1, Math.ceil((milestone.tickets[game] ?? 0) * scale)),
     }),
   );
   const gateLabel =

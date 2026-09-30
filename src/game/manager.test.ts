@@ -74,11 +74,13 @@ describe("manager track", () => {
     expect(managing.skill).toBeLessThan(building.skill);
   });
 
-  it("makes a close team matter more than skill for a manager's difficulty", () => {
+    it("sets difficulty by title, not by skill", () => {
     const base = senior();
-    expect(difficultyFor(base)).toBe("hard");
-    const lead = switchTrack(base);
-    expect(difficultyFor(lead)).not.toBe("hard");
+    expect(difficultyFor({ ...base, stats: { ...base.stats, skill: 0 } })).toBe(
+      difficultyFor(base),
+    );
+    expect(difficultyFor({ ...base, level: "staff" })).toBe("hard");
+    expect(difficultyFor(switchTrack(base))).toBe("normal");
   });
 
   it("promotes a team lead to engineering manager", () => {

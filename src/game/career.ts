@@ -11,7 +11,9 @@ import {
 } from "../content/gear";
 import { pantryById } from "../content/pantry";
 import {
-  FAIL_COOLDOWN_DAYS,
+    FAIL_COOLDOWN_DAYS,
+  REFERRAL_RELATIONSHIP,
+  companyById,
   emptyFeed,
   offeredCompany,
   refreshFeed,
@@ -57,6 +59,7 @@ import {
 } from "./life";
 import { nextUnit, roundByChance } from "./rng";
 import { skillRating } from "./skill";
+import { cvMatch, cvOf, screenChance, taskScaleFor, type Cv } from "./cv";
 import {
   SIDE_SESSION,
   courseById,
@@ -76,6 +79,7 @@ import {
   LEVEL_TITLE,
   emptyProgress,
   milestonesMet,
+    levelGap,
   nextLevel,
   requirements,
   type Level,
@@ -85,7 +89,7 @@ import {
   trackOf,
   twinOf,
 } from "./ladder";
-import { taskDifficulty, type Difficulty } from "./difficulty";
+import { DIFFICULTY_REWARD, typicalDifficulty, type Difficulty } from "./difficulty";
 import { WORK_GAME_LABEL, type WorkGame } from "./workGames";
 import {
   emptyHoldings,
@@ -154,8 +158,10 @@ export type CareerState = {
   level: Level;
   /** The day this level started. */
   levelDay: number;
-  /** Clean tickets per game since the last promotion. */
+    /** Clean tickets per game since the last promotion. */
   progress: Progress;
+  /** Share of the usual promotion tasks this company asks for, set from your CV when you joined. */
+  taskScale: number;
   /** The last day a promotion review was tried, so a fail waits until tomorrow. */
   reviewDay: number | null;
   feed: Feed;
@@ -182,8 +188,10 @@ export type CareerState = {
   counters: Record<string, number>;
   achievements: string[];
   ending: Ending | null;
-  /** The week you joined your current company, for tenure. */
+    /** The week you joined your current company, for tenure. */
   joinedDay: number;
+  /** Weeks employed anywhere. Goes on your CV. */
+  experience: number;
     /** Prices on the first week of the year, to measure how the company grew. */
   yearOpen: Prices;
   
@@ -232,7 +240,8 @@ export function createCareer(seed = 0x5eed): CareerState {
     workDone: false,
     level: "fresher",
     levelDay: 1,
-    progress: emptyProgress(),
+        progress: emptyProgress(),
+    taskScale: 1,
     reviewDay: null,
     feed: emptyFeed(),
     ticketSeed: (seed ^ 0x7ac1e75) >>> 0,
@@ -248,7 +257,8 @@ export function createCareer(seed = 0x5eed): CareerState {
     counters: {},
     achievements: [],
     ending: null,
-    joinedDay: 1,
+        joinedDay: 1,
+    experience: 0,
         yearOpen: market.prices,
     
     saleWeek: null,
@@ -316,13 +326,54 @@ export function startInterview(
   state: CareerState,
   postId: string,
 ): CareerState {
-  const post = state.feed.posts.find((item) => item.id === postId);
-  if (!post || post.closesDay < state.day) return state;
+    const post = state.feed.posts.find((item) => item.id === postId);
+  if (!post || post.closesDay < state.day || post.application !== "shortlisted") return state;
   const cost = ticketEnergyCost(state);
   if (state.stats.energy < cost) return state;
   return {
     ...state,
     stats: clampStats({ ...state.stats, energy: state.stats.energy - cost }),
+  };
+}
+
+/** What HR sees when you apply. */
+export function playerCv(state: CareerState): Cv {
+  return cvOf(state.stats, state.experience, state.pursuits.certificates.length);
+}
+
+/**
+ * Send your CV. HR always calls if you meet every requirement, sometimes if
+ * you're close, and rarely if you're far off. A turned-down CV blocks that
+ * company for a few days, like a failed interview.
+ */
+export function applyToPost(state: CareerState, postId: string): CareerState {
+  const post = state.feed.posts.find((item) => item.id === postId);
+  if (!post || post.application || post.closesDay < state.day) return state;
+  const company = companyById(post.companyId);
+  const referred = state.stats.relationship >= REFERRAL_RELATIONSHIP;
+  const chance = screenChance(cvMatch(playerCv(state), post.level), referred);
+  const roll = nextUnit(state.rngState);
+  const shortlisted = roll.value < chance;
+  return {
+    ...state,
+    rngState: roll.rngState,
+    feed: {
+      ...state.feed,
+      posts: state.feed.posts.map((item) =>
+        item.id === postId
+          ? { ...item, application: shortlisted ? "shortlisted" : "rejected" }
+          : item,
+      ),
+      blocked: shortlisted
+        ? state.feed.blocked
+        : { ...state.feed.blocked, [post.companyId]: state.day + FAIL_COOLDOWN_DAYS },
+    },
+    counters: bumpCounter(state.counters, "applications"),
+    log: [
+      shortlisted
+        ? `${company?.name ?? "The company"} wants to talk. You're shortlisted.`
+        : `${company?.name ?? "The company"} is moving forward with other candidates.`,
+    ],
   };
 }
 
@@ -357,18 +408,24 @@ export function declinePost(state: CareerState, postId: string): CareerState {
 }
 
 /**
- * Move to the new company. The title stays unless the post was a stretch role,
- * which is a promotion. Milestone progress moves with you, except on a promotion.
+ * Move to the new company at the post's level. A higher post is a step up.
+ * Promotion progress never carries over: every company counts your work from zero.
  */
 export function joinCompany(state: CareerState, post: JobPost): CareerState {
   const company = offeredCompany(post);
   if (!company) return state;
-  const wasJobless = state.company === null;
-  const promoted = post.level !== state.level;
+    const wasJobless = state.company === null;
+  const stepUp = levelGap(state.level, post.level) > 0;
   let money = state.stats.money;
   let health = state.stats.health;
   let book = bookOf(state);
-  const notes = [`You join ${company.name} as ${LEVEL_TITLE[post.level]}.`];
+      const taskScale = taskScaleFor(playerCv(state), post.level);
+  const notes = [
+    `You join ${company.name} as ${LEVEL_TITLE[post.level]}.${stepUp ? " A step up." : ""}`,
+    taskScale < 1
+      ? `Promotion progress starts fresh, but your CV counts: ${Math.round((1 - taskScale) * 100)}% fewer tasks to your next promotion.`
+      : "Promotion progress starts fresh here.",
+  ];
   if (post.benefits.includes("bonus")) {
     money += post.bonusCash;
     notes.push(`Signing bonus: +${formatMoney(post.bonusCash)}.`);
@@ -393,16 +450,21 @@ export function joinCompany(state: CareerState, post: JobPost): CareerState {
     ...state,
     company,
     joinedDay: state.day,
-    level: post.level,
-    levelDay: promoted ? state.day : state.levelDay,
-    progress: promoted ? emptyProgress() : state.progress,
-    reviewDay: promoted ? state.day : state.reviewDay,
+        level: post.level,
+        levelDay: state.day,
+    progress: emptyProgress(),
+    taskScale,
+    reviewDay: null,
     ...book,
     workDone: wasJobless ? state.offWeek !== null : state.workDone,
-    counters: bumpCounter(
-      bumpCounter(state.counters, "jobs"),
-      "negotiated",
-      post.negotiated ? 1 : 0,
+        counters: bumpCounter(
+      bumpCounter(
+        bumpCounter(state.counters, "jobs"),
+        "negotiated",
+        post.negotiated ? 1 : 0,
+      ),
+      "promotions",
+      stepUp ? 1 : 0,
     ),
     stats: clampStats({ ...state.stats, money, health }),
     feed: {
@@ -521,8 +583,9 @@ export function workTicket(
     grade,
     bonus,
     ticket.game,
-    energy,
+        energy,
     result.overtime > 0,
+    ticket.difficulty,
   );
   const notes: string[] = [];
   const effects: Partial<Stats>[] = [];
@@ -622,8 +685,9 @@ export function recordWork(
   grade: CodeGrade,
   bonus = 0,
   game?: WorkGame,
-  energyCost = ticketEnergyCost(state),
+    energyCost = ticketEnergyCost(state),
   overtime = false,
+  difficulty: Difficulty = "normal",
 ): CareerState {
   if (
     (state.section !== "work" && state.section !== "room") ||
@@ -634,14 +698,18 @@ export function recordWork(
     const learn = state.company.learning;
   const leading = trackOf(state.level) === "manager";
   const clean = grade === "clear";
-  const expected = WORK_GAINS[grade === "miss" ? "miss" : grade];
-  const skillRoll = roundByChance(expected.skill * learn * (leading ? 0.5 : 1), state.rngState);
+    const expected = WORK_GAINS[grade === "miss" ? "miss" : grade];
+  const reward = DIFFICULTY_REWARD[difficulty];
+  const skillRoll = roundByChance(
+    expected.skill * learn * (leading ? 0.5 : 1) * reward,
+    state.rngState,
+  );
   const repRoll = roundByChance(
-    clean ? expected.reputation * (state.company.type === "enterprise" ? 2 : 1) : 0,
+    clean ? expected.reputation * (state.company.type === "enterprise" ? 2 : 1) * reward : 0,
     skillRoll.rngState,
   );
   const relRoll = roundByChance(
-    clean ? expected.relationship * (leading ? 2 : 1) : 0,
+    clean ? expected.relationship * (leading ? 2 : 1) * reward : 0,
     repRoll.rngState,
   );
   const skill = skillRoll.value;
@@ -696,23 +764,15 @@ export type CareerStatus = {
   games: readonly WorkGame[];
   payday: number;
   pay: PayPackage;
-  /** The level at the same height on the other track, if there is one. */
+    /** The level at the same height on the other track, if there is one. */
   switchTo: { level: Level; title: string } | null;
+  /** Below 1 when a strong CV cut this company's promotion tasks. */
+  taskScale: number;
 };
 
-/**
- * Engineers face harder work as skill grows. Managers are judged on their team:
- * a close team makes the work easier, and skill only nudges it.
- */
+/** The difficulty this title usually faces. Board tickets roll their own from the title's mix. */
 export function difficultyFor(state: CareerState): Difficulty {
-  if (trackOf(state.level) === "manager") {
-        const pressure =
-      22 -
-      Math.floor(state.stats.relationship / 10) * 2 +
-      Math.floor(skillRating(state.stats.skill) / 25);
-    return pressure < 13 ? "easy" : pressure < 19 ? "normal" : "hard";
-  }
-    return taskDifficulty(skillRating(state.stats.skill), state.stats.relationship);
+  return typicalDifficulty(state.level);
 }
 
 export type { PayPackage } from "./pay";
@@ -723,11 +783,12 @@ export function paydayFor(state: CareerState): number {
 
 export function careerStatus(state: CareerState): CareerStatus {
   const upcoming = nextLevel(state.level);
-  const items = requirements({
+    const items = requirements({
     level: state.level,
     progress: state.progress,
     stats: state.stats,
     gameLabel: WORK_GAME_LABEL,
+    taskScale: state.taskScale,
   });
   const twin = twinOf(state.level);
   return {
@@ -741,7 +802,8 @@ export function careerStatus(state: CareerState): CareerStatus {
     games: LEVEL_GAMES[state.level],
     payday: paydayFor(state),
     pay: payPackage(state.company, state.level),
-    switchTo: twin ? { level: twin, title: LEVEL_TITLE[twin] } : null,
+        switchTo: twin ? { level: twin, title: LEVEL_TITLE[twin] } : null,
+    taskScale: state.taskScale,
   };
 }
 
@@ -755,9 +817,10 @@ export function switchTrack(state: CareerState): CareerState {
   }
   const moved: CareerState = refitBoard({
     ...state,
-    level: twin,
+        level: twin,
     levelDay: state.day,
     progress,
+    taskScale: 1,
     reviewDay: null,
   });
   return {
@@ -783,9 +846,10 @@ export function passReview(state: CareerState): CareerState {
   if (!status.ready || status.triedToday || !upcoming) return state;
   const promoted: CareerState = {
     ...state,
-    level: upcoming,
+        level: upcoming,
     levelDay: state.day,
     progress: emptyProgress(),
+    taskScale: 1,
     reviewDay: state.day,
     counters: bumpCounter(state.counters, "promotions"),
     stats: clampStats({
@@ -1277,7 +1341,8 @@ export function endDay(state: CareerState): CareerState {
     ...state,
     day: nextDay,
     board,
-    ticketSeed: boardSeed,
+        ticketSeed: boardSeed,
+    experience: state.experience + (state.company && !state.offWeek ? 1 : 0),
     rngState: sick.rngState,
     feed: refreshed.feed,
             prices: rolled.prices,

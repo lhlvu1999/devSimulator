@@ -5,6 +5,7 @@ import {
   freshBoard,
   type CareerState,
 } from "./career";
+import { HIRING_BAR } from "./cv";
 import { MILESTONES, emptyProgress, type Level } from "./ladder";
 import type { WorkGame } from "./workGames";
 import { emptyFeed, refreshFeed } from "./workline";
@@ -37,8 +38,9 @@ export function jumpToLevel(state: CareerState, level: Level): CareerState {
       level,
       levelDay: next.day,
       progress: emptyProgress(),
-      reviewDay: null,
+            reviewDay: null,
       workDone: false,
+      experience: Math.max(next.experience, HIRING_BAR[level].experience),
       feed: refreshed.feed,
       log: [`Sandbox: you are now at ${level}.`],
     },

@@ -2,14 +2,14 @@ import { useState } from "react";
 import { deviceById } from "../content/gear";
 import {
   careerStatus,
-  difficultyFor,
+  
   failReview,
   passReview,
   reviewGames,
   workTicket,
   type CareerState,
 } from "../game/career";
-import type { Difficulty } from "../game/difficulty";
+import { DIFFICULTY_REWARD, type Difficulty } from "../game/difficulty";
 import { dealInbox } from "../game/inbox";
 import { dealOneOnOne, dealRoadmap, dealSprint } from "../game/manage";
 import { dealShip } from "../game/ship";
@@ -43,7 +43,7 @@ export function WorkSession({
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [notes, setNotes] = useState<string[]>([]);
   const device = deviceById(state.deviceId);
-  const difficulty = difficultyFor(state);
+  
   const status = careerStatus(state);
   const active = state.board.tickets.find((ticket) => ticket.key === activeKey) ?? null;
 
@@ -78,11 +78,12 @@ export function WorkSession({
           key={`${state.ticketSeed}-${active.key}-${active.partsDone}`}
           game={active.game}
           seed={state.ticketSeed}
-          difficulty={difficulty}
+                    difficulty={active.difficulty}
           relationship={state.stats.relationship}
           bonus={device.timeBonus + moodSeconds(state.stats.mood)}
           onDone={(grade, left, nextSeed) => {
-            const timePay = grade === "clear" ? Math.floor(left / 2) : 0;
+                        const timePay =
+              grade === "clear" ? Math.floor((left / 2) * DIFFICULTY_REWARD[active.difficulty]) : 0;
             const next = workTicket(state, active.key, grade, timePay, nextSeed);
             onChange(next);
             setNotes(next.log);

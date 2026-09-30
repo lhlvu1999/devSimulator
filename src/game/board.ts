@@ -1,6 +1,7 @@
 import type { CompanyType } from "../content/companies";
 import { TICKET_TITLES, URGENT_TITLES } from "../content/ticketTitles";
 import { LEVEL_GAMES, picksOwnWork, type Level } from "./ladder";
+import { rollDifficulty, type Difficulty } from "./difficulty";
 import { nextUnit } from "./rng";
 import { skillRating } from "./skill";
 import type { CodeGrade, Stats } from "./types";
@@ -32,8 +33,10 @@ export type BoardTicket = {
   /** The overdue hit has been applied. */
   overdue: boolean;
   urgent: boolean;
-  /** The ticket this one came out of. */
+    /** The ticket this one came out of. */
   parent: string | null;
+  /** How hard its mini-games are, from the title's mix of work. */
+  difficulty: Difficulty;
 };
 
 export type Board = {
@@ -287,7 +290,8 @@ function dealOne(
   const sizeRoll = nextUnit(picked.rngState);
   const priorityRoll = nextUnit(sizeRoll.rngState);
   const dueRoll = nextUnit(priorityRoll.rngState);
-  const titleRoll = nextUnit(dueRoll.rngState);
+    const titleRoll = nextUnit(dueRoll.rngState);
+  const difficultyRoll = nextUnit(titleRoll.rngState);
 
   const size: TicketSize =
     kind === "urgent"
@@ -333,8 +337,13 @@ function dealOne(
     createdAt: now,
     dueAt: now + window,
     overdue: false,
-    urgent: kind === "urgent",
+        urgent: kind === "urgent",
     parent: parent?.key ?? null,
+    difficulty: rollDifficulty(
+      ctx.level,
+      difficultyRoll.value,
+      kind === "urgent" || priority === "critical",
+    ),
   };
   return {
     board: {
@@ -342,8 +351,8 @@ function dealOne(
       tickets: [...board.tickets, ticket],
       nextNumber: board.nextNumber + 1,
     },
-    ticket,
-    rngState: titleRoll.rngState,
+        ticket,
+    rngState: difficultyRoll.rngState,
   };
 }
 

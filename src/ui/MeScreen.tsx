@@ -209,8 +209,13 @@ function CareerCard({
               ? career.triedToday
                 ? " · review next week"
                 : " · review ready"
-              : ""}
+                            : ""}
           </span>
+          {career.taskScale < 1 ? (
+            <span className="career-discount">
+              Your CV cut the tasks here by {Math.round((1 - career.taskScale) * 100)}%.
+            </span>
+          ) : null}
           <ul className="career-list">
             {career.items.map((item) => {
               const filled = Math.min(

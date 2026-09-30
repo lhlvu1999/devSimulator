@@ -279,19 +279,27 @@ Freshers and juniors work in their lead's order: only the top ticket can be star
 
 A ticket part is one short mini game. A **clean** grade means you finished with at least half the clock left. **Late** means you finished with less. **Miss** means the clock hit zero. A wrong tap costs 1 second.
 
-Clean parts pay floor(seconds left ÷ 2) in cash.
+Clean parts pay floor(seconds left ÷ 2 × the difficulty multiplier) in cash.
 
 ### Difficulty
 
-**Engineer track:** pressure = skill rating − floor(relationship ÷ 20) × 3.
+Difficulty comes from your **title**, not your skill. Each ticket rolls its difficulty when it lands on the board, from your level's mix, and the card shows it as **Easy**, **Normal**, or **Hard**. Urgent and Critical tickets are never easy: an easy roll becomes normal.
 
-**Manager track:** pressure = 22 − floor(relationship ÷ 10) × 2 + floor(skill rating ÷ 25). A close team makes manager work easier, and skill only nudges it.
+| Title | Easy | Normal | Hard |
+| ----- | ---- | ------ | ---- |
+| Fresher | 70% | 30% | — |
+| Junior engineer | 45% | 45% | 10% |
+| Engineer | 25% | 50% | 25% |
+| Senior engineer | 10% | 50% | 40% |
+| Staff engineer | 5% | 35% | 60% |
+| Principal engineer | — | 30% | 70% |
+| Team lead | 20% | 50% | 30% |
+| Engineering manager | 10% | 45% | 45% |
+| Director | 5% | 35% | 60% |
 
-| Pressure  | Difficulty |
-| --------- | ---------- |
-| Below 13  | Easy       |
-| 13 to 18  | Normal     |
-| 19 and up | Hard       |
+Harder work pays more. Skill, reputation, and relationship gains from a part, and its cash for time left, are multiplied by **0.75** on easy, **1** on normal, and **1.5** on hard. Higher titles earn more because they get more hard work.
+
+Interviews use the target title's usual difficulty (its biggest share, ties going harder), and are always hard for a step up. Promotion reviews stay normal for a fresher and hard after that.
 
 ### Games
 
@@ -420,7 +428,7 @@ The **Jobs** tab opens **Workline**, a job and news feed. The red badge shows ho
 
 - New posts arrive each morning. They come from any company except your current one and any company on cooldown.
 - Number of open posts: min(5, 2 + floor(reputation ÷ 25)).
-- Each post is for your current level, or a **stretch role** one level up on your track. Stretch chance: min(60%, reputation%).
+- Each post is for your level (45%), one level up on your track (40%), or two up (15%). A post above your level shows **Step up**.
 - Pay is the company salary × 1.00 to 1.25, rounded to 0.05, then × the level's pay multiplier, plus the post's stock percent in company shares. The card shows total pay, the cash and stock split, and the change against your current total pay.
 - Each post closes 2 to 5 days after it goes up. Closed posts disappear overnight.
 - Between job posts, the feed shows three social posts a day for flavor.
@@ -437,11 +445,39 @@ A post has one or two benefits.
 | Sign-on shares  | 3 to 8 shares of the new employer on joining. Listed companies only |
 | Gym membership  | +15 health on joining                                               |
 
+### Your CV and the HR screen
+
+Every post lists what HR is looking for, checked against your CV with ✓ or ✗, plus a match badge. Your CV is your skill (each course certificate adds 50), your **experience** (weeks employed anywhere, +1 each week you have a job and aren't off sick or burned out), your reputation, and, for manager roles, your team relationship.
+
+| Level | Skill | Experience | Other |
+| ----- | ----- | ---------- | ----- |
+| Junior engineer | 80 | 4 weeks | — |
+| Engineer | 220 | 14 weeks | — |
+| Senior engineer | 420 | 30 weeks | Reputation 30 |
+| Staff engineer | 800 | 60 weeks | Reputation 50 |
+| Principal engineer | 1,300 | 100 weeks | Reputation 65 |
+| Team lead | 350 | 30 weeks | Relationship 50 |
+| Engineering manager | — | 55 weeks | Relationship 60, reputation 45 |
+| Director | — | 95 weeks | Relationship 65, reputation 60 |
+
+The bars sit close to where the same player would be when promoted in-house, so switching is an alternative, not a shortcut.
+
+**Send CV** is free and happens once per post. Your match is your weakest requirement as a share of what's asked.
+
+| Match | Badge | Chance of an interview |
+| ----- | ----- | ---------------------- |
+| Every requirement met | You match | Always |
+| 80% or more on everything | Close match | 25% at 80%, rising to 70% just under 100% |
+| 60% to 80% | Long shot | 5% |
+| Below 60% | Long shot | None |
+
+With relationship 60 or more, a referral adds 15% to any chance above zero, up to 95%. A turned-down CV puts that company on the 5-day cooldown. A recruiter who reaches out skips the screen: the post arrives already shortlisted.
+
 ### Interview
 
-- Starting an interview costs one ticket of energy, paid up front.
-- Normal posts are 2 tickets, and stretch roles are 3. Games come from the post's level, weighted by that company's type.
-- Difficulty is at least normal. Stretch interviews are hard. Teammate help is off.
+- Only shortlisted posts can be interviewed. Starting costs one ticket of energy, paid up front.
+- An interview is 2 tickets, plus 1 for each level the role sits above yours. Games come from the post's level, weighted by that company's type.
+- Difficulty is at least normal. Interviews for a step up are hard. Teammate help is off.
 - A miss ends the interview. That company won't post or interview you for 5 days.
 - Passing shows the offer. Accepting moves you to the new company right away. The room, game mix, pay, and benefits all change, and every other post from that company is removed.
 
@@ -464,8 +500,10 @@ Chances show as **Likely** (70%+), **Maybe** (40–69%), or **Long shot**. A yes
 
 ### Title and progress after switching
 
-- **Normal post:** you keep your title and your milestone progress.
-- **Stretch post:** you take the higher title. That counts as a promotion, so milestone progress starts fresh and no promotion review is offered that day.
+- You take the post's title. A post above your level counts as a promotion.
+- Promotion progress always starts fresh at a new company: its milestones count your work there from zero. Skill, reputation, experience, and certificates stay with you, since they're on your CV.
+- **A strong CV means fewer tasks.** On joining, your CV is checked against the bar for the level *after* the one you're hired at. Halfway to that bar or less, the ticket counts are normal. Meeting it cuts them in half. In between, the cut slides from 0% to 50%, rounded to 5%. Stat gates like reputation 30 never change. The offer screen shows the cut before you accept, and the Career card shows it after.
+- The cut lasts while you stay at that company at that level. An in-house promotion or a track switch goes back to normal counts.
 
 ## Invest
 

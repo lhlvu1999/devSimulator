@@ -18,17 +18,14 @@ import {
   recordWork,
   sellAsset,
 } from "./career";
-import { taskDifficulty, taskSeconds } from "./difficulty";
+import { taskSeconds } from "./difficulty";
 import { gameSeconds } from "./workGames";
 import { fresherProfile } from "./placement";
 import { emptyBoard, newbieMove, winner } from "./tictactoe";
 import { backfillHistory, rollPrices, START_PRICES } from "./market";
 
 describe("placement and the day", () => {
-  it("makes work easier when relationship is high and harder when skill is high", () => {
-    expect(taskDifficulty(10, 20)).toBe("easy");
-    expect(taskDifficulty(22, 10)).toBe("hard");
-    expect(taskDifficulty(22, 46)).not.toBe("hard");
+    it("gives each ticket's game a clock that fits its difficulty", () => {
     expect(taskSeconds("easy", 14)).toBe(38);
     expect(gameSeconds("tidy", "easy", 6)).toBe(18);
     expect(gameSeconds("spot", "hard")).toBeLessThan(

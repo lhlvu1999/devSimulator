@@ -1,6 +1,7 @@
 import type { DeviceId, LookId } from "../content/gear";
 import { COMPANIES } from "../content/companies";
 import { emptyBoard } from "./board";
+import { typicalDifficulty } from "./difficulty";
 import { freshBoard, type CareerState, type Section } from "./career";
 import { ALL_LEVELS, emptyProgress } from "./ladder";
 import { NIGHT_SLOTS, WEEKEND_SLOTS } from "./life";
@@ -227,10 +228,18 @@ function withLife(state: CareerState): CareerState {
     counters: isRecord(state.counters) ? state.counters : {},
     achievements: Array.isArray(state.achievements) ? state.achievements : [],
     ending: isRecord(state.ending) ? state.ending : null,
-    joinedDay:
+        joinedDay:
       typeof state.joinedDay === "number"
         ? state.joinedDay
         : (state.levelDay ?? 1),
+        taskScale:
+      typeof state.taskScale === "number" ? Math.min(1, Math.max(0.5, state.taskScale)) : 1,
+    experience:
+      typeof state.experience === "number"
+        ? state.experience
+        : state.company
+          ? Math.max(0, state.day - 1)
+          : 0,
     yearOpen: isRecord(state.yearOpen)
       ? { ...state.prices, ...state.yearOpen }
       : state.prices,
@@ -254,8 +263,19 @@ function withPursuits(value: unknown): Pursuits {
 /** Saves from before the work board get a fresh board for the current job. */
 function withBoard(state: CareerState): CareerState {
   const board = (state as { board?: unknown }).board;
-  if (isRecord(board) && Array.isArray(board.tickets) && typeof board.hour === "number")
-    return state;
+  if (isRecord(board) && Array.isArray(board.tickets) && typeof board.hour === "number") {
+    const typical = typicalDifficulty(state.level);
+    return {
+      ...state,
+      board: {
+        ...state.board,
+        tickets: state.board.tickets.map((ticket) => ({
+          ...ticket,
+          difficulty: ticket.difficulty ?? typical,
+        })),
+      },
+    };
+  }
   return freshBoard({ ...state, board: emptyBoard() }, 0);
 }
 

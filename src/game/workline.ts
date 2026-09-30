@@ -1,5 +1,5 @@
 import { COMPANIES, type Company } from "../content/companies";
-import { nextLevel, type Level } from "./ladder";
+import { levelGap, nextLevel, type Level } from "./ladder";
 import { stockForCompany } from "./market";
 import { payPackage, type PayPackage } from "./pay";
 import { nextUnit } from "./rng";
@@ -26,9 +26,11 @@ export const BENEFIT_HINT: Record<Benefit, string> = {
 export type JobPost = {
   id: string;
   companyId: string;
-  level: Level;
-  /** A role one level above yours. Passing its interview is a promotion. */
+    level: Level;
+  /** Above your level when it was posted. Joining is a step up. */
   stretch: boolean;
+  /** What HR said about your CV. Unset until you apply. */
+  application?: "shortlisted" | "rejected";
   /** Salary compared with the company's usual pay. */
   boost: number;
   /** Share of each payday paid in company stock. Zero for private companies. */
@@ -97,13 +99,18 @@ export function daysLeft(post: JobPost, day: number): number {
   return post.closesDay - day;
 }
 
-/** More reputation brings more posts and more stretch roles. */
+/** More reputation brings more posts. */
 export function feedSize(reputation: number): number {
   return Math.min(5, 2 + Math.floor(reputation / 25));
 }
 
-export function stretchChance(reputation: number): number {
-  return Math.min(0.6, reputation / 100);
+/** Most posts are at your level or one up. A few reach two up, for a CV that's ahead of its title. */
+function postLevel(current: Level, roll: number): Level {
+  const one = nextLevel(current);
+  const two = one ? nextLevel(one) : null;
+  if (two && roll >= 0.85) return two;
+  if (one && roll >= 0.45) return one;
+  return current;
 }
 
 const AUTHORS: readonly { name: string; role: string }[] = [
@@ -177,7 +184,7 @@ type FeedInput = {
   level: Level;
   reputation: number;
   seed: number;
-  /** A close team refers you: one more post and more stretch roles. */
+  /** A close team refers you: one more post, and HR looks kindlier at your CV. */
   relationship?: number;
   /** Skill lifts how high a post's pay can go. */
   skill?: number;
@@ -191,11 +198,10 @@ type Dice = ReturnType<typeof roll>;
 function makePost(
   company: (typeof COMPANIES)[number],
   input: FeedInput,
-  stretch: boolean,
+  level: Level,
   id: number,
   dice: Dice,
 ): JobPost {
-  const upper = nextLevel(input.level);
   const reach = Math.min(0.25, (input.skill ?? 0) / 400);
   const boost = Math.round((1 + dice.next() * (0.25 + reach)) * 20) / 20;
   const listed = stockForCompany(company.id) !== undefined;
@@ -214,8 +220,8 @@ function makePost(
   return {
     id: `post-${id}`,
     companyId: company.id,
-    level: stretch && upper ? upper : input.level,
-    stretch: stretch && upper !== null,
+        level,
+    stretch: levelGap(input.level, level) > 0,
     boost,
     stockPercent,
     benefits,
@@ -256,9 +262,8 @@ export function refreshFeed(
     (post) => post.closesDay >= input.day && post.companyId !== input.companyId,
   );
   let nextId = feed.nextId;
-  const referred = (input.relationship ?? 0) >= REFERRAL_RELATIONSHIP;
+    const referred = (input.relationship ?? 0) >= REFERRAL_RELATIONSHIP;
   const target = feedSize(input.reputation) + (referred ? 1 : 0);
-  const stretchOdds = stretchChance(input.reputation) + (referred ? 0.1 : 0);
 
   while (posts.length < target) {
     const open = openCompanies(posts, blocked, input.companyId);
@@ -266,7 +271,7 @@ export function refreshFeed(
     const company = open[Math.floor(dice.next() * open.length)] ?? open[0];
     if (!company) break;
     posts.push(
-      makePost(company, input, dice.next() < stretchOdds, nextId, dice),
+            makePost(company, input, postLevel(input.level, dice.next()), nextId, dice),
     );
     nextId += 1;
   }
@@ -290,12 +295,12 @@ export function refreshFeed(
   return { feed: { posts, social, blocked, nextId }, rngState: dice.state };
 }
 
-/** Interviews are a short chain of tickets. Stretch roles ask for one more. */
-export function interviewRounds(post: JobPost): number {
-  return post.stretch ? 3 : 2;
+/** Interviews are a short chain of tickets: two, plus one for every level the role sits above yours. */
+export function interviewRounds(post: JobPost, current: Level): number {
+  return 2 + levelGap(current, post.level);
 }
 
-/** A recruiter reaches out with one role above yours, from a company not already posting. */
+/** A recruiter reaches out with one role above yours, from a company not already posting. They skip the CV screen. */
 export function recruiterPost(
   feed: Feed,
   input: FeedInput,
@@ -304,8 +309,8 @@ export function recruiterPost(
   const open = openCompanies(feed.posts, feed.blocked, input.companyId);
   const company = open[Math.floor(dice.next() * open.length)];
   if (!company) return { feed, rngState: dice.state, post: null };
-  const post = makePost(company, input, true, feed.nextId, dice);
-  const lasting = { ...post, closesDay: input.day + 4 };
+    const post = makePost(company, input, nextLevel(input.level) ?? input.level, feed.nextId, dice);
+  const lasting: JobPost = { ...post, closesDay: input.day + 4, application: "shortlisted" };
   return {
     feed: { ...feed, posts: [lasting, ...feed.posts], nextId: feed.nextId + 1 },
     rngState: dice.state,
