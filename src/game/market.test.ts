@@ -58,17 +58,16 @@ describe("market rules", () => {
     expect(spread(moves.crypto ?? [])).toBeGreaterThan(
       spread(moves.PIXL ?? []) * 2,
     );
-    expect(Math.min(...(moves.gold ?? []))).toBeGreaterThan(-0.004);
+    expect(Math.min(...(moves.gold ?? []))).toBeGreaterThan(-0.005);
   });
 
-  it("gives crypto the best average night", () => {
-    const moves = nights(4000);
-    expect(average(moves.crypto ?? [])).toBeGreaterThan(
-      average(moves.ATLS ?? []),
-    );
-    expect(average(moves.crypto ?? [])).toBeGreaterThan(
-      average(moves.gold ?? []),
-    );
+  it("keeps crypto roughly flat on average so it can't be farmed", () => {
+    const moves = nights(8000);
+    const cryptoAverage = average(moves.crypto ?? []);
+    expect(cryptoAverage).toBeGreaterThan(-0.01);
+    expect(cryptoAverage).toBeLessThan(0.01);
+    expect(average(moves.gold ?? [])).toBeLessThan(0.003);
+    expect(average(moves.gold ?? [])).toBeGreaterThan(0);
   });
 
   it("puts up to three different companies in each paper", () => {

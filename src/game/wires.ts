@@ -58,13 +58,22 @@ export function dealWires(
   difficulty: Difficulty,
   relationship: number,
 ): { puzzle: WirePuzzle; rngState: number } {
-  const size = difficulty === "easy" ? 3 : difficulty === "normal" ? 4 : 5;
+  const sizePool: Record<Difficulty, readonly number[]> = {
+    easy: [3, 3, 3, 4, 4, 4, 3, 4, 3, 4, 3, 4, 3, 4, 4, 3, 4, 3, 4, 4],
+    normal: [4, 4, 4, 5, 5, 4, 5, 4, 5, 5, 4, 5, 4, 5, 5, 4, 4, 5, 5, 4],
+    hard: [5, 5, 5, 6, 6, 5, 6, 5, 6, 6, 5, 6, 5, 6, 6, 5, 5, 6, 6, 5],
+  };
   let rngState = seed;
   const roll = () => {
     const next = nextUnit(rngState);
     rngState = next.rngState;
     return next.value;
   };
+
+  const sizes = sizePool[difficulty];
+  const size =
+    sizes[Math.floor(roll() * sizes.length)] ??
+    (difficulty === "easy" ? 3 : difficulty === "normal" ? 4 : 5);
 
   const startRow = Math.floor(roll() * size);
   const endRow = Math.floor(roll() * size);

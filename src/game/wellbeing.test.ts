@@ -4,6 +4,7 @@ import {
   consumeItem,
   createCareer,
   endDay,
+  chooseGoal,
   finishPlacement,
   healthScale,
   recordWork,
@@ -13,7 +14,7 @@ import {
 import { picksOwnWork } from "./ladder";
 
 function hired(): CareerState {
-  const state = finishPlacement(createCareer(4), "win", 4);
+  const state = chooseGoal(finishPlacement(createCareer(4), "win", 4), "fire");
   const offer = state.offers[0];
   if (!offer) throw new Error("missing offer");
   return acceptOffer(state, offer.id);

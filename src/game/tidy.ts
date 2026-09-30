@@ -1,18 +1,7 @@
 import type { CodeGrade } from "./types";
 import type { Difficulty } from "./difficulty";
+import { EXTRA_TIDY_SCENES } from "./pools/tidyScenesExtra";
 import { nextUnit } from "./rng";
-
-export type TidyScene =
-  | "picnic"
-  | "shop"
-  | "photo"
-  | "music"
-  | "weather"
-  | "pet"
-  | "recipe"
-  | "chat"
-  | "bank"
-  | "map";
 export type TidyGoal = "remove" | "place" | "color";
 export type Swatch = "cream" | "sage" | "clay" | "blue";
 
@@ -23,7 +12,7 @@ export type TidyPiece = {
 };
 
 export type Ticket = {
-  scene: TidyScene;
+  scene: string;
   note: string;
   goals: TidyGoal[];
   pieces: TidyPiece[];
@@ -43,20 +32,19 @@ export const SWATCH_LABEL: Record<Swatch, string> = {
   blue: "blue",
 };
 
-const SCENES: Record<
-  TidyScene,
-  {
-    keep: TidyPiece[];
-    wrong: TidyPiece;
-    decoy: TidyPiece;
-    loose: { id: string; label: string };
-    slotLabel: string;
-    paintLabel: string;
-    removeNote: string;
-    placeNote: string;
-    colorNote: (want: Swatch) => string;
-  }
-> = {
+type SceneDef = {
+  keep: TidyPiece[];
+  wrong: TidyPiece;
+  decoy: TidyPiece;
+  loose: { id: string; label: string };
+  slotLabel: string;
+  paintLabel: string;
+  removeNote: string;
+  placeNote: string;
+  colorNote: (want: Swatch) => string;
+};
+
+const BASE_SCENES: Record<string, SceneDef> = {
   picnic: {
     keep: [
       { id: "basket", label: "Basket", kind: "keep" },
@@ -198,6 +186,13 @@ const SCENES: Record<
     colorNote: (want) => `Make the route line ${SWATCH_LABEL[want]}.`,
   },
 };
+
+const SCENES: Record<string, SceneDef> = {
+  ...BASE_SCENES,
+  ...EXTRA_TIDY_SCENES,
+};
+
+export type TidyScene = keyof typeof SCENES;
 
 function pull(seed: number): { rngState: number; value: number } {
   return nextUnit(seed);

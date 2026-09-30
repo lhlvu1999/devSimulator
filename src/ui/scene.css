@@ -384,15 +384,254 @@
   color: #1f1a14;
 }
 
+/* Leave room for the bottom tab bar under any full screen tab. */
+.work-screen.with-nav {
+  padding-bottom: calc(var(--nav-height) + 12px);
+}
+
+.bottom-nav {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  height: var(--nav-height);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  border-top: 2px solid #3f342c;
+  background: #f6efe6;
+  box-shadow: 0 -6px 0 rgba(63, 52, 44, 0.08);
+}
+
+.nav-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 0 2px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #6b5e52;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-tab.on {
+  color: #1f1a14;
+}
+
+.nav-tab.on .nav-icon {
+  background: #3f342c;
+}
+
+.nav-tab.on .nav-icon i,
+.nav-tab.on .nav-icon i::before,
+.nav-tab.on .nav-icon i::after {
+  border-color: #f6efe6;
+}
+
+.nav-tab:focus-visible {
+  outline: 2px solid #3f342c;
+  outline-offset: -2px;
+}
+
+.nav-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 28px;
+  border-radius: 999px;
+  transition: background 0.15s ease;
+}
+
+.nav-icon i {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  border: 2px solid #3f342c;
+}
+
+.nav-icon b {
+  position: absolute;
+  top: -4px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #e07a7a;
+  color: #fff;
+  font-size: 0.6rem;
+  line-height: 16px;
+  text-align: center;
+}
+
+/* Home: a small house. */
+.tab-home .nav-icon i {
+  width: 16px;
+  height: 12px;
+  margin-top: 5px;
+  border-top: 0;
+  border-radius: 0 0 2px 2px;
+}
+
+.tab-home .nav-icon i::before {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: -8px;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #3f342c;
+  border-right: 0;
+  border-bottom: 0;
+  transform: translateX(1px) rotate(45deg);
+  transform-origin: 50% 50%;
+}
+
+/* Invest: rising bars. */
+.tab-invest .nav-icon i {
+  width: 18px;
+  height: 16px;
+  border-top: 0;
+  border-right: 0;
+}
+
+.tab-invest .nav-icon i::before,
+.tab-invest .nav-icon i::after {
+  content: "";
+  position: absolute;
+  bottom: 1px;
+  width: 3px;
+  border: 2px solid #3f342c;
+  border-bottom: 0;
+}
+
+.tab-invest .nav-icon i::before {
+  left: 2px;
+  height: 5px;
+}
+
+.tab-invest .nav-icon i::after {
+  left: 9px;
+  height: 10px;
+}
+
+/* Jobs: a briefcase. */
+.tab-jobs .nav-icon i {
+  width: 20px;
+  height: 13px;
+  margin-top: 4px;
+  border-radius: 3px;
+}
+
+.tab-jobs .nav-icon i::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: -6px;
+  width: 8px;
+  height: 5px;
+  border: 2px solid #3f342c;
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+}
+
+/* Shop: a bag. */
+.tab-shop .nav-icon i {
+  width: 18px;
+  height: 14px;
+  margin-top: 5px;
+  border-radius: 2px 2px 5px 5px;
+}
+
+.tab-shop .nav-icon i::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: -7px;
+  width: 8px;
+  height: 6px;
+  border: 2px solid #3f342c;
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+}
+
+/* Me: head and shoulders. */
+.tab-me .nav-icon i {
+  width: 18px;
+  height: 8px;
+  margin-top: 10px;
+  border-bottom: 0;
+  border-radius: 9px 9px 0 0;
+}
+
+.tab-me .nav-icon i::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: -11px;
+  width: 8px;
+  height: 8px;
+  border: 2px solid #3f342c;
+  border-radius: 50%;
+}
+
+/* The tab bar has a fixed height so the room can sit right on top of it. */
+.world {
+  --nav-height: calc(64px + env(safe-area-inset-bottom));
+  --nav-space: 0px;
+  /* Set from the fitted clip: how much of the top the clip leaves empty. */
+  --clip-top: 0px;
+  /* The least the top bar needs to be readable below the status bar. */
+    --hud-min: calc(62px + env(safe-area-inset-top));
+}
+
+.world.with-nav {
+  --nav-space: var(--nav-height);
+}
+
+/* The clip is shown whole, resting on the tab bar. The frame is also what the monitor glass is measured against. */
+.scene-frame {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: var(--nav-space);
+  pointer-events: none;
+}
+
 .scene-clip {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
+  object-fit: contain;
+  object-position: center bottom;
   pointer-events: none;
+}
+
+/* Soft fill for any space the whole frame leaves, usually a strip under the status bar. */
+.scene-backdrop {
+  position: absolute;
   z-index: 0;
+  top: -32px;
+  left: -32px;
+  width: calc(100% + 64px);
+  height: calc(100% + 64px);
+  object-fit: cover;
+  object-position: center top;
+  filter: blur(22px) saturate(0.95);
+  pointer-events: none;
 }
 
 .glass-option {
@@ -537,217 +776,6 @@
   z-index: 8;
 }
 
-.corner-entity {
-  position: absolute;
-  z-index: 16;
-  top: calc(12px + env(safe-area-inset-top));
-  left: 10px;
-  width: 64px;
-  height: 52px;
-  padding: 6px 8px 8px;
-  border: 2px solid #3f342c;
-  border-radius: 8px;
-  background: #f6efe6;
-  box-shadow: 0 6px 0 rgba(63, 52, 44, 0.12);
-  cursor: pointer;
-}
-
-.corner-entity.corner-shop {
-  left: 84px;
-}
-
-.corner-entity.corner-phone {
-  left: 158px;
-  width: 48px;
-  padding: 6px;
-}
-
-.phone-mark {
-  position: relative;
-  display: block;
-  width: 22px;
-  height: 34px;
-  margin: 0 auto;
-  border: 2px solid #3f342c;
-  border-radius: 6px;
-  background: #7fa7c9;
-}
-
-.phone-mark i {
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: 4px;
-  bottom: 7px;
-  border-radius: 2px;
-  background: #e7f6ef;
-}
-
-.phone-mark b {
-  position: absolute;
-  top: -9px;
-  right: -12px;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border: 2px solid #3f342c;
-  border-radius: 999px;
-  background: #e07a7a;
-  color: #fff;
-  font-size: 0.65rem;
-  line-height: 14px;
-  text-align: center;
-}
-
-.corner-entity.on {
-  background: #e7f6ef;
-}
-
-.shop-bag {
-  position: relative;
-  display: block;
-  width: 30px;
-  height: 26px;
-  margin: 8px auto 0;
-  border: 2px solid #3f342c;
-  border-radius: 4px 4px 8px 8px;
-  background: #e39b7a;
-}
-
-.shop-bag i {
-  position: absolute;
-  left: 7px;
-  top: -12px;
-  width: 12px;
-  height: 12px;
-  border: 2px solid #3f342c;
-  border-bottom: 0;
-  border-radius: 8px 8px 0 0;
-}
-
-.chart-bars {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  height: 100%;
-  gap: 3px;
-}
-
-.chart-bars i {
-  display: block;
-  width: 8px;
-  border-radius: 2px 2px 0 0;
-  background: #7fa7c9;
-}
-
-.chart-bars i:nth-child(1) {
-  height: 40%;
-  background: #e39b7a;
-}
-.chart-bars i:nth-child(2) {
-  height: 70%;
-}
-.chart-bars i:nth-child(3) {
-  height: 48%;
-  background: #6f8f5b;
-}
-.chart-bars i:nth-child(4) {
-  height: 88%;
-}
-
-.chart-panel {
-  position: absolute;
-  z-index: 22;
-  top: calc(76px + env(safe-area-inset-top));
-  bottom: 12px;
-  left: 8px;
-  width: min(92%, 420px);
-  overflow: auto;
-  padding: 8px;
-  border: 2px solid #3f342c;
-  border-radius: 12px;
-  background: #f6efe6;
-  color: #1f1a14;
-  color-scheme: light;
-}
-
-.chart-panel button {
-  color: #1f1a14;
-}
-
-.chart-panel .primary {
-  position: sticky;
-  bottom: 0;
-  width: 100%;
-  background: #1f1a14;
-  color: #f6efe6;
-}
-
-.stats-entity {
-  position: absolute;
-  z-index: 26;
-  top: calc(12px + env(safe-area-inset-top));
-  right: 10px;
-  width: 64px;
-  height: 52px;
-  padding: 8px;
-  border: 2px solid #3f342c;
-  border-radius: 8px;
-  background: #f6efe6;
-  box-shadow: 0 6px 0 rgba(63, 52, 44, 0.12);
-  cursor: pointer;
-}
-
-.stats-entity.on {
-  background: #e7f6ef;
-}
-
-.stats-mark {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  height: 100%;
-}
-
-.stats-mark i {
-  display: block;
-  height: 5px;
-  border-radius: 3px;
-  background: #7fa7c9;
-}
-
-.stats-mark i:nth-child(1) {
-  width: 72%;
-  background: #e39b7a;
-}
-
-.stats-mark i:nth-child(2) {
-  width: 100%;
-}
-
-.stats-mark i:nth-child(3) {
-  width: 48%;
-  background: #6f8f5b;
-}
-
-.stats-panel {
-  position: absolute;
-  z-index: 26;
-  top: calc(76px + env(safe-area-inset-top));
-  right: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: min(78%, 260px);
-  padding: 12px;
-  border: 2px solid #3f342c;
-  border-radius: 12px;
-  background: #f6efe6;
-  box-shadow: 0 8px 0 rgba(63, 52, 44, 0.1);
-  color: #1f1a14;
-}
-
 .stats-money {
   display: flex;
   align-items: baseline;
@@ -820,17 +848,10 @@
   background: #e07a7a;
 }
 
-.stats-panel {
-  max-height: calc(100% - 130px);
-  overflow: auto;
-}
-
 .career-card {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(63, 52, 44, 0.16);
 }
 
 .stat-tip {
@@ -1083,4 +1104,216 @@
 
 .dot.missing {
   background: #e11d48;
+}
+
+/*
+ * The top bar: time, who you are, the three stats that move every week, and money.
+ * It fills exactly the space the clip leaves above itself. When that's too thin to read,
+ * it keeps its minimum and frosts over the top edge of the clip instead of shrinking it.
+ */
+.scene-hud {
+  position: absolute;
+  z-index: 20;
+  top: 0;
+  left: 0;
+  right: 0;
+  box-sizing: border-box;
+  height: max(var(--clip-top), var(--hud-min));
+  padding-top: env(safe-area-inset-top);
+    container: hud / size;
+  border-bottom: 2px solid #3f342c;
+  background: rgba(246, 239, 230, 0.86);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.top-hud {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title head"
+    "stats stats";
+  align-content: center;
+  gap: 5px 10px;
+  width: 100%;
+  height: 100%;
+  padding: 6px 14px;
+  border: 0;
+  background: transparent;
+  color: #1f1a14;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.top-hud:focus-visible {
+  outline: 2px solid #3f342c;
+  outline-offset: -4px;
+}
+
+.hud-head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hud-when {
+  display: none;
+  overflow: hidden;
+  font-size: 0.78rem;
+  color: #6b5e52;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hud-money {
+  flex: none;
+  padding: 3px 10px;
+  border: 2px solid #3f342c;
+  border-radius: 999px;
+  background: #fffdf8;
+  font-size: 0.88rem;
+}
+
+.hud-title {
+  grid-area: title;
+  align-self: center;
+  overflow: hidden;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hud-when-inline {
+  font-weight: 500;
+  color: #6b5e52;
+}
+
+.hud-stats {
+  grid-area: stats;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.hud-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.hud-stat-head {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  line-height: 1;
+  color: #6b5e52;
+}
+
+.hud-stat-head svg {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.hud-stat-label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.hud-stat-head b {
+  margin-left: auto;
+  font-size: 0.78rem;
+  color: #1f1a14;
+}
+
+.hud-bar {
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(63, 52, 44, 0.12);
+}
+
+.hud-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.hud-stat.hud-tone-clay svg {
+  color: #c9764f;
+}
+.hud-stat.hud-tone-clay .hud-bar i {
+  background: #e39b7a;
+}
+.hud-stat.hud-tone-blue svg {
+  color: #5d86aa;
+}
+.hud-stat.hud-tone-blue .hud-bar i {
+  background: #7fa7c9;
+}
+.hud-stat.hud-tone-rose svg {
+  color: #c95b5b;
+}
+.hud-stat.hud-tone-rose .hud-bar i {
+  background: #e07a7a;
+}
+.hud-stat.is-low .hud-stat-head b,
+.hud-stat.is-low .hud-stat-label {
+  color: #b04848;
+}
+.hud-stat.is-low .hud-bar i {
+  background: #c05454;
+}
+
+/* When the clip leaves a tall gap, spread out: time and money, then the title, then stats. */
+@container hud (min-height: 92px) {
+  .top-hud {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "title"
+      "stats";
+    gap: 7px;
+    padding: 8px 16px;
+  }
+
+  .hud-when {
+    display: block;
+  }
+
+  .hud-when-inline {
+    display: none;
+  }
+
+  .hud-title {
+    font-size: 1.05rem;
+  }
+
+  .hud-stat-head {
+    font-size: 0.76rem;
+  }
+
+  .hud-stat-head b {
+    font-size: 0.86rem;
+  }
+
+  .hud-stat-head svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .hud-bar {
+    height: 6px;
+  }
 }

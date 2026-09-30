@@ -1,6 +1,6 @@
 import { nextUnit } from "./rng";
 
-/** Listed companies. Six of them also hire on Workline; the rest are just companies you can invest in. */
+/** Listed companies. Many also hire on Workline; the rest are invest-only names on the market. */
 export type StockId =
   | "SPRK"
   | "NWND"
@@ -11,7 +11,17 @@ export type StockId =
   | "BREW"
   | "VOLT"
   | "PIXL"
-  | "LEAF";
+  | "LEAF"
+  | "FORG"
+  | "DRFT"
+  | "QURY"
+  | "TIDE"
+  | "NOOK"
+  | "SMMT"
+  | "SOLR"
+  | "FARM"
+  | "MESH"
+  | "BOOK";
 
 export type MarketId = StockId | "crypto" | "gold";
 
@@ -135,6 +145,92 @@ export const STOCKS: readonly Stock[] = [
     risk: "Low",
     ...STEADY,
   },
+  {
+    id: "FORG",
+    name: "Forge Labs",
+    sector: "Hardware",
+    companyId: "forge",
+    start: 21,
+    risk: "High",
+    ...JUMPY,
+  },
+  {
+    id: "DRFT",
+    name: "Driftware",
+    sector: "Mobile apps",
+    companyId: "drift",
+    start: 44,
+    risk: "Medium",
+    ...NORMAL,
+  },
+  {
+    id: "QURY",
+    name: "Quarry Data",
+    sector: "Data platforms",
+    companyId: "quarry",
+    start: 88,
+    risk: "Low",
+    ...STEADY,
+  },
+  {
+    id: "TIDE",
+    name: "Tideframe",
+    sector: "Remote tools",
+    companyId: "tide",
+    start: 58,
+    risk: "Medium",
+    ...NORMAL,
+  },
+  {
+    id: "NOOK",
+    name: "Nook Remote",
+    sector: "Collaboration",
+    companyId: "nook",
+    start: 39,
+    risk: "Medium",
+    ...NORMAL,
+  },
+  {
+    id: "SMMT",
+    name: "Summit Digital",
+    sector: "Consumer apps",
+    companyId: "summit",
+    start: 275,
+    risk: "Low",
+    ...STEADY,
+  },
+  {
+    id: "SOLR",
+    name: "Sunrail Energy",
+    sector: "Solar power",
+    start: 27,
+    risk: "High",
+    ...JUMPY,
+  },
+  {
+    id: "FARM",
+    name: "Farmstead Foods",
+    sector: "Organic food",
+    start: 46,
+    risk: "Medium",
+    ...NORMAL,
+  },
+  {
+    id: "MESH",
+    name: "MeshNet",
+    sector: "Telecom",
+    start: 72,
+    risk: "Low",
+    ...STEADY,
+  },
+  {
+    id: "BOOK",
+    name: "Bookstack",
+    sector: "Publishing",
+    start: 33,
+    risk: "Medium",
+    ...NORMAL,
+  },
 ];
 
 export const STOCK_IDS: readonly StockId[] = STOCKS.map((stock) => stock.id);
@@ -173,9 +269,9 @@ export function marketRisk(id: MarketId): Risk {
 
 export const MARKET_BLURB = {
   stock:
-    "Read the paper. Good news usually lifts a company tomorrow, bad news usually drops it. Usually, not always.",
+    "Read the paper. Good news usually lifts a company the next week, bad news usually drops it. Usually, not always.",
   crypto:
-    "The biggest swings. Most days wobble. Some days crash hard, some days shoot up.",
+    "The biggest swings. Most weeks wobble. Some weeks crash hard, some shoot up. Over time it roughly holds its value, so luck matters more than patience.",
   gold: "Steady. Small moves, slowly upward. It tends to rise when crypto crashes.",
 } as const;
 
@@ -187,7 +283,7 @@ export function marketBlurb(id: MarketId): string {
     risk === "High"
       ? "It moves a lot."
       : risk === "Low"
-        ? "It barely moves on a quiet day."
+        ? "It barely moves in a quiet week."
         : "It moves a little most days.";
   return `${MARKET_BLURB.stock} ${feel}`;
 }
@@ -204,6 +300,12 @@ const HEADLINES: Record<NewsTone, readonly ((name: string) => string)[]> = {
     (name) => `A famous investor buys a large stake in ${name}.`,
     (name) => `${name} opens a second office.`,
     (name) => `${name} wins an award for its product.`,
+    (name) => `${name} lands its biggest customer yet.`,
+    (name) => `${name} raises guidance for the year.`,
+    (name) => `${name} launches in a new country.`,
+    (name) => `${name} partners with a major platform.`,
+    (name) => `${name} reports record quarterly profit.`,
+    (name) => `${name}'s new hire gets glowing press.`,
   ],
   bad: [
     (name) => `${name} recalls a product.`,
@@ -212,13 +314,24 @@ const HEADLINES: Record<NewsTone, readonly ((name: string) => string)[]> = {
     (name) => `A big customer leaves ${name} for a rival.`,
     (name) => `${name}'s app is down for most of the day.`,
     (name) => `${name} is fined for a data mistake.`,
+    (name) => `${name} delays its next product launch.`,
+    (name) => `${name} cuts staff after a weak quarter.`,
+    (name) => `${name} faces a lawsuit from a rival.`,
+    (name) => `${name}'s supply chain hits a snag.`,
+    (name) => `${name} loses a key patent case.`,
+    (name) => `${name} warns profits will be lower this year.`,
   ],
 };
+
+export const HEADLINE_TEMPLATE_COUNT = {
+  good: HEADLINES.good.length,
+  bad: HEADLINES.bad.length,
+} as const;
 
 /** How often a headline turns out right the next day. */
 export const NEWS_ACCURACY = 0.75;
 
-/** Tomorrow's paper: zero to three companies in the news. */
+/** Next week's paper: zero to three companies in the news. */
 export function rollNews(seed: number): {
   news: StockNews[];
   rngState: number;
@@ -243,7 +356,7 @@ export function rollNews(seed: number): {
     news.push({
       stockId: stock.id,
       tone,
-      headline: line ? line(stock.name) : "",
+            headline: line ? line(stock.name) : "",
     });
   }
   return { news, rngState };
@@ -287,13 +400,17 @@ function stockFactor(
 
 type CryptoDay = "crash" | "spike" | "normal";
 
+/**
+ * Crypto is a gamble, not a savings account: on average it roughly holds its value,
+ * but a crash or a spike can arrive any week.
+ */
 function cryptoFactor(
   first: number,
   second: number,
 ): { factor: number; day: CryptoDay } {
   if (second < 0.1) return { factor: between(first, 0.55, 0.75), day: "crash" };
-  if (second < 0.19) return { factor: between(first, 1.4, 1.9), day: "spike" };
-  return { factor: between(first, 0.85, 1.2), day: "normal" };
+  if (second < 0.19) return { factor: between(first, 1.3, 1.7), day: "spike" };
+  return { factor: between(first, 0.83, 1.15), day: "normal" };
 }
 
 function settle(price: number, factor: number): number {
@@ -326,7 +443,7 @@ export function rollPrices(
   moved.crypto = settle(prices.crypto, crypto.factor);
   moved.gold = settle(
     prices.gold,
-    between(next(), 0.997, 1.012) * (crypto.day === "crash" ? 1.02 : 1),
+    between(next(), 0.996, 1.006) * (crypto.day === "crash" ? 1.02 : 1),
   );
 
   const changes = STOCKS.map((stock) => ({
@@ -378,7 +495,7 @@ export function seedHistory(
   let rngState = (seed ^ 0x9e3779b9) >>> 0;
   let paper = rollNews(rngState);
   rngState = paper.rngState;
-  for (let day = 1; day < days; day += 1) {
+    for (let day = 1; day < days; day += 1) {
     const rolled = rollPrices(prices, rngState, paper.news);
     prices = rolled.prices;
     history = pushHistory(history, prices);
@@ -390,7 +507,7 @@ export function seedHistory(
 
 function roughRange(id: MarketId): [number, number] {
   if (id === "crypto") return [0.82, 1.24];
-  if (id === "gold") return [0.997, 1.012];
+  if (id === "gold") return [0.996, 1.006];
   const stock = stockById(id);
   return [1 - stock.move[1] / 2, 1 + stock.move[1] / 2];
 }

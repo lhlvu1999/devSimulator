@@ -12,6 +12,7 @@ import {
   buyGear,
   createCareer,
   endDay,
+  chooseGoal,
   finishPlacement,
   finishWork,
   recordWork,
@@ -58,7 +59,7 @@ describe("placement and the day", () => {
   });
 
   it("turns placement into offers, then work you can leave without a story choice", () => {
-    let state = finishPlacement(createCareer(4), "win", 3);
+    let state = chooseGoal(finishPlacement(createCareer(4), "win", 3), "fire");
     expect(state.section).toBe("offers");
     expect(state.offers).toHaveLength(3);
     const offer = state.offers[0];
@@ -72,10 +73,10 @@ describe("placement and the day", () => {
   });
 
   it("ends the day with full energy and a fresh work day", () => {
-    let state = finishPlacement(createCareer(4), "win", 4);
+    let state = chooseGoal(finishPlacement(createCareer(4), "win", 4), "fire");
     const offer = state.offers[0];
     if (!offer) throw new Error("missing offer");
-    state = finishWork(recordWork(acceptOffer(state, offer.id), "clear"));
+            state = finishWork(recordWork(acceptOffer(state, offer.id), "clear"));
     const night = endDay(state);
     expect(night.stats.energy).toBe(100);
     expect(night.workDone).toBe(false);
@@ -85,7 +86,7 @@ describe("placement and the day", () => {
   });
 
   it("records a work block without leaving the work section", () => {
-    let state = finishPlacement(createCareer(4), "win", 4);
+    let state = chooseGoal(finishPlacement(createCareer(4), "win", 4), "fire");
     const offer = state.offers[0];
     if (!offer) throw new Error("missing offer");
     state = acceptOffer(state, offer.id);
@@ -114,7 +115,7 @@ describe("placement and the day", () => {
     expect(first.prices).toEqual(second.prices);
     expect(first.prices).not.toEqual(START_PRICES);
 
-    let state = finishPlacement(createCareer(8), "win", 3);
+    let state = chooseGoal(finishPlacement(createCareer(8), "win", 3), "fire");
     const offer = state.offers[0];
     if (!offer) throw new Error("missing offer");
     state = finishWork(acceptOffer(state, offer.id));

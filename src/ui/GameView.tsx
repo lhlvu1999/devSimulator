@@ -4,7 +4,8 @@ import {
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
-  type ReactNode,
+    type ReactNode,
+  type RefObject,
 } from "react";
 import { boxStyle, type Box, type SceneBoxes } from "../content/sceneLayout";
 import type { SceneVideo } from "../content/sceneVideo";
@@ -19,22 +20,10 @@ import {
 } from "../content/entities";
 import { deviceById, lookById, type DeviceId } from "../content/gear";
 import { environmentMotion, isMotionLayer } from "../content/motion";
-import { formatMoney } from "../game/format";
-import type { CareerStatus } from "../game/career";
-import type { StatKey, Stats } from "../game/types";
-import { WORK_GAME_LABEL } from "../game/workGames";
 import { useRoomMotion } from "./useRoomMotion";
-import { useCoverRect } from "./useCoverRect";
+import { useFitRect } from "./useFitRect";
 import "./scene.css";
 
-const METERS: { key: StatKey; label: string; tone: string }[] = [
-  { key: "energy", label: "Energy", tone: "clay" },
-  { key: "mood", label: "Mood", tone: "blue" },
-  { key: "health", label: "Health", tone: "rose" },
-  { key: "skill", label: "Skill", tone: "sage" },
-  { key: "reputation", label: "Reputation", tone: "ink" },
-  { key: "relationship", label: "Relationship", tone: "clay" },
-];
 
 export type ScenePanel =
   | "work"
@@ -45,6 +34,8 @@ export type ScenePanel =
   | "workline"
   | "interview"
   | "stocks"
+  | "free"
+  | "me"
   | null;
 
 /** Panels that take over the whole room instead of opening a card. */
@@ -55,22 +46,34 @@ const FULL_SCREEN: readonly ScenePanel[] = [
   "workline",
   "interview",
   "stocks",
+  "free",
+  "invest",
+  "shop",
+  "me",
+];
+
+export type NavTab = "home" | "invest" | "jobs" | "shop" | "me";
+
+/** Screens where the bottom bar steps aside so the task has the whole phone. */
+const NO_NAV: readonly ScenePanel[] = ["work", "free", "interview"];
+
+const NAV_ITEMS: { id: NavTab; label: string }[] = [
+  { id: "home", label: "Home" },
+  { id: "invest", label: "Invest" },
+  { id: "jobs", label: "Jobs" },
+  { id: "shop", label: "Shop" },
+  { id: "me", label: "Me" },
 ];
 
 export function GameView({
   environment,
   deviceId,
   lookId,
-  stats,
   locked,
   panel,
   workDone,
   onWork,
   onEndDay,
-  onInvest,
-  onShop,
-  onWorkline,
-  jobCount,
   onBack,
   onClose,
   hidden,
@@ -78,25 +81,22 @@ export function GameView({
   boxes,
   onEdit,
   screenTone,
-  video,
-  career,
-  onSwitchTrack,
+        video,
+  hud,
+  nav,
+  glassLabel,
+  overlay,
   children,
 }: {
   environment: ScenePlace;
   deviceId: string;
   lookId: string;
-  stats: Stats | null;
   locked: boolean;
   panel: ScenePanel;
   workDone: boolean;
   onWork: () => void;
   onEndDay: () => void;
-  onInvest: () => void;
-  onShop: () => void;
-  onWorkline?: () => void;
-  jobCount?: number;
-  /** Where Back goes from an investing screen. Defaults to the invest hub. */
+  /** Where Back goes from a screen inside a tab, like one market inside Invest. */
   onBack?: () => void;
   onClose: () => void;
   hidden?: ReadonlySet<string>;
@@ -105,9 +105,16 @@ export function GameView({
   onEdit?: (id: string, box: Box) => void;
   screenTone?: string;
   /** When set, the clip is the whole room and the layered entities are skipped. */
-  video?: SceneVideo;
-  career?: CareerStatus;
-  onSwitchTrack?: () => void;
+    video?: SceneVideo;
+  
+    /** The strip above the room. Sandbox leaves it out. */
+  hud?: ReactNode;
+  /** The bottom tab bar. Sandbox leaves it out. */
+  nav?: { active: NavTab; jobCount: number; onTab: (tab: NavTab) => void };
+  /** What the monitor says once work is off the table: free time, job hunt, a sick week. */
+  glassLabel?: string;
+  /** Shown over everything, such as an event that needs an answer. */
+  overlay?: ReactNode;
   children: ReactNode;
 }) {
   const look = lookById(lookId);
@@ -115,25 +122,28 @@ export function GameView({
   const dual = device.id === "rig" || device.id === "studio";
   const open = locked || panel !== null;
   const frames = useRoomMotion();
-  const worldRef = useRef<HTMLDivElement>(null);
-  const glass = useCoverRect(worldRef, video ?? null, video?.screen ?? null);
-  const glassStyle = glass
+    const worldRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+    const fitted = useFitRect(frameRef, video ?? null, video?.screen ?? null);
+  const glass = fitted?.box ?? null;
+  const glassStyle = fitted
     ? ({
-        "--glass-left": `${glass.left}px`,
-        "--glass-top": `${glass.top}px`,
-        "--glass-width": `${glass.width}px`,
-        "--glass-height": `${glass.height}px`,
+        "--glass-left": `${fitted.box.left}px`,
+        "--glass-top": `${fitted.box.top}px`,
+        "--glass-width": `${fitted.box.width}px`,
+        "--glass-height": `${fitted.box.height}px`,
+        "--clip-top": `${Math.max(0, fitted.shown.top)}px`,
       } as CSSProperties)
     : undefined;
 
   return (
     <div
       ref={worldRef}
-      className={`world env-${environment}${open ? " focus" : ""}${layout ? " show-layout" : ""}${video ? " has-video" : ""}`}
+            className={`world env-${environment}${open ? " focus" : ""}${layout ? " show-layout" : ""}${video ? " has-video" : ""}${nav ? " with-nav" : ""}`}
       style={glassStyle}
     >
       {video ? (
-        <SceneClip video={video} />
+                <SceneClip video={video} frameRef={frameRef} />
       ) : (
         <>
           {(
@@ -228,7 +238,7 @@ export function GameView({
         <button
           type="button"
           className={`glass-option${workDone ? " done" : ""}`}
-          aria-label={workDone ? "End the day" : "Work"}
+          aria-label={workDone ? (glassLabel ?? "Free time") : "Work"}
           style={{
             left: glass.left,
             top: glass.top,
@@ -237,7 +247,7 @@ export function GameView({
           }}
           onClick={workDone ? onEndDay : onWork}
         >
-          {workDone ? <span>End the day</span> : null}
+          {workDone ? <span>{glassLabel ?? "Free time"}</span> : null}
         </button>
       ) : (
         <button
@@ -249,58 +259,20 @@ export function GameView({
           }}
           onClick={workDone ? onEndDay : onWork}
         >
-          {workDone ? "End the day" : "Work"}
+          {workDone ? (glassLabel ?? "Free time") : "Work"}
         </button>
       )}
-      {locked || layout ? null : (
-        <CornerEntity
-          kind="chart"
-          label="Invest"
-          open={panel === "invest"}
-          onOpen={onInvest}
-          onClose={onClose}
-        >
-          {panel === "invest" ? children : null}
-        </CornerEntity>
-      )}
-      {locked || layout ? null : (
-        <CornerEntity
-          kind="shop"
-          label="Shop"
-          open={panel === "shop"}
-          onOpen={onShop}
-          onClose={onClose}
-        >
-          {panel === "shop" ? children : null}
-        </CornerEntity>
-      )}
-      {locked || layout || !onWorkline ? null : (
-        <button
-          type="button"
-          className={`corner-entity corner-phone${panel === "workline" ? " on" : ""}`}
-          aria-label="Workline"
-          onClick={onWorkline}
-        >
-          <span className="phone-mark" aria-hidden="true">
-            <i />
-            {jobCount ? <b>{jobCount}</b> : null}
-          </span>
-        </button>
-      )}
-      {stats && !layout ? (
-        <StatsEntity
-          stats={stats}
-          career={career}
-          onSwitchTrack={onSwitchTrack}
-        />
-      ) : null}
       {FULL_SCREEN.includes(panel) || locked ? (
         <div
           className={`work-screen${screenTone ? ` tone-${screenTone}` : ""}${
-            video && glass && panel === "work" ? " from-glass" : ""
+            nav && !locked && !NO_NAV.includes(panel) ? " with-nav" : ""
+          }${
+            video && glass && (panel === "work" || panel === "free")
+              ? " from-glass"
+              : ""
           }`}
         >
-          {!locked && (panel === "work" || panel === "workline") ? (
+          {!locked && (panel === "work" || panel === "free") ? (
             <button type="button" className="monitor-close" onClick={onClose}>
               Desk
             </button>
@@ -312,7 +284,7 @@ export function GameView({
             <button
               type="button"
               className="monitor-close"
-              onClick={onBack ?? onInvest}
+              onClick={onBack ?? onClose}
             >
               Back
             </button>
@@ -320,11 +292,52 @@ export function GameView({
           {children}
         </div>
       ) : null}
+            {hud && !locked ? <div className="scene-hud">{hud}</div> : null}
+      {nav && !locked && !layout && !NO_NAV.includes(panel) ? (
+        <BottomNav nav={nav} />
+      ) : null}
+      {overlay}
     </div>
   );
 }
 
-function SceneClip({ video }: { video: SceneVideo }) {
+function BottomNav({
+  nav,
+}: {
+  nav: { active: NavTab; jobCount: number; onTab: (tab: NavTab) => void };
+}) {
+  return (
+    <nav className="bottom-nav" aria-label="Main">
+      {NAV_ITEMS.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className={`nav-tab tab-${item.id}${nav.active === item.id ? " on" : ""}`}
+          aria-current={nav.active === item.id ? "page" : undefined}
+          onClick={() => nav.onTab(item.id)}
+        >
+          <span className="nav-icon" aria-hidden="true">
+            <i />
+            {item.id === "jobs" && nav.jobCount > 0 ? <b>{nav.jobCount}</b> : null}
+          </span>
+          <span className="nav-label">{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/**
+ * The whole 9:16 clip, never cropped, resting on the tab bar. Any spare space
+ * above it is filled with a soft blur of the same scene.
+ */
+function SceneClip({
+  video,
+  frameRef,
+}: {
+  video: SceneVideo;
+  frameRef: RefObject<HTMLDivElement | null>;
+}) {
   const ref = useRef<HTMLVideoElement>(null);
   const [still, setStill] = useState(
     () =>
@@ -341,10 +354,24 @@ function SceneClip({ video }: { video: SceneVideo }) {
     const element = ref.current;
     if (!element) return;
     element.playbackRate = video.playbackRate;
-    if (still) element.pause();
+        if (still) element.pause();
     else void element.play().catch(() => undefined);
   }, [still, video.playbackRate, video.src]);
-  return (
+  
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || still) return;
+    const onVisibility = () => {
+      if (document.hidden) element.pause();
+      else void element.play().catch(() => undefined);
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [still]);
+    return (
+    <>
+      <img className="scene-backdrop" src={video.poster} alt="" aria-hidden="true" />
+      <div ref={frameRef} className="scene-frame">
     <video
       ref={ref}
       className="scene-clip"
@@ -356,272 +383,12 @@ function SceneClip({ video }: { video: SceneVideo }) {
       playsInline
       preload="auto"
       aria-hidden="true"
-      onLoadedMetadata={(event) => {
+            onLoadedMetadata={(event) => {
         event.currentTarget.playbackRate = video.playbackRate;
       }}
     />
-  );
-}
-
-function CornerEntity({
-  kind,
-  label,
-  open,
-  onOpen,
-  onClose,
-  children,
-}: {
-  kind: "chart" | "shop";
-  label: string;
-  open: boolean;
-  onOpen: () => void;
-  onClose: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <>
-      <button
-        type="button"
-        className={`corner-entity corner-${kind}${open ? " on" : ""}`}
-        aria-label={label}
-        onClick={open ? onClose : onOpen}
-      >
-        {kind === "chart" ? (
-          <span className="chart-bars" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-            <i />
-          </span>
-        ) : (
-          <span className="shop-bag" aria-hidden="true">
-            <i />
-          </span>
-        )}
-      </button>
-      {open ? (
-        <div className="chart-panel">
-          <button type="button" className="monitor-close" onClick={onClose}>
-            Desk
-          </button>
-          {children}
-        </div>
-      ) : null}
-    </>
-  );
-}
-
-function StatsEntity({
-  stats,
-  career,
-  onSwitchTrack,
-}: {
-  stats: Stats;
-  career?: CareerStatus;
-  onSwitchTrack?: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [tip, setTip] = useState<StatKey | null>(null);
-  const toggleTip = (key: StatKey) =>
-    setTip((current) => (current === key ? null : key));
-  return (
-    <>
-      <button
-        type="button"
-        className={`stats-entity${open ? " on" : ""}`}
-        aria-label="Stats"
-        onClick={() => setOpen((value) => !value)}
-      >
-        <span className="stats-mark" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </span>
-      </button>
-      {open ? (
-        <div className="stats-panel">
-          <p className="stats-money">
-            <span>
-              Money
-              <StatTip id="money" open={tip === "money"} onToggle={toggleTip} />
-            </span>
-            <strong>{formatMoney(stats.money)}</strong>
-          </p>
-          {tip === "money" ? (
-            <p className="stat-hint">{STAT_HINT.money}</p>
-          ) : null}
-          <ul className="stats-list">
-            {METERS.map((meter) => {
-              const value = stats[meter.key];
-              const filled = Math.max(0, Math.min(100, value));
-              return (
-                <li key={meter.key}>
-                  <div className="stats-row">
-                    <span>
-                      {meter.label}
-                      <StatTip
-                        id={meter.key}
-                        open={tip === meter.key}
-                        onToggle={toggleTip}
-                      />
-                    </span>
-                    <span>{value}</span>
-                  </div>
-                  <span className={`stats-meter tone-${meter.tone}`}>
-                    <span
-                      className={filled < 30 ? "is-low" : undefined}
-                      style={{ width: `${filled}%` }}
-                    />
-                  </span>
-                  {tip === meter.key ? (
-                    <p className="stat-hint">{STAT_HINT[meter.key]}</p>
-                  ) : null}
-                </li>
-              );
-            })}
-          </ul>
-          {career ? (
-            <CareerCard career={career} onSwitchTrack={onSwitchTrack} />
-          ) : null}
-        </div>
-      ) : null}
-    </>
-  );
-}
-
-/** What each stat is for, without numbers. The player works out the details by playing. */
-const STAT_HINT: Record<StatKey, string> = {
-  money: "Pays rent and buys gear, snacks, and investments.",
-  energy: "Every task uses some. It comes back overnight.",
-  mood: "How you feel about work and life lately.",
-  health: "Your body. When it runs low, every task feels heavier.",
-  skill: "What you know. It brings harder work and opens early promotions.",
-  reputation: "How the company sees you. Bigger promotions look at it.",
-  relationship:
-    "How close you are with your team. Teammates help more when it is high.",
-};
-
-function StatTip({
-  id,
-  open,
-  onToggle,
-}: {
-  id: StatKey;
-  open: boolean;
-  onToggle: (id: StatKey) => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`stat-tip${open ? " on" : ""}`}
-      aria-label={`What is ${id}?`}
-      aria-expanded={open}
-      onClick={() => onToggle(id)}
-    >
-      ?
-    </button>
-  );
-}
-
-function CareerCard({
-  career,
-  onSwitchTrack,
-}: {
-  career: CareerStatus;
-  onSwitchTrack?: () => void;
-}) {
-  const [confirming, setConfirming] = useState(false);
-  return (
-    <div className="career-card">
-      <div className="career-head">
-        <span>
-          {career.track === "manager" ? "Manager track" : "Engineer track"}
-        </span>
-        <strong>{career.title}</strong>
-        <small>Payday {formatMoney(career.payday)}</small>
-        {career.pay.ticker && career.pay.stock > 0 ? (
-          <small>
-            {formatMoney(career.pay.cash)} cash +{" "}
-            {formatMoney(career.pay.stock)} in {career.pay.ticker} stock
-          </small>
-        ) : null}
       </div>
-      {career.nextTitle ? (
-        <>
-          <span className="career-next">
-            Next: {career.nextTitle}
-            {career.ready
-              ? career.triedToday
-                ? " · review tomorrow"
-                : " · review ready"
-              : ""}
-          </span>
-          <ul className="career-list">
-            {career.items.map((item) => {
-              const filled = Math.min(
-                100,
-                (item.have / Math.max(1, item.need)) * 100,
-              );
-              const met = item.have >= item.need;
-              return (
-                <li key={item.id} className={met ? "met" : undefined}>
-                  <div className="stats-row">
-                    <span>{item.label}</span>
-                    <span>
-                      {Math.min(item.have, item.need)}/{item.need}
-                    </span>
-                  </div>
-                  <span className="stats-meter tone-sage">
-                    <span style={{ width: `${filled}%` }} />
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      ) : (
-        <span className="career-next">
-          Top of the {career.track === "manager" ? "manager" : "engineer"}{" "}
-          track.
-        </span>
-      )}
-      <span className="career-games">
-        Work: {career.games.map((game) => WORK_GAME_LABEL[game]).join(", ")}
-      </span>
-      {career.switchTo && onSwitchTrack ? (
-        <div className="career-switch">
-          {confirming ? (
-            <>
-              <span>
-                Become {career.switchTo.title}? Progress toward the next level
-                carries over at half.
-              </span>
-              <div className="career-switch-actions">
-                <button
-                  type="button"
-                  className="on"
-                  onClick={() => {
-                    setConfirming(false);
-                    onSwitchTrack();
-                  }}
-                >
-                  Switch
-                </button>
-                <button type="button" onClick={() => setConfirming(false)}>
-                  Stay
-                </button>
-              </div>
-            </>
-          ) : (
-            <button type="button" onClick={() => setConfirming(true)}>
-              {career.track === "manager"
-                ? `Go back to engineering as ${career.switchTo.title}`
-                : `Move to managing as ${career.switchTo.title}`}
-            </button>
-          )}
-        </div>
-      ) : null}
-    </div>
+    </>
   );
 }
 

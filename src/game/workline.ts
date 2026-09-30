@@ -38,6 +38,8 @@ export type JobPost = {
   stockUnits: number;
   postedDay: number;
   closesDay: number;
+  /** Set when the player talked the pay up before accepting. */
+  negotiated?: boolean;
 };
 
 export type SocialPost = {
@@ -113,6 +115,14 @@ const AUTHORS: readonly { name: string; role: string }[] = [
   { name: "Ari S.", role: "Product designer" },
   { name: "Morgan B.", role: "Director" },
   { name: "Sam O.", role: "Growth hacker" },
+  { name: "Riley C.", role: "Staff engineer" },
+  { name: "Noah F.", role: "VP Engineering" },
+  { name: "Elena V.", role: "People ops" },
+  { name: "Chris D.", role: "DevRel" },
+  { name: "Hana Y.", role: "QA lead" },
+  { name: "Omar J.", role: "Security engineer" },
+  { name: "Zoe M.", role: "Product manager" },
+  { name: "Ben R.", role: "Founder, Series A" },
 ];
 
 const SOCIAL_LINES: readonly string[] = [
@@ -130,6 +140,21 @@ const SOCIAL_LINES: readonly string[] = [
   "Unpopular opinion: the old design was fine.",
   "Promoted to Team lead! My first task: learning everyone's coffee order.",
   "Our office plant has more uptime than our app.",
+  "Shipped a one-line fix. Writing the post-mortem took longer than the fix.",
+  "Anyone else feel like Slack is just a to-do list that talks back?",
+  "We migrated to the cloud. The bill migrated upward too.",
+  "Interview tip: when they ask about weakness, say you care too much. They love that.",
+  "My standup update: still blocked. My blocker: physics.",
+  "New job! Grateful for this journey. (Translation: I survived onboarding.)",
+  "If AI replaces engineers, who will fix the AI's CSS?",
+  "Remote work pro: no commute. Remote work con: the commute from bed to desk.",
+  "We hit 99.9% uptime. The 0.1% was during my demo.",
+  "Just learned our prod database is named after someone's cat. Respect.",
+  "Three reverts later, I am once again at peace with main.",
+  "Posting to stay visible. Visibility does not equal productivity, but here we are.",
+  "Our intern fixed the bug senior engineers missed. Intern is going places.",
+  "Budget season means one thing: free lunch in exchange for your honest feedback.",
+  "I code in dark mode because my bugs feel less scary that way.",
 ];
 
 function roll(seed: number) {
@@ -146,19 +171,81 @@ function roll(seed: number) {
   };
 }
 
+type FeedInput = {
+  day: number;
+  companyId: string | null;
+  level: Level;
+  reputation: number;
+  seed: number;
+  /** A close team refers you: one more post and more stretch roles. */
+  relationship?: number;
+  /** Skill lifts how high a post's pay can go. */
+  skill?: number;
+};
+
+/** Relationship at or above this brings referrals. */
+export const REFERRAL_RELATIONSHIP = 60;
+
+type Dice = ReturnType<typeof roll>;
+
+function makePost(
+  company: (typeof COMPANIES)[number],
+  input: FeedInput,
+  stretch: boolean,
+  id: number,
+  dice: Dice,
+): JobPost {
+  const upper = nextLevel(input.level);
+  const reach = Math.min(0.25, (input.skill ?? 0) / 400);
+  const boost = Math.round((1 + dice.next() * (0.25 + reach)) * 20) / 20;
+  const listed = stockForCompany(company.id) !== undefined;
+  const stockPercent = listed
+    ? Math.round(company.stockPercent * (0.8 + dice.next() * 0.6) * 20) / 20
+    : 0;
+  const pool: Benefit[] = listed
+    ? ["remote", "learning", "bonus", "stock", "gym"]
+    : ["remote", "learning", "bonus", "gym"];
+  const benefits: Benefit[] = [];
+  const count = dice.next() < 0.4 ? 2 : 1;
+  while (benefits.length < count) {
+    const pick = pool.splice(Math.floor(dice.next() * pool.length), 1)[0];
+    if (pick) benefits.push(pick);
+  }
+  return {
+    id: `post-${id}`,
+    companyId: company.id,
+    level: stretch && upper ? upper : input.level,
+    stretch: stretch && upper !== null,
+    boost,
+    stockPercent,
+    benefits,
+    bonusCash: Math.round((company.salary * boost) / 2),
+    stockUnits: 3 + Math.floor(dice.next() * 6),
+    postedDay: input.day,
+    closesDay: input.day + 2 + Math.floor(dice.next() * 4),
+  };
+}
+
+function openCompanies(
+  posts: readonly JobPost[],
+  blocked: Record<string, number>,
+  companyId: string | null,
+) {
+  return COMPANIES.filter(
+    (company) =>
+      company.id !== companyId &&
+      !blocked[company.id] &&
+      !posts.some((post) => post.companyId === company.id),
+  );
+}
+
 /**
  * Drops closed posts, lifts expired cooldowns, and fills the feed back up.
  * Posts never come from your current company or one that turned you down recently.
  */
 export function refreshFeed(
   feed: Feed,
-  input: {
-    day: number;
-    companyId: string | null;
-    level: Level;
-    reputation: number;
-    seed: number;
-  },
+  input: FeedInput,
 ): { feed: Feed; rngState: number } {
   const dice = roll(input.seed);
   const blocked: Record<string, number> = {};
@@ -169,48 +256,18 @@ export function refreshFeed(
     (post) => post.closesDay >= input.day && post.companyId !== input.companyId,
   );
   let nextId = feed.nextId;
-  const target = feedSize(input.reputation);
-  const upper = nextLevel(input.level);
+  const referred = (input.relationship ?? 0) >= REFERRAL_RELATIONSHIP;
+  const target = feedSize(input.reputation) + (referred ? 1 : 0);
+  const stretchOdds = stretchChance(input.reputation) + (referred ? 0.1 : 0);
 
   while (posts.length < target) {
-    const open = COMPANIES.filter(
-      (company) =>
-        company.id !== input.companyId &&
-        !blocked[company.id] &&
-        !posts.some((post) => post.companyId === company.id),
-    );
+    const open = openCompanies(posts, blocked, input.companyId);
     if (open.length === 0) break;
     const company = open[Math.floor(dice.next() * open.length)] ?? open[0];
     if (!company) break;
-    const stretch =
-      upper !== null && dice.next() < stretchChance(input.reputation);
-    const boost = Math.round((1 + dice.next() * 0.25) * 20) / 20;
-    const listed = stockForCompany(company.id) !== undefined;
-    const stockPercent = listed
-      ? Math.round(company.stockPercent * (0.8 + dice.next() * 0.6) * 20) / 20
-      : 0;
-    const pool: Benefit[] = listed
-      ? ["remote", "learning", "bonus", "stock", "gym"]
-      : ["remote", "learning", "bonus", "gym"];
-    const benefits: Benefit[] = [];
-    const count = dice.next() < 0.4 ? 2 : 1;
-    while (benefits.length < count) {
-      const pick = pool.splice(Math.floor(dice.next() * pool.length), 1)[0];
-      if (pick) benefits.push(pick);
-    }
-    posts.push({
-      id: `post-${nextId}`,
-      companyId: company.id,
-      level: stretch && upper ? upper : input.level,
-      stretch,
-      boost,
-      stockPercent,
-      benefits,
-      bonusCash: Math.round((company.salary * boost) / 2),
-      stockUnits: 3 + Math.floor(dice.next() * 6),
-      postedDay: input.day,
-      closesDay: input.day + 2 + Math.floor(dice.next() * 4),
-    });
+    posts.push(
+      makePost(company, input, dice.next() < stretchOdds, nextId, dice),
+    );
     nextId += 1;
   }
 
@@ -236,4 +293,22 @@ export function refreshFeed(
 /** Interviews are a short chain of tickets. Stretch roles ask for one more. */
 export function interviewRounds(post: JobPost): number {
   return post.stretch ? 3 : 2;
+}
+
+/** A recruiter reaches out with one role above yours, from a company not already posting. */
+export function recruiterPost(
+  feed: Feed,
+  input: FeedInput,
+): { feed: Feed; rngState: number; post: JobPost | null } {
+  const dice = roll(input.seed);
+  const open = openCompanies(feed.posts, feed.blocked, input.companyId);
+  const company = open[Math.floor(dice.next() * open.length)];
+  if (!company) return { feed, rngState: dice.state, post: null };
+  const post = makePost(company, input, true, feed.nextId, dice);
+  const lasting = { ...post, closesDay: input.day + 4 };
+  return {
+    feed: { ...feed, posts: [lasting, ...feed.posts], nextId: feed.nextId + 1 },
+    rngState: dice.state,
+    post: lasting,
+  };
 }

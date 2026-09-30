@@ -90,7 +90,7 @@ export function gameSeconds(
   difficulty: Difficulty,
   deviceBonus = 0,
 ): number {
-  return BASE_SECONDS[game][difficulty] + deviceBonus;
+  return Math.max(6, BASE_SECONDS[game][difficulty] + deviceBonus);
 }
 
 export function shuffleWith<T>(

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   acceptOffer,
   careerStatus,
+  chooseGoal,
   createCareer,
   declinePost,
   endDay,
@@ -12,6 +13,7 @@ import {
   joinCompany,
   netWorth,
   nextMorning,
+  resolveEvent,
   sceneFor,
   startInterview,
   switchTrack,
@@ -32,18 +34,52 @@ import {
   ShopDesk,
 } from "./ui/PersonalDesk";
 import { Placement } from "./ui/Placement";
-import { GameView, type ScenePanel } from "./ui/GameView";
+import { GameView, type NavTab, type ScenePanel } from "./ui/GameView";
+import { MeScreen } from "./ui/MeScreen";
+import { TopHud } from "./ui/TopHud";
+import { useMusic } from "./ui/music";
 import { Sandbox } from "./ui/Sandbox";
 import { useSceneLayout } from "./ui/useSceneLayout";
+import {
+  EndingScreen,
+  EventCard,
+  FreeTime,
+  GoalPicker,
+  LifeCard,
+} from "./ui/Life";
+import { ageOn, weekOfYear } from "./game/life";
 import { InterviewSession, WorklineFeed } from "./ui/Workline";
 import { WorkSession } from "./ui/WorkSession";
 
 type Mode = "play" | "sandbox";
 
+/** Which bottom tab lights up for the open panel. */
+function tabFor(panel: ScenePanel): NavTab {
+  if (
+    panel === "invest" ||
+    panel === "market" ||
+    panel === "stocks" ||
+    panel === "blackjack"
+  )
+    return "invest";
+  if (panel === "workline") return "jobs";
+  if (panel === "shop") return "shop";
+  if (panel === "me") return "me";
+  return "home";
+}
+
+/** Tapping the tab you're already on takes you back to the room. */
+function panelFor(tab: NavTab, current: ScenePanel): ScenePanel {
+  if (tab === "home" || tabFor(current) === tab) return null;
+  if (tab === "jobs") return "workline";
+  return tab;
+}
+
 /** Play and Sandbox tabs are only for the web dev server, never in the app build. */
 const devTools = import.meta.env.DEV && !Capacitor.isNativePlatform();
 
 export function App() {
+  const [music, setMusic] = useMusic();
   const [career, setCareer] = useState<CareerState>(
     () => loadGame() ?? createCareer(),
   );
@@ -69,9 +105,19 @@ export function App() {
 
   const forced =
     career.section === "placement" ||
+    career.section === "goal" ||
     career.section === "offers" ||
-    career.section === "summary";
+    career.section === "summary" ||
+    career.section === "ending";
   const shown = forced ? "screen" : panel;
+  const glassLabel =
+    career.company === null
+      ? "Job hunt"
+      : career.offWeek === "sick"
+        ? "Sick week"
+        : career.offWeek === "burnout"
+          ? "Burnout week"
+          : "Free time";
 
   return (
     <main className="phone">
@@ -110,12 +156,12 @@ export function App() {
           environment={sceneFor(career)}
           deviceId={career.deviceId}
           lookId={career.lookId}
-          stats={career.section === "placement" ? null : career.stats}
           locked={forced}
           panel={panel}
           workDone={career.workDone}
           boxes={scene.boxes}
-          video={HOME_VIDEO}
+                                        video={HOME_VIDEO}
+          hud={<TopHud state={career} onOpen={() => setPanel("me")} />}
           screenTone={
             panel === "market"
               ? isStock(market)
@@ -129,29 +175,34 @@ export function App() {
                     ? "workline"
                     : undefined
           }
-          career={career.company ? careerStatus(career) : undefined}
-          onSwitchTrack={
-            career.company && career.section === "room"
-              ? () => {
-                  setPanel(null);
-                  setCareer(switchTrack(career));
-                }
-              : undefined
-          }
           onWork={() => setPanel("work")}
-          onEndDay={() => setCareer(endDay(career))}
-          onInvest={() => setPanel("invest")}
-          onShop={() => setPanel("shop")}
-          onWorkline={
-            career.company && career.section === "room"
-              ? () => setPanel("workline")
-              : undefined
+          onEndDay={() => setPanel("free")}
+          glassLabel={glassLabel}
+          nav={{
+            active: tabFor(panel),
+            jobCount: career.feed.posts.length,
+            onTab: (tab) => setPanel(panelFor(tab, panel)),
+          }}
+          overlay={
+            career.section === "room" && career.event ? (
+              <EventCard
+                event={career.event}
+                money={career.stats.money}
+                onChoose={(choice) => {
+                  setPanel(null);
+                  setCareer(resolveEvent(career, choice));
+                }}
+              />
+            ) : undefined
           }
-          jobCount={career.feed.posts.length}
           onBack={
             panel === "market" && isStock(market)
               ? () => setPanel("stocks")
-              : undefined
+              : panel === "market" ||
+                  panel === "stocks" ||
+                  panel === "blackjack"
+                ? () => setPanel("invest")
+                : undefined
           }
           onClose={() => setPanel(null)}
         >
@@ -160,6 +211,11 @@ export function App() {
               onDone={(outcome: PlacementOutcome, moves: number) =>
                 setCareer(finishPlacement(career, outcome, moves))
               }
+            />
+          ) : null}
+          {career.section === "goal" ? (
+            <GoalPicker
+              onPick={(goal) => setCareer(chooseGoal(career, goal))}
             />
           ) : null}
           {career.section === "offers" ? (
@@ -253,12 +309,44 @@ export function App() {
           {shown === "blackjack" ? (
             <BlackjackScreen state={career} onChange={setCareer} />
           ) : null}
+          {shown === "me" ? (
+            <MeScreen
+              stats={career.stats}
+              career={career.company ? careerStatus(career) : undefined}
+              lifeCard={career.goal ? <LifeCard state={career} /> : undefined}
+              onSwitchTrack={
+                career.company
+                  ? () => setCareer(switchTrack(career))
+                  : undefined
+              }
+                            onRestart={restart}
+                            music={music}
+              onMusic={setMusic}
+            />
+          ) : null}
           {shown === "shop" ? (
             <ShopDesk state={career} onChange={setCareer} />
           ) : null}
+          {shown === "free" ? (
+            <FreeTime
+              state={career}
+              onChange={setCareer}
+              onWorkline={() => setPanel("workline")}
+              onEndWeek={() => {
+                setPanel(null);
+                setCareer(endDay(career));
+              }}
+            />
+          ) : null}
+          {career.section === "ending" ? (
+            <EndingScreen state={career} onRestart={restart} />
+          ) : null}
           {career.section === "summary" ? (
             <section className="screen">
-              <h1>Night</h1>
+              <p className="kicker">
+                Age {ageOn(career.day - 1)} · Week {weekOfYear(career.day - 1)}
+              </p>
+              <h1>The week is done</h1>
               <ul className="ledger">
                 {career.log.map((line) => (
                   <li key={line}>{line}</li>
@@ -272,10 +360,7 @@ export function App() {
                 className="primary"
                 onClick={() => setCareer(nextMorning(career))}
               >
-                Next morning
-              </button>
-              <button type="button" className="text-button" onClick={restart}>
-                Start over
+                Next week
               </button>
             </section>
           ) : null}

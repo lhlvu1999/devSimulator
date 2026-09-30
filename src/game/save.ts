@@ -1,13 +1,16 @@
 import type { DeviceId, LookId } from "../content/gear";
 import { COMPANIES } from "../content/companies";
-import type { CareerState, Section } from "./career";
+import { emptyBoard } from "./board";
+import { freshBoard, type CareerState, type Section } from "./career";
 import { ALL_LEVELS, emptyProgress } from "./ladder";
+import { NIGHT_SLOTS, WEEKEND_SLOTS } from "./life";
+import { emptyPursuits, type Pursuits } from "./pursuits";
 import { emptyFeed, refreshFeed } from "./workline";
 import {
   MARKET_IDS,
   START_PRICES,
   STOCK_IDS,
-  backfillHistory,
+      backfillHistory,
   emptyHoldings,
   type Holdings,
   type PriceHistory,
@@ -19,11 +22,13 @@ import { STAT_KEYS } from "./types";
 const SAVE_KEY = "dev-simulator-career-v1";
 const SECTIONS: readonly Section[] = [
   "placement",
+  "goal",
   "offers",
   "room",
   "work",
   "personal",
   "summary",
+  "ending",
 ];
 /** Present in every save since investing started. */
 const CORE_MARKETS = ["crypto", "gold"] as const;
@@ -88,13 +93,23 @@ function withMarkets(state: CareerState): CareerState {
   for (const id of MARKET_IDS) {
     if (Array.isArray(oldHistory[id])) kept[id] = oldHistory[id];
   }
+  const oldBasis = (state.costBasis ?? {}) as Record<string, number>;
+  const costBasis = emptyHoldings() as Holdings;
+  for (const id of MARKET_IDS) {
+    costBasis[id] =
+      typeof oldBasis[id] === "number" ? oldBasis[id] : holdings[id] * prices[id];
+  }
   return {
     ...state,
     prices,
     holdings,
+    costBasis,
+    heldAtRoll: isRecord(state.heldAtRoll)
+      ? ({ ...holdings, ...state.heldAtRoll } as Holdings)
+      : holdings,
     stats: { ...state.stats, money },
     history: backfillHistory(kept, state.rngState, undefined, prices),
-    news: Array.isArray(state.news) ? state.news.filter(isNews) : [],
+            news: Array.isArray(state.news) ? state.news.filter(isNews) : [],
   };
 }
 
@@ -176,12 +191,82 @@ function ensureFeed(state: CareerState): CareerState {
   return { ...state, feed: refreshed.feed };
 }
 
+/** Saves from before life goals get the new fields, and pick a goal once. */
+function withLife(state: CareerState): CareerState {
+  const goal =
+    state.goal === "fire" || state.goal === "home" || state.goal === "top"
+      ? state.goal
+      : null;
+  const asksGoal =
+    goal === null &&
+    state.section !== "placement" &&
+    state.section !== "goal" &&
+    state.section !== "offers";
+  return {
+    ...state,
+    goal,
+    section: asksGoal ? "goal" : state.section,
+    ownsHome: state.ownsHome === true,
+        nightSlots:
+      typeof state.nightSlots === "number"
+        ? state.nightSlots
+        : typeof (state as { freeSlots?: unknown }).freeSlots === "number"
+          ? ((state as { freeSlots?: number }).freeSlots ?? NIGHT_SLOTS)
+          : NIGHT_SLOTS,
+    weekendSlots: typeof state.weekendSlots === "number" ? state.weekendSlots : WEEKEND_SLOTS,
+    sleep: state.sleep === "early" || state.sleep === "late" ? state.sleep : "normal",
+    pursuits: withPursuits(state.pursuits),
+    offWeek:
+      state.offWeek === "sick" || state.offWeek === "burnout"
+        ? state.offWeek
+        : null,
+    event:
+      isRecord(state.event) && Array.isArray(state.event.choices)
+        ? state.event
+        : null,
+    counters: isRecord(state.counters) ? state.counters : {},
+    achievements: Array.isArray(state.achievements) ? state.achievements : [],
+    ending: isRecord(state.ending) ? state.ending : null,
+    joinedDay:
+      typeof state.joinedDay === "number"
+        ? state.joinedDay
+        : (state.levelDay ?? 1),
+    yearOpen: isRecord(state.yearOpen)
+      ? { ...state.prices, ...state.yearOpen }
+      : state.prices,
+    saleWeek: typeof state.saleWeek === "number" ? state.saleWeek : null,
+  };
+}
+
+/** Fills in any course, hobby, or side project an older save doesn't know about. */
+function withPursuits(value: unknown): Pursuits {
+  const base = emptyPursuits();
+  if (!isRecord(value)) return base;
+  const saved = value as Partial<Pursuits>;
+  return {
+    courses: { ...base.courses, ...(isRecord(saved.courses) ? saved.courses : {}) },
+    certificates: Array.isArray(saved.certificates) ? saved.certificates : [],
+    hobbies: { ...base.hobbies, ...(isRecord(saved.hobbies) ? saved.hobbies : {}) },
+    side: isRecord(saved.side) ? { ...base.side, ...saved.side } : base.side,
+  };
+}
+
+/** Saves from before the work board get a fresh board for the current job. */
+function withBoard(state: CareerState): CareerState {
+  const board = (state as { board?: unknown }).board;
+  if (isRecord(board) && Array.isArray(board.tickets) && typeof board.hour === "number")
+    return state;
+  return freshBoard({ ...state, board: emptyBoard() }, 0);
+}
+
 export function loadGame(): CareerState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
-    return isCareer(parsed) ? ensureFeed(withMarkets(withGear(parsed))) : null;
+    return isCareer(parsed)
+      ? withBoard(withLife(ensureFeed(withMarkets(withGear(parsed)))))
+      : null;
   } catch {
     return null;
   }

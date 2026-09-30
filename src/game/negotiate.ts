@@ -1,3 +1,4 @@
+import { skillRating } from "./skill";
 import type { Track } from "./ladder";
 import { nextUnit } from "./rng";
 import type { Stats } from "./types";
@@ -16,7 +17,7 @@ export const PULL_CHANCE = 0.4;
  * skill, managers on how close their team is. A good mood helps you sound sure.
  */
 export function leverage(stats: Stats, track: Track): number {
-  const craft = track === "manager" ? stats.relationship : stats.skill;
+    const craft = track === "manager" ? stats.relationship : skillRating(stats.skill);
   return Math.round(0.5 * stats.reputation + 0.3 * craft + 0.2 * stats.mood);
 }
 
@@ -53,7 +54,12 @@ export function negotiate(
     const scale = boost / post.boost;
     return {
       result: "raised",
-      post: { ...post, boost, bonusCash: Math.round(post.bonusCash * scale) },
+      post: {
+        ...post,
+        boost,
+        bonusCash: Math.round(post.bonusCash * scale),
+        negotiated: true,
+      },
     };
   }
   if (ask === "big" && nextUnit(first.rngState).value < PULL_CHANCE) {

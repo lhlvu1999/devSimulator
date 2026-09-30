@@ -35,6 +35,7 @@ import {
   type NegotiationResult,
 } from "../game/negotiate";
 import { trackOf } from "../game/ladder";
+import { moodSeconds } from "../game/life";
 import { TicketFor } from "./WorkSession";
 
 /** Cash and stock parts of one payday, as a small bar and a line of text. */
@@ -478,7 +479,7 @@ export function InterviewSession({
         seed={picked.rngState}
         difficulty={difficulty}
         relationship={Math.min(state.stats.relationship, 39)}
-        bonus={device.timeBonus}
+        bonus={device.timeBonus + moodSeconds(state.stats.mood)}
         onDone={(grade, _left, nextSeed) => {
           if (grade === "miss") {
             setResult("fail");

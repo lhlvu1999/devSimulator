@@ -4,13 +4,14 @@ import {
   careerStatus,
   createCareer,
   difficultyFor,
+  chooseGoal,
   finishPlacement,
   passReview,
   recordWork,
   switchTrack,
   type CareerState,
 } from "./career";
-import { LEVEL_GAMES, nextLevel, picksOwnWork, twinOf } from "./ladder";
+import { LEVEL_GAMES, MILESTONES, nextLevel, picksOwnWork, twinOf } from "./ladder";
 import {
   dealOneOnOne,
   dealRoadmap,
@@ -20,7 +21,7 @@ import {
 } from "./manage";
 
 function senior(): CareerState {
-  const state = finishPlacement(createCareer(4), "win", 4);
+  const state = chooseGoal(finishPlacement(createCareer(4), "win", 4), "fire");
   const offer = state.offers[0];
   if (!offer) throw new Error("missing offer");
   const hired = acceptOffer(state, offer.id);
@@ -28,7 +29,7 @@ function senior(): CareerState {
     ...hired,
     level: "senior",
     progress: { ...hired.progress, ship: 4, inbox: 3 },
-    stats: { ...hired.stats, skill: 70, relationship: 40, reputation: 40 },
+        stats: { ...hired.stats, skill: 1200, relationship: 40, reputation: 40 },
   };
 }
 
@@ -53,15 +54,24 @@ describe("manager track", () => {
     expect(switchTrack(lead).level).toBe("senior");
   });
 
-  it("trades skill for relationship on manager work", () => {
+    it("trades skill for relationship on manager work", () => {
     const lead = switchTrack(senior());
-    const worked = recordWork(lead, "clear", 0, "oneonone");
-    expect(worked.stats.relationship).toBe(lead.stats.relationship + 2);
-    expect(worked.progress.oneonone).toBe(1);
-    const engineer = recordWork(senior(), "clear", 0, "ship");
-    expect(worked.stats.skill - lead.stats.skill).toBeLessThan(
-      engineer.stats.skill - senior().stats.skill,
-    );
+    expect(recordWork(lead, "clear", 0, "oneonone").progress.oneonone).toBe(1);
+    const gains = (start: CareerState, game: "oneonone" | "ship") => {
+      let skill = 0;
+      let relationship = 0;
+      for (let seed = 1; seed <= 400; seed += 1) {
+        const before = { ...start, rngState: seed };
+        const after = recordWork(before, "clear", 0, game);
+        skill += after.stats.skill - before.stats.skill;
+        relationship += after.stats.relationship - before.stats.relationship;
+      }
+      return { skill, relationship };
+    };
+    const managing = gains(lead, "oneonone");
+    const building = gains(senior(), "ship");
+    expect(managing.relationship).toBeGreaterThan(building.relationship);
+    expect(managing.skill).toBeLessThan(building.skill);
   });
 
   it("makes a close team matter more than skill for a manager's difficulty", () => {
@@ -75,7 +85,7 @@ describe("manager track", () => {
     const lead = switchTrack(senior());
     const ready: CareerState = {
       ...lead,
-      progress: { ...lead.progress, oneonone: 6, inbox: 4 },
+            progress: { ...lead.progress, ...MILESTONES.lead?.tickets },
       stats: { ...lead.stats, relationship: 65 },
     };
     const promoted = passReview(ready);

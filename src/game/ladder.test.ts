@@ -5,6 +5,7 @@ import {
   createCareer,
   endDay,
   failReview,
+  chooseGoal,
   finishPlacement,
   nextMorning,
   passReview,
@@ -13,12 +14,12 @@ import {
   type CareerState,
 } from "./career";
 import { dealInbox } from "./inbox";
-import { LEVEL_GAMES } from "./ladder";
+import { LEVEL_GAMES, MILESTONES } from "./ladder";
 import { dealShip, inZone, markerAt } from "./ship";
 import { pickGame } from "./workGames";
 
 function hired(): CareerState {
-  const state = finishPlacement(createCareer(4), "win", 4);
+  const state = chooseGoal(finishPlacement(createCareer(4), "win", 4), "fire");
   const offer = state.offers[0];
   if (!offer) throw new Error("missing offer");
   return acceptOffer(state, offer.id);
@@ -29,8 +30,8 @@ function readyFresher(): CareerState {
   return {
     ...state,
     day: state.levelDay + 5,
-    progress: { ...state.progress, tidy: 6, spot: 4 },
-    stats: { ...state.stats, skill: 25 },
+        progress: { ...state.progress, ...MILESTONES.fresher?.tickets },
+    stats: { ...state.stats, skill: MILESTONES.fresher?.gate.value ?? 0 },
   };
 }
 

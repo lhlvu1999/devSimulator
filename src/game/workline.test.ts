@@ -4,6 +4,7 @@ import {
   createCareer,
   endDay,
   failInterview,
+  chooseGoal,
   finishPlacement,
   joinCompany,
   nextMorning,
@@ -22,7 +23,7 @@ import {
 import { payPackage } from "./pay";
 
 function hired(reputation = 10): CareerState {
-  const state = finishPlacement(createCareer(4), "win", 4);
+  const state = chooseGoal(finishPlacement(createCareer(4), "win", 4), "fire");
   const offer = state.offers[0];
   if (!offer) throw new Error("missing offer");
   const joined = acceptOffer(state, offer.id);
@@ -36,6 +37,23 @@ function firstPost(state: CareerState): JobPost {
 }
 
 describe("workline feed", () => {
+  it("draws job posts from a large employer pool", () => {
+    const seen = new Set<string>();
+    let seed = 1;
+    for (let day = 0; day < 80; day += 1) {
+      const refreshed = refreshFeed(emptyFeed(), {
+        day,
+        companyId: "spark",
+        level: "junior",
+        reputation: 80,
+        seed,
+      });
+      seed = refreshed.rngState;
+      for (const post of refreshed.feed.posts) seen.add(post.companyId);
+    }
+    expect(seen.size).toBeGreaterThanOrEqual(8);
+  });
+
   it("fills with posts from other companies after the first job", () => {
     const state = hired();
     expect(state.feed.posts.length).toBeGreaterThan(0);
@@ -121,9 +139,12 @@ describe("workline feed", () => {
     expect(pay.ticker).toBe("ATLS");
     expect(pay.stock).toBe(Math.round(pay.cash * 0.2));
     expect(pay.total).toBe(pay.cash + pay.stock);
-    const payday = endDay({ ...state, day: 5, company: atlas });
+    const payday = endDay({ ...state, day: 4, company: atlas });
     const shares = Math.floor(pay.stock / state.prices.ATLS);
     expect(payday.holdings.ATLS).toBe(state.holdings.ATLS + shares);
+    expect(payday.costBasis.ATLS).toBeCloseTo(
+      state.costBasis.ATLS + shares * state.prices.ATLS,
+    );
     const loft = offeredCompany({
       ...firstPost(state),
       companyId: "loft",

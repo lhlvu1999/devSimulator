@@ -94,33 +94,38 @@ export type Milestone = {
 };
 
 /** What it takes to leave each level. Principal and Director are the top of their tracks. */
+/**
+ * Tuned for about 10 clean mini-games in a full work week: roughly 4 weeks as a
+ * Fresher, 10 as a Junior, 20 as an Engineer, 35 as a Senior, and 50 as Staff.
+ * Counts assume the company deals the game less often than the others.
+ */
 export const MILESTONES: Partial<Record<Level, Milestone>> = {
   fresher: {
-    tickets: { tidy: 6, spot: 4 },
-    gate: { stat: "skill", value: 20 },
+        tickets: { tidy: 15, spot: 15 },
+    gate: { stat: "skill", value: 80 },
   },
   junior: {
-    tickets: { spot: 6, wires: 5 },
-    gate: { stat: "skill", value: 35 },
+        tickets: { spot: 30, wires: 15 },
+    gate: { stat: "skill", value: 220 },
   },
   mid: {
-    tickets: { wires: 5, ship: 5 },
+        tickets: { wires: 30, ship: 30 },
     gate: { stat: "reputation", value: 30 },
   },
   senior: {
-    tickets: { ship: 6, inbox: 5 },
+        tickets: { ship: 40, inbox: 40 },
     gate: { stat: "reputation", value: 50 },
   },
   staff: {
-    tickets: { wires: 6, inbox: 6 },
+        tickets: { wires: 55, inbox: 55 },
     gate: { stat: "reputation", value: 65 },
   },
   lead: {
-    tickets: { oneonone: 6, inbox: 4 },
+    tickets: { oneonone: 60, inbox: 25 },
     gate: { stat: "relationship", value: 60 },
   },
   manager: {
-    tickets: { oneonone: 5, sprint: 6 },
+    tickets: { oneonone: 90, sprint: 90 },
     gate: { stat: "reputation", value: 60 },
   },
 };

@@ -5,14 +5,12 @@ import {
   difficultyFor,
   failReview,
   passReview,
-  recordWork,
   reviewGames,
-  ticketEnergyCost,
+  workTicket,
   type CareerState,
 } from "../game/career";
 import type { Difficulty } from "../game/difficulty";
 import { dealInbox } from "../game/inbox";
-import { picksOwnWork } from "../game/ladder";
 import { dealOneOnOne, dealRoadmap, dealSprint } from "../game/manage";
 import { dealShip } from "../game/ship";
 import { dealSpot } from "../game/spot";
@@ -20,6 +18,8 @@ import { dealTicket } from "../game/tidy";
 import type { CodeGrade } from "../game/types";
 import { dealWires } from "../game/wires";
 import { WORK_GAME_LABEL, pickGame, type WorkGame } from "../game/workGames";
+import { WorkBoard } from "./WorkBoard";
+import { moodSeconds } from "../game/life";
 import { InboxTicket } from "./InboxTicket";
 import { OneOnOneTicket, RoadmapTicket, SprintTicket } from "./ManageTickets";
 import { ShipTicket } from "./ShipTicket";
@@ -38,46 +38,20 @@ export function WorkSession({
   onChange: (next: CareerState) => void;
   onFinish: () => void;
 }) {
-  const seed = state.ticketSeed;
-  const [streak, setStreak] = useState(0);
-  const [leaves, setLeaves] = useState(0);
   const [reviewing, setReviewing] = useState(false);
   const [news, setNews] = useState<string[] | null>(null);
-  const [chosen, setChosen] = useState<WorkGame | null>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [notes, setNotes] = useState<string[]>([]);
   const device = deviceById(state.deviceId);
   const difficulty = difficultyFor(state);
-  const energyCost = ticketEnergyCost(state);
-  const canStart = state.stats.energy >= energyCost;
   const status = careerStatus(state);
-  const choosing = picksOwnWork(state.level);
-  const random = pickGame(seed, state.company?.type, status.games);
-  const game = choosing ? chosen : random.game;
-  const dealSeed = choosing ? seed : random.rngState;
-
-  function finishTicket(
-    game: WorkGame,
-    grade: CodeGrade,
-    left: number,
-    nextSeed: number,
-  ) {
-    const nextStreak = grade === "clear" ? streak + 1 : 0;
-    const grew = nextStreak > 0 && nextStreak % 3 === 0;
-    const timePay = grade === "clear" ? Math.floor(left / 2) : 0;
-    const tip = grew ? 12 : 0;
-    onChange({
-      ...recordWork(state, grade, timePay + tip, game),
-      ticketSeed: nextSeed,
-    });
-    setStreak(nextStreak);
-    if (grew) setLeaves((count) => count + 1);
-    setChosen(null);
-  }
+  const active = state.board.tickets.find((ticket) => ticket.key === activeKey) ?? null;
 
   if (reviewing) {
     return (
       <ReviewSession
         state={state}
-        seed={seed}
+        seed={state.ticketSeed}
         onDone={(passed, nextSeed) => {
           const next = passed ? passReview(state) : failReview(state);
           onChange({ ...next, ticketSeed: nextSeed });
@@ -88,17 +62,39 @@ export function WorkSession({
     );
   }
 
+  if (active) {
+    return (
+      <div className="screen">
+        <div className="ticket-play-head">
+          <span className="ticket-key">{active.key}</span>
+          <strong>{active.title}</strong>
+          <small>
+            {active.parts > 1 ? `Part ${active.partsDone + 1} of ${active.parts} · ` : ""}
+            {active.partHours}h · {device.name}
+            {device.timeBonus > 0 ? ` +${device.timeBonus}s` : ""}
+          </small>
+        </div>
+        <TicketFor
+          key={`${state.ticketSeed}-${active.key}-${active.partsDone}`}
+          game={active.game}
+          seed={state.ticketSeed}
+          difficulty={difficulty}
+          relationship={state.stats.relationship}
+          bonus={device.timeBonus + moodSeconds(state.stats.mood)}
+          onDone={(grade, left, nextSeed) => {
+            const timePay = grade === "clear" ? Math.floor(left / 2) : 0;
+            const next = workTicket(state, active.key, grade, timePay, nextSeed);
+            onChange(next);
+            setNotes(next.log);
+            setActiveKey(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="screen">
-      <div className="tidy-session">
-        <span className="work-title">{status.title}</span>
-        <span>Streak {streak}</span>
-        {leaves > 0 ? <span className="tidy-leaf">{leaves} leaves</span> : null}
-        <span>
-          {device.name}
-          {device.timeBonus > 0 ? ` +${device.timeBonus}s` : ""}
-        </span>
-      </div>
       {news ? (
         <div className="review-banner promoted">
           <strong>Promoted</strong>
@@ -115,7 +111,7 @@ export function WorkSession({
           <strong>Promotion review · {status.nextTitle}</strong>
           <span>
             {status.triedToday
-              ? "You tried today. The review opens again tomorrow."
+              ? "You tried this week. The review opens again next week."
               : `Clear ${REVIEW_ROUNDS} harder tickets in a row. A miss ends the review.`}
           </span>
           {status.triedToday ? null : (
@@ -125,84 +121,15 @@ export function WorkSession({
           )}
         </div>
       ) : null}
-      {!canStart ? (
-        <p className="ask">
-          You need {energyCost} energy for another ticket. Finish the day, or
-          grab something from the pantry.
-        </p>
-      ) : game ? (
-        <TicketFor
-          key={`${seed}-${game}`}
-          game={game}
-          seed={dealSeed}
-          difficulty={difficulty}
-          relationship={state.stats.relationship}
-          bonus={device.timeBonus}
-          onDone={(grade, left, nextSeed) =>
-            finishTicket(game, grade, left, nextSeed)
-          }
-        />
-      ) : (
-        <TaskPicker state={state} energyCost={energyCost} onPick={setChosen} />
-      )}
-      <button type="button" className="primary" onClick={onFinish}>
-        Finish work
-      </button>
-    </div>
-  );
-}
-
-const GAME_BLURB: Record<WorkGame, string> = {
-  tidy: "Fix a tiny screen to match a note.",
-  spot: "Find what changed from the design.",
-  wires: "Turn tiles until the button reaches the server.",
-  ship: "Release inside the green window, three times.",
-  inbox: "Send each message to now or later.",
-  oneonone: "Listen to a teammate and pick the reply that fits.",
-  sprint: "Fill the sprint to exactly what the team can carry.",
-  roadmap: "Put each feature in now, next, or later.",
-};
-
-function TaskPicker({
-  state,
-  energyCost,
-  onPick,
-}: {
-  state: CareerState;
-  energyCost: number;
-  onPick: (game: WorkGame) => void;
-}) {
-  const status = careerStatus(state);
-  const needed = new Map(status.items.map((item) => [item.id, item]));
-  return (
-    <div className="task-picker">
-      <p className="ask">
-        Pick your next task. Each one costs {energyCost} energy.
-      </p>
-      {status.games.map((game) => {
-        const goal = needed.get(game);
-        return (
-          <button
-            key={game}
-            type="button"
-            className={`task-choice game-${game}`}
-            onClick={() => onPick(game)}
-          >
-            <strong>{WORK_GAME_LABEL[game]}</strong>
-            <small>{GAME_BLURB[game]}</small>
-            {goal ? (
-              <span
-                className={
-                  goal.have >= goal.need ? "task-goal met" : "task-goal"
-                }
-              >
-                {Math.min(goal.have, goal.need)}/{goal.need} toward{" "}
-                {status.nextTitle}
-              </span>
-            ) : null}
-          </button>
-        );
-      })}
+      <WorkBoard
+        state={state}
+        notes={notes}
+        onStart={(key) => {
+          setNotes([]);
+          setActiveKey(key);
+        }}
+        onFinish={onFinish}
+      />
     </div>
   );
 }
@@ -231,7 +158,7 @@ function ReviewSession({
         <h2>Not this time</h2>
         <p className="ask">
           The panel liked your work but wants to see a little more. The review
-          opens again tomorrow.
+          opens again next week.
         </p>
         <button
           type="button"
@@ -266,7 +193,7 @@ function ReviewSession({
         seed={picked.rngState}
         difficulty={difficulty}
         relationship={Math.min(state.stats.relationship, 39)}
-        bonus={device.timeBonus}
+        bonus={device.timeBonus + moodSeconds(state.stats.mood)}
         onDone={(grade, _left, nextSeed) => {
           if (grade === "miss") {
             setSeed(nextSeed);

@@ -16,7 +16,7 @@ export type SpotPuzzle = {
   hint: number | null;
 };
 
-const SHAPES: readonly SpotShape[] = [
+const ALL_SHAPES: readonly SpotShape[] = [
   "circle",
   "square",
   "pill",
@@ -24,7 +24,86 @@ const SHAPES: readonly SpotShape[] = [
   "diamond",
   "bar",
 ];
-const COLORS: readonly SpotColor[] = ["sage", "clay", "blue", "ink"];
+const ALL_COLORS: readonly SpotColor[] = ["sage", "clay", "blue", "ink"];
+
+/** Twenty layout presets — multiplies visual variety from the same RNG seed space. */
+const LAYOUTS: readonly {
+  columns: number;
+  rows: number;
+  shapes: readonly SpotShape[];
+  colors: readonly SpotColor[];
+}[] = [
+  { columns: 2, rows: 3, shapes: ALL_SHAPES, colors: ALL_COLORS },
+  { columns: 2, rows: 4, shapes: ALL_SHAPES, colors: ALL_COLORS },
+  { columns: 3, rows: 3, shapes: ALL_SHAPES, colors: ALL_COLORS },
+  {
+    columns: 2,
+    rows: 3,
+    shapes: ["circle", "square", "pill", "ring"],
+    colors: ALL_COLORS,
+  },
+  {
+    columns: 2,
+    rows: 4,
+    shapes: ["diamond", "bar", "square", "circle"],
+    colors: ALL_COLORS,
+  },
+  { columns: 3, rows: 2, shapes: ALL_SHAPES, colors: ["sage", "clay", "blue"] },
+  { columns: 2, rows: 3, shapes: ["ring", "pill", "bar"], colors: ALL_COLORS },
+  {
+    columns: 3,
+    rows: 3,
+    shapes: ["circle", "square", "diamond"],
+    colors: ALL_COLORS,
+  },
+  { columns: 2, rows: 4, shapes: ALL_SHAPES, colors: ["clay", "blue", "ink"] },
+  {
+    columns: 3,
+    rows: 3,
+    shapes: ["bar", "pill", "ring", "square"],
+    colors: ALL_COLORS,
+  },
+  { columns: 2, rows: 5, shapes: ALL_SHAPES, colors: ALL_COLORS },
+  { columns: 3, rows: 4, shapes: ALL_SHAPES, colors: ["sage", "ink", "blue"] },
+  {
+    columns: 2,
+    rows: 3,
+    shapes: ["circle", "diamond", "bar"],
+    colors: ["clay", "blue", "ink"],
+  },
+  {
+    columns: 3,
+    rows: 2,
+    shapes: ["square", "pill", "ring"],
+    colors: ALL_COLORS,
+  },
+  { columns: 2, rows: 4, shapes: ["ring", "circle"], colors: ["sage", "clay"] },
+  {
+    columns: 3,
+    rows: 3,
+    shapes: ALL_SHAPES,
+    colors: ["sage", "clay", "blue", "ink"],
+  },
+  {
+    columns: 2,
+    rows: 3,
+    shapes: ["pill", "square", "diamond", "bar"],
+    colors: ["blue", "ink"],
+  },
+  { columns: 3, rows: 3, shapes: ["circle", "ring"], colors: ALL_COLORS },
+  {
+    columns: 2,
+    rows: 4,
+    shapes: ["bar", "diamond", "pill"],
+    colors: ["sage", "blue", "ink"],
+  },
+  {
+    columns: 3,
+    rows: 3,
+    shapes: ["square", "circle", "pill", "ring", "bar"],
+    colors: ["clay", "ink"],
+  },
+];
 
 function pick<T>(items: readonly T[], value: number): T {
   return items[Math.floor(value * items.length)] as T;
@@ -41,16 +120,37 @@ export function dealSpot(
   difficulty: Difficulty,
   relationship: number,
 ): { puzzle: SpotPuzzle; rngState: number } {
-  const columns = difficulty === "hard" ? 3 : 2;
-  const rows = 3;
-  const count = columns * rows;
-  const bugCount = difficulty === "easy" ? 1 : difficulty === "normal" ? 2 : 3;
   let rngState = seed;
   const roll = () => {
     const next = nextUnit(rngState);
     rngState = next.rngState;
     return next.value;
   };
+
+  const layoutIndex = Math.floor(roll() * LAYOUTS.length);
+  const layout = LAYOUTS[layoutIndex] ??
+    LAYOUTS[0] ?? {
+      columns: 2,
+      rows: 3,
+      shapes: ALL_SHAPES,
+      colors: ALL_COLORS,
+    };
+  const columns =
+    difficulty === "hard"
+      ? Math.max(layout.columns, 3)
+      : difficulty === "normal"
+        ? layout.columns
+        : Math.min(layout.columns, 2);
+  const rows =
+    difficulty === "easy"
+      ? Math.min(layout.rows, 3)
+      : difficulty === "hard"
+        ? Math.max(layout.rows, 3)
+        : layout.rows;
+  const SHAPES = layout.shapes;
+  const COLORS = layout.colors;
+  const count = columns * rows;
+  const bugCount = difficulty === "easy" ? 1 : difficulty === "normal" ? 2 : 3;
 
   const design: SpotTile[] = Array.from({ length: count }, () => ({
     shape: pick(SHAPES, roll()),

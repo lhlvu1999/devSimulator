@@ -19,40 +19,195 @@ npm run push       # push to github.com/lhlvu1999/devSimulator as lhlvu1999, the
 ## The day
 
 1. **Placement.** Tic-tac-toe against a newbie opponent. A faster win gives a higher fresher profile: skill 8 on a loss, 11 on a draw, 12 for a slow win, 16 for a 4-move win, and up to 22 for a 3-move win. Placement never goes past fresher.
-2. **Offers.** Three companies based on your placement skill. Each has a tier (seed, growth, established, giant) and a type (startup, product, agency, enterprise, remote).
-3. **Room.** The room is your workplace. The machine on the desk opens **Work**. The chart at the top left opens **Invest**. The bag next to it opens the **Shop**. The phone opens **Workline**. The icon at the top right opens **Stats** and the **Career** card.
-4. **Work.** Play tickets until you choose **Finish work**. After that, the Work button becomes **End the day**.
-5. **Night.** Prices move, payday and rent happen, energy refills to 100, and you see a summary. **Next morning** starts a new day.
+2. **Goal, then offers.** Pick what this life is for, then choose from three companies based on your placement skill. Each has a tier (seed, growth, established, giant) and a type (startup, product, agency, enterprise, remote).
+3. **Room.** The room is your workplace. The top bar shows the week, your title, energy, mood, health, and money; tap it for full stats. The machine on the desk opens **Work**. Everything else lives in the bottom bar: **Home** (the room), **Invest**, **Jobs** (Workline), **Shop**, and **Me** (stats, the Career and Life cards, and Settings). Tap the tab you are on to go back to the room. The bar hides during work, free time, and interviews.
+4. **Work.** The monitor opens the **work board**: a week of 40 work hours and a set of tickets with sizes and deadlines. Work tickets until you choose **Wrap up the week**. After that, the monitor says **Free time**.
+5. **Free time and the week's end.** The monitor opens free time. **End the week** moves prices, pays payday and rent, refills energy, and shows a summary. **Next week** starts the new one, sometimes with an event card.
 
-Payday is every 5 days. It pays company salary × level pay. Rent is $500 every 10 days.
+Payday and rent both come every 4 weeks, like a month: salary × level pay in cash plus stock, and $500 rent.
+
+## Life
+
+One game day is **one week** of life. You start at 22. A run lasts until you reach your goal, burn out, get too sick, or turn 60 (week 1976).
+
+### Goal
+
+Chosen right after placement. Older saves are asked once.
+
+| Goal          | Met when                                  |
+| ------------- | ----------------------------------------- |
+| Retire early  | Net worth reaches $500,000                |
+| Own a home    | You buy the $180,000 home in the Shop     |
+| Reach the top | You become Principal engineer or Director |
+
+The Life card in Stats shows age, week, net worth, goal progress, and achievements.
+
+### Endings and score
+
+| Ending              | When                          |
+| ------------------- | ----------------------------- |
+| You did it          | Goal met at the end of a week |
+| Burned out          | Mood reaches 0                |
+| Your body said stop | Health reaches 0              |
+| Retired at 60       | Time runs out                 |
+
+Score = ending base (goal 2000, age 600, burnout or health 150) + 60 × years left before 60 (goal only) + net worth ÷ 500 + 3 × mood + 3 × health + 100 × achievements.
+
+### Free time
+
+After **Wrap up the week**, the monitor says **Free time**. Time outside work comes in two pools:
+
+- **Weeknights:** 2 a week, or 3 without a job. Wrapping up early adds up to 2 more, and a sick or burnout week adds 1.
+- **Weekend:** 2 days a week. Startup overtime takes weeknights first, then weekend days.
+
+#### Sleep
+
+Pick a sleep habit for the week. It can be changed any time you still have the evening to give up.
+
+| Sleep  | Weeknights | At the end of the week                                      |
+| ------ | ---------- | ----------------------------------------------------------- |
+| Early  | −1         | +4 health, +1 mood                                          |
+| Normal | —          | —                                                           |
+| Late   | +1         | −3 health, and next week starts at 80 energy instead of 100 |
+
+#### Weeknights
+
+| Plan                | Cost | Energy | Effect                              |
+| ------------------- | ---- | ------ | ----------------------------------- |
+| Gym                 | $15  | 15     | +6 health, +2 mood                  |
+| Quiet night in      | Free | 0      | +3 health, +4 mood                  |
+| Dinner with friends | $40  | 10     | +8 mood                             |
+| Team drinks         | $35  | 10     | +3 relationship, +3 mood, −2 health |
+| Tech meetup         | $20  | 10     | +2 reputation, +10 skill            |
+
+#### Weekend
+
+| Plan              | Days | Cost | Energy | Effect                                       |
+| ----------------- | ---- | ---- | ------ | -------------------------------------------- |
+| Date day          | 1    | $80  | 10     | +12 mood, +1 health                          |
+| Get outside       | 1    | $10  | 15     | +7 health, +5 mood                           |
+| Visit family      | 1    | $30  | 10     | +10 mood, +2 health                          |
+| Weekend hackathon | 2    | Free | 30     | +40 skill, +2 reputation, −2 mood, −3 health |
+| Vacation          | 2    | $900 | 0      | +25 mood, +10 health                         |
+
+#### Pursuits
+
+Things that build up over many weeks.
+
+- **Courses** take one weeknight per lesson. The last lesson earns a certificate and a bigger reward.
+
+  | Course                | Lessons | Per lesson     | Each lesson     | Certificate                    |
+  | --------------------- | ------- | -------------- | --------------- | ------------------------------ |
+  | Frontend fundamentals | 6       | $60, 12 energy | +8 skill        | +80 skill, +2 reputation       |
+  | System design         | 10      | $90, 15 energy | +12 skill       | +200 skill, +4 reputation      |
+  | Leading people        | 8       | $80, 12 energy | +1 relationship | +8 relationship, +4 reputation |
+
+- **Hobbies** fit a weeknight or a weekend day. Doing one in back-to-back weeks builds a streak, and each extra week adds +1 to its main stat, up to +4. Missing a week starts the streak over.
+
+  | Hobby   | Cost | Energy | Effect             | Streak adds to |
+  | ------- | ---- | ------ | ------------------ | -------------- |
+  | Running | Free | 15     | +4 health          | Health         |
+  | Guitar  | $10  | 5      | +4 mood            | Mood           |
+  | Cooking | $25  | 8      | +2 health, +2 mood | Mood           |
+
+- **Side project** sessions fit a weeknight or a weekend day, cost 20 energy, and give +6 skill and −1 mood. It grows through stages as you put in sessions, and once launched it pays each week, give or take a fifth, as long as you worked on it in the last 3 weeks.
+
+  | Stage     | Sessions | Weekly income |
+  | --------- | -------- | ------------- |
+  | Idea      | 0        | —             |
+  | Prototype | 5        | —             |
+  | Launched  | 12       | about $60     |
+  | Growing   | 25       | about $180    |
+  | Thriving  | 50       | about $450    |
+
+**End the week** on the same screen runs the night.
+
+### Weekly drift and stakes
+
+- **Mood** −5 every week. Clean tickets no longer raise it; misses still cost 2. Free time is how it comes back.
+- **Health** +3 every week, minus aging: −1 every other week from 35, −1 a week from 45, −2 a week from 55. Each ticket still costs 1, and 2 more below 25 energy.
+- **Mood and ticket time:** below 30, −2 seconds a ticket. Below 15, −4. At 75 or more, +1. A ticket never has less than 6 seconds.
+- **Burnout week:** if mood ends a week below 15, you can't work the next week.
+- **Sick week:** if health ends a week below 25, 40% chance you can't work next week, with a $300 doctor's bill.
+- **Relationship 60+:** coworkers refer you on Workline, which means one more post and +10% stretch chance.
+- **Skill:** raises how high a Workline post's pay can go, up to +25% more at skill 100.
+
+### Events
+
+From week 5, each new week has a 35% chance to start with an event card. It sits over the room until you choose.
+
+| Event                    | When it can happen                                                          | Choices                                                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Layoffs announced        | Growth, established, or giant employer (giant and established 3× as likely) | Wait. Risk = 35% − reputation ÷ 250 − relationship ÷ 400, between 5% and 40%. Laid off: 2 cash paydays severance, −10 mood |
+| Startup ran out of money | Seed employer                                                               | Laid off, no severance                                                                                                     |
+| Being bought             | Listed employer                                                             | Its stock +30%, +5 mood                                                                                                    |
+| New manager              | Any job                                                                     | Coffee chat ($10, −4 relationship, +2 mood) or head down (−12 relationship)                                                |
+| Conference invite        | Any job                                                                     | Go ($400, +4 skill, +4 reputation, +3 mood) or skip                                                                        |
+| Recruiter message        | Reputation 25+, not at the top                                              | Adds a stretch role to the top of Workline for 4 weeks                                                                     |
+| Market crash             | You hold any investment                                                     | Stocks −15%, crypto −35%. Hold (−3 mood) or sell everything                                                                |
+| Family needs help        | $500+ cash                                                                  | Give 10% of cash, at least $500 (+6 mood), or say no (−8 mood)                                                             |
+| A friend's wedding       | Any time                                                                    | Go ($300, +8 mood, −1 health) or skip (−4 mood)                                                                            |
+| Phone broke              | Any time                                                                    | Buy ($300) or live without (−6 mood)                                                                                       |
+| Cat is sick              | Any time                                                                    | Vet ($250, +2 mood) or wait (−6 mood)                                                                                      |
+| Office raffle            | Any time                                                                    | +$200, +3 mood                                                                                                             |
+
+**Without a job** the monitor says **Job hunt**. Free time has an **Open Workline** button. There's no payday, rent still comes due, and joining a company from Workline puts you straight back to work.
+
+### Seasons and holidays
+
+The year runs Winter (weeks 49–9), Spring (10–22), Summer (23–35), and Autumn (36–48). The Life card shows the season and the next holiday. A holiday takes the place of any random event that week.
+
+| Week | Holiday             | What happens                                                                                                                                |
+| ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | New Year            | New Year bonus, then pick a resolution: get healthier (+5 health), learn (+3 skill), see friends (+6 mood), or speak up (+3 reputation)     |
+| 6    | Lunar New Year      | Lucky money of half a cash payday after 26+ weeks at the company. Go home ($300, +12 mood) or stay (+3 mood)                                |
+| 27   | Summer trip         | With a job: company beach trip (+10 mood, +5 relationship, +2 health) or skip (−2 relationship). Without: beach ($400, +12 mood, +3 health) |
+| 38   | Mid-Autumn Festival | Mooncakes for the team ($60, +4 relationship, +2 mood) or for yourself ($25, +3 mood)                                                       |
+| 47   | Black Friday        | Machines in the Shop are 30% off that week                                                                                                  |
+| 51   | Year-end party      | Go and sing (+6 relationship, +6 mood, −2 health) or skip (−2 relationship)                                                                 |
+
+**New Year bonus** = cash payday × tenure × growth.
+
+- **Tenure** = 0.25 + 0.5 per year at the company, up to 1.5.
+- **Growth** = 1 + the employer's stock change over the year, clamped to 0.5–2. For a private company it's a random year from −20% to +40%.
+
+It's paid on top of the week-52 performance review.
+
+### Year-end review
+
+At the end of every 52nd week, with a job: bonus = cash payday × min(1.5, clean tickets that year ÷ 100) × (0.5 + reputation ÷ 100). The count resets each year.
+
+### Achievements
+
+Moving up, People person, Top before 30, Six figures, Millionaire, Survivor (a layoff wave), Job hopper (3 jobs), Negotiator, Out of office (a vacation), Gym regular (20 visits), Healthy at 50, Homeowner. They're checked at the end of each week and shown on the ending screen.
 
 ## Stats
 
 All stats except money run from 0 to 100.
 
-| Stat         | What raises it                                                                    | What lowers it                                                     | What it does                                                             |
-| ------------ | --------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Money        | Payday, clean-ticket time pay, streak tips, selling investments, blackjack wins   | Rent, shop, pantry, buying investments, blackjack losses           | Pays for everything                                                      |
-| Energy       | Refills to 100 each night. Coffee, energy drink, recovery pill                    | Each ticket                                                        | You need at least the ticket cost to start a ticket                      |
-| Health       | +3 each night. Vitamins, recovery pill                                            | −1 per ticket, −2 more when energy drops below 25. Energy drink −4 | Scales the energy cost of every ticket                                   |
-| Skill        | Clean ticket: 4 × company learning. Late: 2 × learning. Half on the manager track | —                                                                  | Raises engineer ticket difficulty. Gates Junior and Engineer             |
-| Relationship | +1 per clean ticket (+2 on the manager track)                                     | —                                                                  | Lowers difficulty. Teammate help at 20 and 40. Gates Engineering manager |
-| Reputation   | +1 per clean ticket (+2 at an enterprise). +4 on promotion                        | —                                                                  | Gates Senior, Staff, Principal, Director                                 |
-| Mood         | +1 clean, +2 each night, +8 on promotion                                          | −2 per miss                                                        | Tracked, no effect yet                                                   |
+| Stat         | What raises it                                                                                                                           | What lowers it                                                                              | What it does                                                                                                                                                          |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Money        | Payday, clean-ticket time pay, early-ticket bonuses, selling investments, blackjack wins                                                 | Rent, shop, pantry, buying investments, blackjack losses                                    | Pays for everything                                                                                                                                                   |
+| Energy       | Refills to 100 each week (80 after late nights). Coffee, energy drink, recovery pill                                                     | Each hour of ticket work, double in overtime                                                | You need enough energy for the next part to start it                                                                                                                  |
+| Health       | +3 each week. Free time, hobbies, early nights, vitamins, recovery pill                                                                  | −1 per part, −2 more below 25 energy, −2 more in overtime, late nights, aging, energy drink | Energy cost per hour. Sick weeks below 25. Ending at 0                                                                                                                |
+| Skill        | Clean ticket: 2 × company learning on average. Late: 1 × learning. Half on the manager track. Courses, meetups, hackathons, side project | —                                                                                           | Open-ended, no ceiling. Its **rating** (√skill × 2.5, capped at 100) raises ticket difficulty, speeds up tickets, and helps in negotiation. Gates Junior and Engineer |
+| Relationship | 0.2 per clean ticket on average (0.4 on the manager track). Team drinks, Leading people                                                  | Missed High and Critical deadlines                                                          | Lowers difficulty. Teammate help at 20 and 40. At 60+, a teammate may take a ticket. Gates Engineering manager                                                        |
+| Reputation   | 0.1 per clean ticket on average (0.2 at an enterprise). Early High and Critical tickets, Critical on time. +4 on promotion               | Missed deadlines, tickets left overdue                                                      | Gates Senior, Staff, Principal, Director. At 50+, more High and Critical tickets                                                                                      |
+| Mood         | Free time, promotions (+8), some events                                                                                                  | −5 every week, −2 per miss, some events                                                     | Ticket time. Burnout week below 15. Burnout ending at 0                                                                                                               |
 
 ### Health and energy cost
 
-Ticket energy cost = company base cost × health scale, rounded.
+A company's base cost is for a 4-hour block. Energy for a part = hours × base cost × health scale ÷ 4, rounded. Overtime hours count twice. A full 40-hour week costs about 100 energy at a typical company, more at a startup, and less at a remote or giant one.
 
 Health scale = `1 + (70 − health) / 100`, clamped between 0.8 and 1.7.
 
-| Health | Scale | A 12-energy ticket costs |
-| ------ | ----- | ------------------------ |
-| 100    | 0.8×  | 10                       |
-| 70     | 1.0×  | 12                       |
-| 40     | 1.3×  | 16                       |
-| 10     | 1.6×  | 19                       |
-| 0      | 1.7×  | 20                       |
+| Health | Scale | A 12-energy block costs |
+| ------ | ----- | ----------------------- |
+| 100    | 0.8×  | 10                      |
+| 70     | 1.0×  | 12                      |
+| 40     | 1.3×  | 16                      |
+| 10     | 1.6×  | 19                      |
+| 0      | 1.7×  | 20                      |
 
 Company base cost ranges from 8 at remote and giant companies up to 16 at a growing startup.
 
@@ -67,17 +222,70 @@ Items are used right away when bought. Each card shows its effects as green (gai
 | Vitamins      | $30  | +10 health             |
 | Recovery pill | $70  | +25 health, +15 energy |
 
+## Work board
+
+Each week has **40 work hours**, Monday 9:00 to Friday 17:00. The board shows the clock, a bar for the week, and your tickets sorted by deadline (overdue first).
+
+### Tickets
+
+Every ticket has a key (like `KEEL-142`), a title, the mini game that does it, a priority, a size, and a deadline on the same clock.
+
+| Size | Hours | Parts | Deadline window when dealt |
+| ---- | ----- | ----- | -------------------------- |
+| S    | 2     | 1     | 8 to 24 hours              |
+| M    | 4     | 1     | 16 to 40 hours             |
+| L    | 8     | 2     | 32 to 64 hours             |
+| XL   | 16    | 3     | 56 to 96 hours             |
+
+- Each part is one mini game. An L ticket is two games and an XL is three, and finished parts are kept.
+- Skill makes every part faster, up to a quarter off at skill 100.
+- Priority tightens the window: Low 1.2×, Medium 1×, High 0.8×, Critical 0.6×.
+- Freshers get 3 open tickets, S and M only. Juniors get 4. Everyone else gets 5, with bigger sizes.
+
+### Playing a part
+
+- **Clean:** the part is done and takes its hours.
+- **Late:** the part is done but takes 1.5× the hours.
+- **Miss:** the hours are spent and the part stays open to retry.
+
+Freshers and juniors work in their lead's order: only the top ticket can be started. From Engineer up, and on the manager track, you pick any ticket.
+
+### New work
+
+- Finishing a ticket brings a follow-up 35% of the time.
+- Any part may be interrupted by something urgent (S or M, High or Critical, due in 4 to 8 hours): startup 20%, agency 14%, product and enterprise 10%, remote 5%.
+- On Monday, the board is topped back up to its usual size.
+
+### Deadlines
+
+| Result        | When                                      | Effect                                                                                                              |
+| ------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Early         | Done with at least half the window left   | Mood +1. High: reputation +1 and 4% of salary. Critical: reputation +2 and 8% of salary                             |
+| On time       | Done before the deadline                  | Critical: reputation +1                                                                                             |
+| Overdue       | The deadline passes                       | Low: reputation −1. Medium: −2, mood −1. High: −3, mood −2, relationship −1. Critical: −5, mood −3, relationship −2 |
+| Still overdue | Each week it stays open (up to 3 tickets) | Reputation −1, mood −1                                                                                              |
+| Handed off    | Two weeks past the deadline               | The ticket leaves your board, reputation −2                                                                         |
+
+- With relationship 60+, there's a 30% chance each Monday that a teammate takes your most pressing ticket.
+- On a sick or burnout week, the team covers and every deadline moves a week.
+
+### Ending the week
+
+- **Wrap up early:** every 8 unused hours becomes an extra free-time slot, up to 2.
+- **Hard stop:** at 40 hours, most companies stop you. Unfinished tickets carry over.
+- **Overtime (startups only):** up to 16 more hours. Energy costs double, each part costs 2 more health, and every 8 overtime hours takes away a free-time slot.
+
 ## Work tickets
 
-A ticket is one short mini game. A **clean** grade means you finished with at least half the clock left. **Late** means you finished with less. **Miss** means the clock hit zero. A wrong tap costs 1 second.
+A ticket part is one short mini game. A **clean** grade means you finished with at least half the clock left. **Late** means you finished with less. **Miss** means the clock hit zero. A wrong tap costs 1 second.
 
-Clean tickets pay floor(seconds left ÷ 2) in cash. Every third clean in a row pays a $12 tip and grows a leaf on the streak.
+Clean parts pay floor(seconds left ÷ 2) in cash.
 
 ### Difficulty
 
-**Engineer track:** pressure = skill − floor(relationship ÷ 20) × 3.
+**Engineer track:** pressure = skill rating − floor(relationship ÷ 20) × 3.
 
-**Manager track:** pressure = 22 − floor(relationship ÷ 10) × 2 + floor(skill ÷ 25). A close team makes manager work easier, and skill only nudges it.
+**Manager track:** pressure = 22 − floor(relationship ÷ 10) × 2 + floor(skill rating ÷ 25). A close team makes manager work easier, and skill only nudges it.
 
 | Pressure  | Difficulty |
 | --------- | ---------- |
@@ -136,7 +344,7 @@ Device bonus: starter laptop +0, thin laptop +2, desk monitor +4, home rig +6.
 
 ### Which game you get
 
-Fresher and Junior get a random game from their unlocked set, weighted by company type. From Engineer up, and on the whole manager track, you choose each ticket from a list. The list shows how far each game is toward the next promotion.
+Each new ticket on the board gets a game from your unlocked set, weighted by company type. Urgent tickets prefer Spot the bug, Ship it, and Sort the inbox when you have them.
 
 | Company type | Tidy | Spot | Wires | Ship it | Inbox |
 | ------------ | ---- | ---- | ----- | ------- | ----- |
@@ -146,7 +354,7 @@ Fresher and Junior get a random game from their unlocked set, weighted by compan
 | Enterprise   | 25   | 25   | 10    | 10      | 30    |
 | Remote       | 25   | 15   | 35    | 10      | 15    |
 
-One-on-one, Sprint planning, and Roadmap weigh 30 at every company. Weights only apply to games you have unlocked, and they matter for random tickets and for promotion reviews.
+One-on-one, Sprint planning, and Roadmap weigh 30 at every company. Weights only apply to games you have unlocked, and they matter for dealing board tickets and for promotion reviews.
 
 ## Career ladder
 
@@ -185,17 +393,17 @@ Open **Stats → Career** and use the switch button. It asks you to confirm firs
 
 ### Milestones
 
-| From → to                       | Clean tickets                   | Stat gate       |
-| ------------------------------- | ------------------------------- | --------------- |
-| Fresher → Junior                | 6 Tidy, 4 Spot                  | Skill 20        |
-| Junior → Engineer               | 6 Spot, 5 Wires                 | Skill 35        |
-| Engineer → Senior               | 5 Wires, 5 Ship it              | Reputation 30   |
-| Senior → Staff                  | 6 Ship it, 5 Inbox              | Reputation 50   |
-| Staff → Principal               | 6 Wires, 6 Inbox                | Reputation 65   |
-| Team lead → Engineering manager | 6 One-on-one, 4 Inbox           | Relationship 60 |
-| Engineering manager → Director  | 5 One-on-one, 6 Sprint planning | Reputation 60   |
+| From → to                       | Clean tickets                     | Stat gate       |
+| ------------------------------- | --------------------------------- | --------------- |
+| Fresher → Junior                | 15 Tidy, 15 Spot                  | Skill 80        |
+| Junior → Engineer               | 30 Spot, 15 Wires                 | Skill 220       |
+| Engineer → Senior               | 30 Wires, 30 Ship it              | Reputation 30   |
+| Senior → Staff                  | 40 Ship it, 40 Inbox              | Reputation 50   |
+| Staff → Principal               | 55 Wires, 55 Inbox                | Reputation 65   |
+| Team lead → Engineering manager | 60 One-on-one, 25 Inbox           | Relationship 60 |
+| Engineering manager → Director  | 90 One-on-one, 90 Sprint planning | Reputation 60   |
 
-Principal and Director are the top of their tracks. Only clean tickets count. Progress resets after each promotion and stays with you if you change jobs.
+Each clean mini-game counts as one, including each part of a big ticket. With about 10 clean parts in a full week, that's roughly 5 weeks as a Fresher and 1.7 to 2.7 game-years to Principal, depending on how often your company deals each game. Principal and Director are the top of their tracks. Only clean tickets count. Progress resets after each promotion and stays with you if you change jobs.
 
 ### Promotion review
 
@@ -206,7 +414,7 @@ When every milestone is met, a **Promotion review** opens on the work screen. Yo
 
 ## Workline
 
-The phone icon in the room opens **Workline**, a job and news feed. The red badge shows how many job posts are open.
+The **Jobs** tab opens **Workline**, a job and news feed. The red badge shows how many job posts are open.
 
 ### Posts
 
@@ -261,7 +469,12 @@ Chances show as **Likely** (70%+), **Maybe** (40–69%), or **Long shot**. A yes
 
 ## Invest
 
-Prices move once per night. Each chart shows the last 30 days.
+Prices move once per week. Each chart shows the last 30 weeks.
+
+The game remembers what you paid for each holding. Shares from paydays and sign-on grants count at that week's price. Selling part of a holding keeps the average cost of the rest.
+
+- **Stocks screen:** a **Your stocks** card at the top shows the total value, the gain since you bought, what last week's price move did (shares bought since then have not moved yet), a colored bar for how the money is split, and one row per company with shares, average cost, value, and gain. Tap a row to trade. In **All companies**, the stocks you own have a green edge and a "You own N · $value" tag.
+- **Each market screen:** shows You own, Worth, Paid avg, and Gain right under the price.
 
 ### Stocks
 
@@ -282,17 +495,17 @@ Ten listed companies. Six of them also hire on Workline. Four are only for inves
 
 Loft & Co and Relay Studio are private seed startups. They have no stock.
 
-- **The paper:** each night, 0 to 3 companies make the paper with a good or bad headline. The next night that company follows its headline 3 days in 4.
+- **The paper:** each week, 0 to 3 companies make the paper with a good or bad headline. The next week that company follows its headline 3 times in 4.
 - **News moves:** Low-risk stocks move 1–4%, Medium 1.5–7%, and High 3–11%.
 - **Quiet days:** without news, a stock drifts in a small range: Low −1.2% to +1.8%, Medium −2.5% to +3%, High −4.5% to +5%.
 - **Stocks screen:** each company shows tags for **Your employer**, **Hiring on Workline**, and **In the paper**.
 
 ### Crypto and gold
 
-| Market | Risk | Rule                                                                                                     |
-| ------ | ---- | -------------------------------------------------------------------------------------------------------- |
-| Crypto | High | Most nights −15% to +20%. About 1 in 10 crashes 25–45%. About 1 in 11 spikes 40–90%. Best average return |
-| Gold   | Low  | −0.3% to +1.2% a night. About +2% more on a crypto crash                                                 |
+| Market | Risk | Rule                                                                                                                                                                                        |
+| ------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Crypto | High | Most weeks −17% to +15%. About 1 in 10 crashes 25–45%. About 1 in 11 spikes 30–70%. Averages about +0.2% a week, so over time it roughly holds its value. It's a gamble, not a savings plan |
+| Gold   | Low  | −0.4% to +0.6% a week, about +5% a year. About +2% more on a crypto crash                                                                                                                   |
 
 Buy or sell any amount with the stepper, the 25% / 50% / 75% picks, or **Max**. Every price trades as at least $1.
 
@@ -321,13 +534,19 @@ Bet from $10 up to all your cash. A win pays the bet. Blackjack with your first 
 
 ## Shop
 
-- **Pantry:** see the table above.
+The Shop has three tabs. Every row has one button that says what tapping it does: a price to buy, **Use** for a machine you own, or **In use**. After a purchase, a receipt line shows what changed.
+
+- **Pantry:** see the table above. Items are used right away.
 - **Machines:** add seconds to every ticket.
-- **Looks:** change how the character looks.
+- **Home:** the $180,000 house, with how much you have saved toward it.
+
+## Settings
+
+**Me → Settings → Start a new life** erases the save. It asks you to confirm first.
 
 ## Planned
 
-- **Mood:** give it a real effect.
+- **Cost of living:** homes with their own rent, lifestyle creep, and taxes.
 
 ## Art assets
 
@@ -348,9 +567,31 @@ The goal is to keep each part swappable, reusable, and animatable.
 
 Play currently uses a looping clip as the whole room instead of the stacked layers: `public/art/video/home.mp4`, with `home-poster.jpg` as the still frame. Sandbox still shows the layered entities for asset testing.
 
-The monitor glass is set in `src/content/sceneVideo.ts` as a percent box of the video frame. Because the clip is cropped to fill the phone like `object-fit: cover`, the game maps that box onto the screen at runtime. The **Work** / **End the day** button sits exactly on the glass, and the work screen grows out of it.
+The monitor glass is set in `src/content/sceneVideo.ts` as a percent box of the video frame. The whole 9:16 frame is always shown, never cropped. It fits the screen above the tab bar, like `object-fit: contain` anchored to the bottom, so it's as large as the phone allows. The **top bar** then fills exactly the space the clip leaves above it. When that space is too thin to read, for example under a notch or on a short phone, the bar keeps a minimum height and frosts over the top edge of the clip instead of shrinking it. Space left on the sides of short or wide screens is filled with a blur of the poster frame. The top bar shows the week, age, and work clock (or Free time), your title and company, money, and energy, mood, and health as labeled horizontal bars with icons. It lays itself out by its own height: three rows when the gap is tall, and two when it's tight, with the time merged into the title line. Tapping it opens **Me**. `src/ui/useFitRect.ts` maps the glass box onto the screen with the same math at runtime. The **Work** / **End the day** button sits exactly on the glass, and the work screen grows out of it.
 
 To swap the clip, keep the same camera and measure the new glass. The current box was found by sampling frames across the clip and keeping the solid dark screen area that stays put while the camera drifts. A flat magenta screen in the first frame also works well. With reduced motion turned on, the clip pauses on the poster.
+
+The clip is silent. Its sound became the game's music: `public/art/audio/room-theme.m4a`, played by `src/ui/music.ts`.
+
+- It uses Web Audio, so the loop has no gap, and it plays at normal speed even though the clip runs at 75%.
+- Browsers only allow sound after a tap, so music starts on the player's first tap or key press and fades in.
+- **Me → Settings → Music** turns it off with a fade, and the choice is saved on the device. The music pauses while the app is in the background.
+
+When you swap in a new clip, trim any intro frames that don't loop cleanly, and bump `CLIP_VERSION` in `sceneVideo.ts` so the browser and the iOS app fetch the new file. The current clip was cut 0.5 s in, because the source fades in from a magenta screen:
+
+```sh
+ffmpeg -ss 0.5 -i source.mp4 -an -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p \
+  -movflags +faststart public/art/video/home.mp4
+ffmpeg -ss 3 -i public/art/video/home.mp4 -frames:v 1 -q:v 4 public/art/video/home-poster.jpg
+```
+
+To make music from a clip, cross-fade its last half-second into its first so the loop is seamless, then bump `MUSIC_SRC` in `music.ts`:
+
+```sh
+ffmpeg -i source.mp4 -vn -filter_complex \
+  "[0:a]atrim=0:0.5,asetpts=PTS-STARTPTS[head];[0:a]atrim=0.5,asetpts=PTS-STARTPTS[body];[body][head]acrossfade=d=0.5[out]" \
+  -map "[out]" -c:a aac -b:a 128k public/art/audio/room-theme.m4a
+```
 
 ### Documentation
 

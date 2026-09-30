@@ -1,4 +1,9 @@
 import type { Difficulty } from "./difficulty";
+import {
+  ONE_ON_ONE_TALKS,
+  ROADMAP_FEATURES,
+  SPRINT_TASK_NAMES,
+} from "./pools/manageContent";
 import { nextUnit } from "./rng";
 import { shuffleWith } from "./workGames";
 
@@ -23,109 +28,7 @@ export type OneOnOnePuzzle = { rounds: OneOnOneRound[]; hint: boolean };
 
 const NAMES = ["Jun", "Morgan", "Sam", "Ari", "Priya", "Leo", "Mai", "Tom"];
 
-const TALKS: readonly {
-  mood: Mood;
-  says: string;
-  right: string;
-  wrong: [string, string];
-}[] = [
-  {
-    mood: "stressed",
-    says: "I'm drowning in tickets this week.",
-    right: "Let's move two of them to next week.",
-    wrong: ["Great, I'll add one more.", "Just work a bit faster."],
-  },
-  {
-    mood: "bored",
-    says: "I've done the same fix ten times now.",
-    right: "Want to try the new payment feature?",
-    wrong: ["That's just the job.", "Take a longer lunch."],
-  },
-  {
-    mood: "proud",
-    says: "I shipped the login page!",
-    right: "Nice work. Show it at the team demo.",
-    wrong: ["Took you long enough.", "Okay. What's next?"],
-  },
-  {
-    mood: "stuck",
-    says: "I can't figure out this bug.",
-    right: "Let's look at it together for twenty minutes.",
-    wrong: ["Figure it out yourself.", "Just skip it."],
-  },
-  {
-    mood: "tired",
-    says: "I stayed late three nights in a row.",
-    right: "Take tomorrow morning off.",
-    wrong: ["Keep it up!", "Everyone does that."],
-  },
-  {
-    mood: "unsure",
-    says: "Am I doing okay here?",
-    right: "Yes. Here's what you did well this month.",
-    wrong: ["Hard to say.", "Why do you ask?"],
-  },
-  {
-    mood: "upset",
-    says: "Someone keeps changing my work without asking.",
-    right: "Let's all agree on a plan together.",
-    wrong: ["Just ignore them.", "Change their work back."],
-  },
-  {
-    mood: "leaving",
-    says: "I got another job offer.",
-    right: "Thanks for telling me. What would make you stay?",
-    wrong: ["Good luck, bye.", "You can't leave."],
-  },
-  {
-    mood: "stressed",
-    says: "The launch date feels impossible.",
-    right: "Let's cut the plan down to what matters most.",
-    wrong: ["It's fine, just stay late.", "Launches are always like that."],
-  },
-  {
-    mood: "bored",
-    says: "Meetings take up my whole week.",
-    right: "Let's drop the ones you don't need to be in.",
-    wrong: ["Meetings build character.", "Try to enjoy them more."],
-  },
-  {
-    mood: "proud",
-    says: "A customer wrote to thank me!",
-    right: "That's great. Share it with the whole team.",
-    wrong: ["Customers say lots of things.", "Back to work, then."],
-  },
-  {
-    mood: "stuck",
-    says: "I don't understand the new tool.",
-    right: "Let's book an hour with someone who knows it.",
-    wrong: ["Read the manual again.", "Everyone else gets it."],
-  },
-  {
-    mood: "tired",
-    says: "My baby kept me up all night.",
-    right: "Take it easy today. Start late if you need to.",
-    wrong: ["That's not a work problem.", "Coffee fixes that."],
-  },
-  {
-    mood: "unsure",
-    says: "Should I try for a promotion?",
-    right: "Yes. Let's write down what you need together.",
-    wrong: ["Maybe in a few years.", "Why would you want that?"],
-  },
-  {
-    mood: "upset",
-    says: "I wasn't invited to the big planning meeting.",
-    right: "You should be there. I'll add you now.",
-    wrong: ["It wasn't that important.", "You're too busy anyway."],
-  },
-  {
-    mood: "leaving",
-    says: "I'm thinking about moving to another team.",
-    right: "Let's talk about what you'd like to work on.",
-    wrong: ["Do what you want.", "No one leaves my team."],
-  },
-];
+const TALKS = ONE_ON_ONE_TALKS;
 
 /** A teammate says how they feel. The right reply fits the feeling. */
 export function dealOneOnOne(
@@ -168,28 +71,7 @@ export type SprintTask = {
 
 export type SprintPuzzle = { capacity: number; tasks: SprintTask[] };
 
-const TASK_NAMES = [
-  "Checkout fix",
-  "New onboarding",
-  "Dark mode",
-  "Faster search",
-  "Update icons",
-  "Refund button",
-  "Email receipts",
-  "Bug bash",
-  "Clean old code",
-  "Help page",
-  "Login with phone",
-  "Order history",
-  "Gift wrap option",
-  "Speed up photos",
-  "Coupon codes",
-  "Push alerts",
-  "Accessibility pass",
-  "Translate to French",
-  "New pricing page",
-  "Fix crash on start",
-];
+const TASK_NAMES = SPRINT_TASK_NAMES;
 
 /**
  * Fill the sprint exactly to the team's capacity. Some cards are a real plan,
@@ -254,28 +136,7 @@ export type RoadmapPuzzle = { features: Feature[]; hint: boolean };
 export const ROADMAP_RULE =
   "Now: big impact, small effort. Later: small impact, big effort. Next: everything else.";
 
-const FEATURES = [
-  "Saved carts",
-  "Team chat",
-  "Offline mode",
-  "New logo",
-  "Gift cards",
-  "Price alerts",
-  "Voice search",
-  "Photo filters",
-  "Referral bonus",
-  "Weekly report",
-  "One-tap reorder",
-  "Birthday discount",
-  "Smart watch app",
-  "Shared wishlists",
-  "Live chat help",
-  "3D product view",
-  "Split payments",
-  "Loyalty points",
-  "Night delivery",
-  "Recipe ideas",
-];
+const FEATURES = ROADMAP_FEATURES;
 
 export function slotFor(feature: Pick<Feature, "impact" | "effort">): Slot {
   if (feature.impact === "big" && feature.effort === "small") return "now";

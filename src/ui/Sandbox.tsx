@@ -19,21 +19,10 @@ import {
   type DeviceId,
   type LookId,
 } from "../content/gear";
-import type { Stats } from "../game/types";
 import { careerStatus, type CareerState } from "../game/career";
 import { ALL_LEVELS, LEVEL_TITLE, trackOf } from "../game/ladder";
 import { jumpToLevel, meetMilestones, topUp } from "../game/sandbox";
 import { GameView } from "./GameView";
-
-const SAMPLE_STATS: Stats = {
-  money: 900,
-  energy: 80,
-  mood: 72,
-  skill: 16,
-  reputation: 18,
-  health: 86,
-  relationship: 40,
-};
 
 type SlotKey =
   | `environment:${EnvironmentLayer}`
@@ -80,7 +69,6 @@ export function Sandbox({
           environment={place}
           deviceId={device}
           lookId={look}
-          stats={SAMPLE_STATS}
           locked={false}
           panel={panel}
           hidden={hidden}
@@ -90,8 +78,6 @@ export function Sandbox({
           onWork={() => setPanel("work")}
           workDone={false}
           onEndDay={() => setPanel(null)}
-          onInvest={() => setPanel("invest")}
-          onShop={() => setPanel("shop")}
           onClose={() => setPanel(null)}
         >
           {panel === "work" ? (

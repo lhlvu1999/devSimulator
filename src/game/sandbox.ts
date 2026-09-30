@@ -1,4 +1,10 @@
-import { acceptOffer, finishPlacement, type CareerState } from "./career";
+import {
+  acceptOffer,
+  chooseGoal,
+  finishPlacement,
+  freshBoard,
+  type CareerState,
+} from "./career";
 import { MILESTONES, emptyProgress, type Level } from "./ladder";
 import type { WorkGame } from "./workGames";
 import { emptyFeed, refreshFeed } from "./workline";
@@ -7,7 +13,8 @@ import { emptyFeed, refreshFeed } from "./workline";
 
 function hired(state: CareerState): CareerState {
   let next = state;
-  if (next.section === "placement") next = finishPlacement(next, "win", 4);
+  if (next.section === "placement") next = chooseGoal(finishPlacement(next, "win", 4), "fire");
+  if (next.section === "goal") next = chooseGoal(next, "fire");
   if (next.section === "offers") {
     const offer = next.offers[0];
     if (offer) next = acceptOffer(next, offer.id);
@@ -24,16 +31,19 @@ export function jumpToLevel(state: CareerState, level: Level): CareerState {
     reputation: next.stats.reputation,
     seed: (next.rngState ^ 0x51f15e) >>> 0,
   });
-  return {
-    ...next,
-    level,
-    levelDay: next.day,
-    progress: emptyProgress(),
-    reviewDay: null,
-    workDone: false,
-    feed: refreshed.feed,
-    log: [`Sandbox: you are now at ${level}.`],
-  };
+  return freshBoard(
+    {
+      ...next,
+      level,
+      levelDay: next.day,
+      progress: emptyProgress(),
+      reviewDay: null,
+      workDone: false,
+      feed: refreshed.feed,
+      log: [`Sandbox: you are now at ${level}.`],
+    },
+    0,
+  );
 }
 
 export function meetMilestones(state: CareerState): CareerState {
@@ -59,12 +69,13 @@ export function topUp(state: CareerState): CareerState {
   return {
     ...next,
     workDone: false,
+    board: { ...next.board, hour: 0 },
     stats: {
       ...next.stats,
       money: next.stats.money + 1000,
       energy: 100,
       health: 100,
     },
-    log: ["Sandbox: +$1,000, full energy, full health."],
+    log: ["Sandbox: +$1,000, full energy, full health, and a fresh work week."],
   };
 }
