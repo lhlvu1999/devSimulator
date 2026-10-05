@@ -29,6 +29,15 @@ export function winner(board: Board): Mark | "draw" | null {
   return null;
 }
 
+/** The three cells of the finished line, or null while nobody has three in a row. */
+export function winningLine(board: Board): readonly number[] | null {
+  for (const line of LINES) {
+    const [a, b, c] = line;
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) return line;
+  }
+  return null;
+}
+
 function winningMove(board: Board, mark: Mark): number | null {
   for (const [a, b, c] of LINES) {
     const line = [board[a], board[b], board[c]];

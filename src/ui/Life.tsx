@@ -1,4 +1,5 @@
 import { formatMoney } from "../game/format";
+import { IntroSteps } from "./Intro";
 import { ACHIEVEMENTS } from "../game/achievements";
 import { useState } from "react";
 import {
@@ -69,6 +70,7 @@ function EffectTags({
 export function GoalPicker({ onPick }: { onPick: (goal: GoalId) => void }) {
   return (
     <section className="screen life-screen">
+      <IntroSteps step={2} />
       <p className="kicker">{t("Age 22 · A whole career ahead")}</p>
       <h1>{t("What is this life for?")}</h1>
       <p className="ask">

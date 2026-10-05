@@ -18,11 +18,12 @@ npm run push       # push to github.com/lhlvu1999/devSimulator as lhlvu1999, the
 
 ## The day
 
-1. **Placement.** Tic-tac-toe against a newbie opponent. A faster win gives a higher fresher profile: skill 8 on a loss, 11 on a draw, 12 for a slow win, 16 for a 4-move win, and up to 22 for a 3-move win. Placement never goes past fresher.
-2. **Goal, then offers.** Pick what this life is for, then choose from three companies based on your placement skill. Each has a tier (seed, growth, established, giant) and a type (startup, product, agency, enterprise, remote).
-3. **Room.** The room is your workplace. The top bar shows the week, your title, energy, mood, health, and money; tap it for full stats. The machine on the desk opens **Work**. Everything else lives in the bottom bar: **Home** (the room), **Invest**, **Jobs** (Workline), **Shop**, and **Me** (stats, the Career and Life cards, and Settings). Tap the tab you are on to go back to the room. The bar hides during work, free time, and interviews.
-4. **Work.** The monitor opens the **work board**: a week of 40 work hours and a set of tickets with sizes and deadlines. Work tickets until you choose **Wrap up the week**. After that, the monitor says **Free time**.
-5. **Free time and the week's end.** The monitor opens free time. **End the week** moves prices, pays payday and rent, refills energy, and shows a summary. **Next week** starts the new one, sometimes with an event card.
+1. **Title screen.** A new life opens on the home room clip with the game's name, the language switch, and **Start**. It comes back after **Start a new life**.
+2. **Entry test.** At a job fair, Mai, a tech lead, plays tic-tac-toe with you; she reacts as the game goes. A faster win gives a higher fresher level: skill 8 on a loss, 11 on a draw, 12 for a slow win, 16 for a 4-move win, and up to 22 for a 3-move win. A legend under the board shows the levels, and the result card shows your level and what you start with. The test never goes past fresher. Code: `src/ui/Placement.tsx`.
+3. **Goal, then offers.** Pick what this life is for, then choose from three companies based on your entry test. Each offer shows the company's size (seed, growth, established, giant) and working style (Startup, Big company, Remote). A step strip across the top of these three screens shows where you are.
+4. **Room.** The room is your workplace. The top bar shows the week, your title, energy, mood, health, and money; tap it for full stats. The machine on the desk opens **Work**. Everything else lives in the bottom bar: **Home** (the room), **Invest**, **Jobs** (Workline), **Shop**, and **Me** (stats, the Career and Life cards, and Settings). Tap the tab you are on to go back to the room. The bar hides during work, free time, and interviews.
+5. **Work.** The monitor opens the **work board**: a week of 40 work hours and a set of tickets with sizes and deadlines. Work tickets until you choose **Wrap up the week**. After that, the monitor says **Free time**.
+6. **Free time and the week's end.** The monitor opens free time. **End the week** moves prices, pays payday and rent, refills energy, and shows a summary. **Next week** starts the new one, sometimes with an event card.
 
 Payday and rent both come every 4 weeks, like a month: salary × level pay in cash plus stock, and $500 rent.
 
@@ -153,23 +154,23 @@ From week 5, each new week has a 35% chance to start with an event card. It sits
 
 **Workplace events** make the three kinds of job feel different. The kind is the working style in the top bar, set by `workplaceOf()` in `src/content/companies.ts`: startups, agencies, and seed or growth product companies are **Startup**; established or giant product companies and every enterprise are **Big company**; remote-first companies are **Remote**. Offer cards and job posts show the same label. Each kind has its own five events, drawn alongside the ones above at weight 1 each, which works out to about 4–5 a year and 37–50% of work events. They live in `src/game/workplaceEvents.ts`.
 
-| Workplace       | Event                        | Choices                                                                                                                                                                          |
-| --------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Startup         | Demo day crunch              | All-nighter (+30 skill, +4 reputation, −6 health, −15 energy, −2 mood) or cut the scope (−3 relationship, +1 reputation)                                                         |
+| Workplace            | Event                        | Choices                                                                                                                                                                          |
+| -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup              | Demo day crunch              | All-nighter (+30 skill, +4 reputation, −6 health, −15 energy, −2 mood) or cut the scope (−3 relationship, +1 reputation)                                                         |
 | Startup, no agencies | Payday is late               | Wait (+3 reputation, +6 relationship; the next payday is held a week, then paid in full, or lost if the job ends first) or quietly look (a shortlisted stretch role in Workline) |
-| Startup         | You're also DevOps now       | Take it on (+45 skill, −12 energy, −2 mood) or decline (−6 relationship, +2 mood)                                                                                                |
-| Startup         | A message at 11pm            | Answer now (+5 relationship, −3 health, −3 mood) or in the morning (−3 relationship, +3 mood)                                                                                    |
+| Startup              | You're also DevOps now       | Take it on (+45 skill, −12 energy, −2 mood) or decline (−6 relationship, +2 mood)                                                                                                |
+| Startup              | A message at 11pm            | Answer now (+5 relationship, −3 health, −3 mood) or in the morning (−3 relationship, +3 mood)                                                                                    |
 | Startup, no agencies | The round closed             | +8% salary at this company, +8 mood, +3 relationship                                                                                                                             |
-| Big company     | Reorg                        | Roll with it (−8 relationship, −2 mood, +10 skill) or ask to stay with your old lead (−2 relationship at relationship 60+, otherwise −10 and −4 mood)                            |
-| Big company     | Performance calibration      | Bold self-review (+6 reputation, +4 mood at reputation 50+, otherwise −3 and −4) or modest (+1 reputation)                                                                       |
-| Big company     | Compliance training          | 4 work hours this week, or a weekend day and −2 mood; +2 reputation either way                                                                                                   |
-| Big company     | Team building weekend        | Go (a weekend day, +7 relationship, +4 mood, −8 energy) or skip (−4 relationship, +2 mood)                                                                                       |
-| Big company     | Yearly health check          | Go (4 work hours, +8 health, +1 mood) or skip                                                                                                                                    |
-| Remote          | A 10pm call with the US team | Join (+4 reputation, +4 relationship, −3 health, −2 mood) or ask for notes (−4 relationship, +2 mood)                                                                            |
-| Remote          | The undersea cable is cut    | Café ($40, +1 mood) or push through (8 work hours, −4 mood)                                                                                                                      |
-| Remote          | A lonely week                | Coworking ($60, +8 mood, +1 relationship) or call a friend (+4 mood)                                                                                                             |
-| Remote          | Home office stipend          | A good chair (+6 health, +2 mood) or keep the $150                                                                                                                               |
-| Remote          | The neighbor is drilling     | Café ($30, +1 mood) or headphones (−5 mood)                                                                                                                                      |
+| Big company          | Reorg                        | Roll with it (−8 relationship, −2 mood, +10 skill) or ask to stay with your old lead (−2 relationship at relationship 60+, otherwise −10 and −4 mood)                            |
+| Big company          | Performance calibration      | Bold self-review (+6 reputation, +4 mood at reputation 50+, otherwise −3 and −4) or modest (+1 reputation)                                                                       |
+| Big company          | Compliance training          | 4 work hours this week, or a weekend day and −2 mood; +2 reputation either way                                                                                                   |
+| Big company          | Team building weekend        | Go (a weekend day, +7 relationship, +4 mood, −8 energy) or skip (−4 relationship, +2 mood)                                                                                       |
+| Big company          | Yearly health check          | Go (4 work hours, +8 health, +1 mood) or skip                                                                                                                                    |
+| Remote               | A 10pm call with the US team | Join (+4 reputation, +4 relationship, −3 health, −2 mood) or ask for notes (−4 relationship, +2 mood)                                                                            |
+| Remote               | The undersea cable is cut    | Café ($40, +1 mood) or push through (8 work hours, −4 mood)                                                                                                                      |
+| Remote               | A lonely week                | Coworking ($60, +8 mood, +1 relationship) or call a friend (+4 mood)                                                                                                             |
+| Remote               | Home office stipend          | A good chair (+6 health, +2 mood) or keep the $150                                                                                                                               |
+| Remote               | The neighbor is drilling     | Café ($30, +1 mood) or headphones (−5 mood)                                                                                                                                      |
 
 Lost work hours come off the current week, so deadlines get closer. The late payday and money owed are kept in `counters`, and a raise changes the salary on your copy of the company, so it ends when you change jobs.
 
@@ -650,13 +651,13 @@ The goal is to keep each part swappable, reusable, and animatable.
 
 Play currently uses a looping clip as the whole room instead of the stacked layers. Sandbox still shows the layered entities for asset testing. The room shows the office of the company you work for, and changes when you switch jobs:
 
-| Clip in `public/art/video/` | Shown for                                                           |
-| --------------------------- | ------------------------------------------------------------------- |
+| Clip in `public/art/video/` | Shown for                                                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
 | `startup.mp4`               | Startup style: startups, agencies, and seed or growth product companies. A small studio with plants and a client wall |
-| `product.mp4`               | Established or giant product companies: a modern open-plan office, two monitors          |
-| `enterprise.mp4`            | Enterprises of any size: long rows of desks under office lights                 |
-| `remote.mp4`                | Remote companies: a home office at night                            |
-| `home.mp4`                  | Between jobs                                                        |
+| `product.mp4`               | Established or giant product companies: a modern open-plan office, two monitors                                       |
+| `enterprise.mp4`            | Enterprises of any size: long rows of desks under office lights                                                       |
+| `remote.mp4`                | Remote companies: a home office at night                                                                              |
+| `home.mp4`                  | Between jobs                                                                                                          |
 
 Each clip has a matching `-poster.jpg` still frame, and `videoFor()` in `src/content/sceneVideo.ts` picks the clip.
 

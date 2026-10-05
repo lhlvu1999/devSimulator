@@ -1,7 +1,17 @@
-import { useState } from "react";
-import { emptyBoard, newbieMove, winner, type Board } from "../game/tictactoe";
-import type { PlacementOutcome } from "../game/placement";
+import { useEffect, useRef, useState } from "react";
+import { formatMoney } from "../game/format";
+import { fresherProfile, type PlacementOutcome } from "../game/placement";
+import {
+  emptyBoard,
+  newbieMove,
+  winner,
+  winningLine,
+  type Board,
+  type Mark,
+} from "../game/tictactoe";
 import { t } from "../i18n";
+import { IntroSteps } from "./Intro";
+import "./intro.css";
 
 const NAMES = [
   "Top left",
@@ -15,6 +25,34 @@ const NAMES = [
   "Bottom right",
 ];
 
+/** How many moves a win took, and the fresher level it earns. */
+const TIERS = [
+  { label: "High fresher", rule: "Win in 3" },
+  { label: "Mid fresher", rule: "Win in 4" },
+  { label: "Low fresher", rule: "Anything else" },
+] as const;
+
+/** What the interviewer says as the game goes. */
+function interviewerLine(
+  finished: PlacementOutcome | null,
+  moves: number,
+): string {
+  if (finished === "win")
+    return moves <= 3
+      ? t('That was fast. I\'m writing "sharp" on your form.')
+      : t("Nicely done. I'll pass your name along.");
+  if (finished === "draw") return t("A draw. Solid, but I've seen sharper.");
+  if (finished === "loss")
+    return t("Got you this time. Everyone starts somewhere.");
+  if (moves === 0)
+    return t(
+      "Hi! A quick warm-up before we talk jobs. You're X, so you go first.",
+    );
+  if (moves === 1) return t("Interesting opening.");
+  if (moves === 2) return t("Hmm. Let me think about that one.");
+  return t("Still anyone's game.");
+}
+
 export function Placement({
   onDone,
 }: {
@@ -24,6 +62,7 @@ export function Placement({
   const [seed, setSeed] = useState(0x71c7ac);
   const [moves, setMoves] = useState(0);
   const [finished, setFinished] = useState<PlacementOutcome | null>(null);
+  const line = winningLine(board);
 
   function play(index: number) {
     if (finished || board[index]) return;
@@ -48,34 +87,78 @@ export function Placement({
   }
 
   return (
-    <section className="screen">
-      <p className="kicker">{t("Dev Simulator")}</p>
-      <h1>{t("Placement")}</h1>
+    <section className="screen entry-test">
+      <IntroSteps step={1} />
+      <p className="kicker">{t("Job fair")}</p>
+      <h1>{t("Entry test")}</h1>
       <p className="prose">
-        {t("Play tic-tac-toe against a new opponent. A faster win sets a higher fresher profile. The result stays inside the fresher band.")}</p>
-      <div className="board" role="grid" aria-label={t("Tic-tac-toe")}>
+        {t(
+          "Beat the interviewer at tic-tac-toe. The faster you win, the higher your fresher level, and the better your first offers.",
+        )}
+      </p>
+
+      <div className="interviewer">
+        <span className="interviewer-face" aria-hidden="true">
+          M
+        </span>
+        <div>
+          <strong>{t("Mai, tech lead")}</strong>
+          <p className="interviewer-says" aria-live="polite">
+            {interviewerLine(finished, moves)}
+          </p>
+        </div>
+      </div>
+
+      <div className="ttt" role="grid" aria-label={t("Tic-tac-toe")}>
         {board.map((cell, index) => (
           <button
             key={NAMES[index]}
             type="button"
-            className="cell"
-            aria-label={t(NAMES[index] ?? "")}
+            className={`ttt-cell${line?.includes(index) ? " in-line" : ""}`}
+            aria-label={
+              cell
+                ? t("{place}: {mark}", {
+                    place: t(NAMES[index] ?? ""),
+                    mark: cell,
+                  })
+                : t(NAMES[index] ?? "")
+            }
+            data-mark={cell ?? undefined}
             disabled={Boolean(finished) || cell !== null}
             onClick={() => play(index)}
           >
-            {cell ?? ""}
+            {cell ? <MarkArt mark={cell} /> : null}
           </button>
         ))}
       </div>
+
       {finished ? (
         <PlacementResult outcome={finished} moves={moves} onDone={onDone} />
       ) : (
-        <p className="prose muted">
-                    {t("You are X.")}{" "}
-          {moves === 0 ? t("Your move.") : t("{n} moves so far.", { n: moves })}
-        </p>
+        <ul className="ttt-tiers" aria-label={t("Fresher levels")}>
+          {TIERS.map((tier) => (
+            <li key={tier.label}>
+              <b>{t(tier.rule)}</b>
+              {t(tier.label)}
+            </li>
+          ))}
+        </ul>
       )}
     </section>
+  );
+}
+
+/** Hand-drawn marks that draw themselves in. */
+function MarkArt({ mark }: { mark: Mark }) {
+  return mark === "X" ? (
+    <svg className="mark mark-x" viewBox="0 0 40 40" aria-hidden="true">
+      <path d="M10 10 30 30" />
+      <path d="M30 10 10 30" />
+    </svg>
+  ) : (
+    <svg className="mark mark-o" viewBox="0 0 40 40" aria-hidden="true">
+      <circle cx="20" cy="20" r="11" />
+    </svg>
   );
 }
 
@@ -88,21 +171,45 @@ function PlacementResult({
   moves: number;
   onDone: (outcome: PlacementOutcome, moves: number) => void;
 }) {
-  const line =
-    outcome === "win"
-            ? t("You won in {n} moves.", { n: moves })
-      : outcome === "draw"
-        ? t("The board filled. That is a draw.")
-        : t("The other side won.");
+  const card = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    card.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" });
+  }, []);
+  const profile = fresherProfile(outcome, moves);
+  const rank =
+    profile.label === "High fresher"
+      ? 3
+      : profile.label === "Mid fresher"
+        ? 2
+        : 1;
   return (
-    <>
-      <p className="projection">{line}</p>
+    <div ref={card} className={`entry-result rank-${rank}`} role="status">
+      <div className="entry-result-head">
+        <span className="entry-rank" aria-hidden="true">
+          {[1, 2, 3].map((dot) => (
+            <i key={dot} className={dot <= rank ? "on" : ""} />
+          ))}
+        </span>
+        <strong>{t(profile.label)}</strong>
+      </div>
+      <p>{profile.blurb}</p>
+      <p className="entry-start">
+        {t(
+          "You start with {money}, skill {skill}, and reputation {reputation}.",
+          {
+            money: formatMoney(profile.stats.money),
+            skill: profile.stats.skill,
+            reputation: profile.stats.reputation,
+          },
+        )}
+      </p>
       <button
         type="button"
         className="primary"
         onClick={() => onDone(outcome, moves)}
       >
-        {t("See job offers")}</button>
-    </>
+        {t("Next: choose your goal")}
+      </button>
+    </div>
   );
 }
