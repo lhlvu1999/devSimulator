@@ -1,3 +1,4 @@
+import { t as tr } from "../i18n";
 import type { Stats } from "./types";
 import type { WorkGame } from "./workGames";
 
@@ -184,7 +185,7 @@ export function requirements(input: {
   const tickets = (Object.keys(milestone.tickets) as WorkGame[]).map(
     (game) => ({
       id: game,
-      label: `Clean ${input.gameLabel[game]}`,
+            label: tr("Clean {game}", { game: tr(input.gameLabel[game]) }),
       have: input.progress[game],
             need: Math.max(1, Math.ceil((milestone.tickets[game] ?? 0) * scale)),
     }),
@@ -195,7 +196,7 @@ export function requirements(input: {
     ...tickets,
     {
       id: "gate",
-      label: gateLabel,
+            label: tr(gateLabel),
       have: input.stats[milestone.gate.stat],
       need: milestone.gate.value,
     },

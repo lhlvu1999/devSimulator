@@ -151,6 +151,28 @@ From week 5, each new week has a 35% chance to start with an event card. It sits
 | Cat is sick              | Any time                                                                    | Vet ($250, +2 mood) or wait (−6 mood)                                                                                      |
 | Office raffle            | Any time                                                                    | +$200, +3 mood                                                                                                             |
 
+**Workplace events** make the three kinds of job feel different. The kind is the working style in the top bar, set by `workplaceOf()` in `src/content/companies.ts`: startups, agencies, and seed or growth product companies are **Startup**; established or giant product companies and every enterprise are **Big company**; remote-first companies are **Remote**. Offer cards and job posts show the same label. Each kind has its own five events, drawn alongside the ones above at weight 1 each, which works out to about 4–5 a year and 37–50% of work events. They live in `src/game/workplaceEvents.ts`.
+
+| Workplace       | Event                        | Choices                                                                                                                                                                          |
+| --------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup         | Demo day crunch              | All-nighter (+30 skill, +4 reputation, −6 health, −15 energy, −2 mood) or cut the scope (−3 relationship, +1 reputation)                                                         |
+| Startup, no agencies | Payday is late               | Wait (+3 reputation, +6 relationship; the next payday is held a week, then paid in full, or lost if the job ends first) or quietly look (a shortlisted stretch role in Workline) |
+| Startup         | You're also DevOps now       | Take it on (+45 skill, −12 energy, −2 mood) or decline (−6 relationship, +2 mood)                                                                                                |
+| Startup         | A message at 11pm            | Answer now (+5 relationship, −3 health, −3 mood) or in the morning (−3 relationship, +3 mood)                                                                                    |
+| Startup, no agencies | The round closed             | +8% salary at this company, +8 mood, +3 relationship                                                                                                                             |
+| Big company     | Reorg                        | Roll with it (−8 relationship, −2 mood, +10 skill) or ask to stay with your old lead (−2 relationship at relationship 60+, otherwise −10 and −4 mood)                            |
+| Big company     | Performance calibration      | Bold self-review (+6 reputation, +4 mood at reputation 50+, otherwise −3 and −4) or modest (+1 reputation)                                                                       |
+| Big company     | Compliance training          | 4 work hours this week, or a weekend day and −2 mood; +2 reputation either way                                                                                                   |
+| Big company     | Team building weekend        | Go (a weekend day, +7 relationship, +4 mood, −8 energy) or skip (−4 relationship, +2 mood)                                                                                       |
+| Big company     | Yearly health check          | Go (4 work hours, +8 health, +1 mood) or skip                                                                                                                                    |
+| Remote          | A 10pm call with the US team | Join (+4 reputation, +4 relationship, −3 health, −2 mood) or ask for notes (−4 relationship, +2 mood)                                                                            |
+| Remote          | The undersea cable is cut    | Café ($40, +1 mood) or push through (8 work hours, −4 mood)                                                                                                                      |
+| Remote          | A lonely week                | Coworking ($60, +8 mood, +1 relationship) or call a friend (+4 mood)                                                                                                             |
+| Remote          | Home office stipend          | A good chair (+6 health, +2 mood) or keep the $150                                                                                                                               |
+| Remote          | The neighbor is drilling     | Café ($30, +1 mood) or headphones (−5 mood)                                                                                                                                      |
+
+Lost work hours come off the current week, so deadlines get closer. The late payday and money owed are kept in `counters`, and a raise changes the salary on your copy of the company, so it ends when you change jobs.
+
 **Without a job** the monitor says **Job hunt**. Free time has an **Open Workline** button. There's no payday, rent still comes due, and joining a company from Workline puts you straight back to work.
 
 ### Seasons and holidays
@@ -285,17 +307,17 @@ Clean parts pay floor(seconds left ÷ 2 × the difficulty multiplier) in cash.
 
 Difficulty comes from your **title**, not your skill. Each ticket rolls its difficulty when it lands on the board, from your level's mix, and the card shows it as **Easy**, **Normal**, or **Hard**. Urgent and Critical tickets are never easy: an easy roll becomes normal.
 
-| Title | Easy | Normal | Hard |
-| ----- | ---- | ------ | ---- |
-| Fresher | 70% | 30% | — |
-| Junior engineer | 45% | 45% | 10% |
-| Engineer | 25% | 50% | 25% |
-| Senior engineer | 10% | 50% | 40% |
-| Staff engineer | 5% | 35% | 60% |
-| Principal engineer | — | 30% | 70% |
-| Team lead | 20% | 50% | 30% |
-| Engineering manager | 10% | 45% | 45% |
-| Director | 5% | 35% | 60% |
+| Title               | Easy | Normal | Hard |
+| ------------------- | ---- | ------ | ---- |
+| Fresher             | 70%  | 30%    | —    |
+| Junior engineer     | 45%  | 45%    | 10%  |
+| Engineer            | 25%  | 50%    | 25%  |
+| Senior engineer     | 10%  | 50%    | 40%  |
+| Staff engineer      | 5%   | 35%    | 60%  |
+| Principal engineer  | —    | 30%    | 70%  |
+| Team lead           | 20%  | 50%    | 30%  |
+| Engineering manager | 10%  | 45%    | 45%  |
+| Director            | 5%   | 35%    | 60%  |
 
 Harder work pays more. Skill, reputation, and relationship gains from a part, and its cash for time left, are multiplied by **0.75** on easy, **1** on normal, and **1.5** on hard. Higher titles earn more because they get more hard work.
 
@@ -449,27 +471,27 @@ A post has one or two benefits.
 
 Every post lists what HR is looking for, checked against your CV with ✓ or ✗, plus a match badge. Your CV is your skill (each course certificate adds 50), your **experience** (weeks employed anywhere, +1 each week you have a job and aren't off sick or burned out), your reputation, and, for manager roles, your team relationship.
 
-| Level | Skill | Experience | Other |
-| ----- | ----- | ---------- | ----- |
-| Junior engineer | 80 | 4 weeks | — |
-| Engineer | 220 | 14 weeks | — |
-| Senior engineer | 420 | 30 weeks | Reputation 30 |
-| Staff engineer | 800 | 60 weeks | Reputation 50 |
-| Principal engineer | 1,300 | 100 weeks | Reputation 65 |
-| Team lead | 350 | 30 weeks | Relationship 50 |
-| Engineering manager | — | 55 weeks | Relationship 60, reputation 45 |
-| Director | — | 95 weeks | Relationship 65, reputation 60 |
+| Level               | Skill | Experience | Other                          |
+| ------------------- | ----- | ---------- | ------------------------------ |
+| Junior engineer     | 80    | 4 weeks    | —                              |
+| Engineer            | 220   | 14 weeks   | —                              |
+| Senior engineer     | 420   | 30 weeks   | Reputation 30                  |
+| Staff engineer      | 800   | 60 weeks   | Reputation 50                  |
+| Principal engineer  | 1,300 | 100 weeks  | Reputation 65                  |
+| Team lead           | 350   | 30 weeks   | Relationship 50                |
+| Engineering manager | —     | 55 weeks   | Relationship 60, reputation 45 |
+| Director            | —     | 95 weeks   | Relationship 65, reputation 60 |
 
 The bars sit close to where the same player would be when promoted in-house, so switching is an alternative, not a shortcut.
 
 **Send CV** is free and happens once per post. Your match is your weakest requirement as a share of what's asked.
 
-| Match | Badge | Chance of an interview |
-| ----- | ----- | ---------------------- |
-| Every requirement met | You match | Always |
+| Match                     | Badge       | Chance of an interview                    |
+| ------------------------- | ----------- | ----------------------------------------- |
+| Every requirement met     | You match   | Always                                    |
 | 80% or more on everything | Close match | 25% at 80%, rising to 70% just under 100% |
-| 60% to 80% | Long shot | 5% |
-| Below 60% | Long shot | None |
+| 60% to 80%                | Long shot   | 5%                                        |
+| Below 60%                 | Long shot   | None                                      |
 
 With relationship 60 or more, a referral adds 15% to any chance above zero, up to 95%. A turned-down CV puts that company on the 5-day cooldown. A recruiter who reaches out skips the screen: the post arrives already shortlisted.
 
@@ -502,7 +524,7 @@ Chances show as **Likely** (70%+), **Maybe** (40–69%), or **Long shot**. A yes
 
 - You take the post's title. A post above your level counts as a promotion.
 - Promotion progress always starts fresh at a new company: its milestones count your work there from zero. Skill, reputation, experience, and certificates stay with you, since they're on your CV.
-- **A strong CV means fewer tasks.** On joining, your CV is checked against the bar for the level *after* the one you're hired at. Halfway to that bar or less, the ticket counts are normal. Meeting it cuts them in half. In between, the cut slides from 0% to 50%, rounded to 5%. Stat gates like reputation 30 never change. The offer screen shows the cut before you accept, and the Career card shows it after.
+- **A strong CV means fewer tasks.** On joining, your CV is checked against the bar for the level _after_ the one you're hired at. Halfway to that bar or less, the ticket counts are normal. Meeting it cuts them in half. In between, the cut slides from 0% to 50%, rounded to 5%. Stat gates like reputation 30 never change. The offer screen shows the cut before you accept, and the Career card shows it after.
 - The cut lasts while you stay at that company at that level. An in-house promotion or a track switch goes back to normal counts.
 
 ## Invest
@@ -582,6 +604,29 @@ The Shop has three tabs. Every row has one button that says what tapping it does
 
 **Me → Settings → Start a new life** erases the save. It asks you to confirm first.
 
+**Me → Settings → Language** switches between English and Tiếng Việt, and every screen changes right away. A new player starts in Vietnamese when the phone's language is Vietnamese, otherwise in English, and the choice is saved on the device.
+
+## Languages
+
+The game is written in English, and every player-facing string goes through `t()` in `src/i18n/index.ts`. The English text is the key, so English needs no dictionary.
+
+- `t("Payday {amount}", { amount })` translates a sentence. Names and numbers go in as `{placeholders}`, so word order can change per language.
+- `tn(count, "{n} job", "{n} jobs")` picks the English plural. Vietnamese maps both to one line.
+- `tc("blackjack", "Stand")` is for a word that means different things in different places. The key becomes `Stand|blackjack`.
+
+Vietnamese lives in `src/i18n/vi/`, split by area so each file can be reviewed on its own: `ui.ts` for screens, `game.ts` for rules, messages, and events, `content.ts` for companies, gear, tickets, and tidy scenes, and `pools.ts` for the mini-game pools. The pools are generated from a few hundred base lines, so `pools.ts` holds the base lines plus patterns that rebuild the variations ("Urgent: …", "(v2)", "— lite", 1:1 lead-ins). A pattern only succeeds when every part of the sentence has a translation.
+
+Style: the game calls the player "bạn", and keeps the English words Vietnamese developers use every day (ticket, bug, deadline, sprint, review, release, OT, CV, HR). Vietnamese uses the bundled Lora font, because the default Iowan font can't stack Vietnamese marks.
+
+Text the game writes as it happens (the weekly summary, event cards, endings) is written in the language active at that moment. After switching languages, those lines change with the next one.
+
+Two tests keep the translation complete:
+
+- `src/i18n/coverage.test.ts` reads every shipped source file and fails on any English string a player could see that has no Vietnamese, apart from names of companies, stocks, and people. It also fails if two dictionary files give the same key different meanings.
+- `src/i18n/playthrough.test.tsx` plays about two years in Vietnamese, deals every mini-game hundreds of times, and clicks through the main screens. It fails on any text the translator didn't know, which catches sentences that are only put together while playing.
+
+To add a language, add a dictionary folder like `vi/`, add the language to `LANGS`, and extend the two tests.
+
 ## Planned
 
 - **Cost of living:** homes with their own rent, lifestyle creep, and taxes.
@@ -603,11 +648,21 @@ The goal is to keep each part swappable, reusable, and animatable.
 
 ### Video room (temporary)
 
-Play currently uses a looping clip as the whole room instead of the stacked layers: `public/art/video/home.mp4`, with `home-poster.jpg` as the still frame. Sandbox still shows the layered entities for asset testing.
+Play currently uses a looping clip as the whole room instead of the stacked layers. Sandbox still shows the layered entities for asset testing. The room shows the office of the company you work for, and changes when you switch jobs:
 
-The monitor glass is set in `src/content/sceneVideo.ts` as a percent box of the video frame. The whole 9:16 frame is always shown, never cropped. It fits the screen above the tab bar, like `object-fit: contain` anchored to the bottom, so it's as large as the phone allows. The **top bar** then fills exactly the space the clip leaves above it. When that space is too thin to read, for example under a notch or on a short phone, the bar keeps a minimum height and frosts over the top edge of the clip instead of shrinking it. Space left on the sides of short or wide screens is filled with a blur of the poster frame. The top bar shows the week, age, and work clock (or Free time), your title and company, money, and energy, mood, and health as labeled horizontal bars with icons. It lays itself out by its own height: three rows when the gap is tall, and two when it's tight, with the time merged into the title line. Tapping it opens **Me**. `src/ui/useFitRect.ts` maps the glass box onto the screen with the same math at runtime. The **Work** / **End the day** button sits exactly on the glass, and the work screen grows out of it.
+| Clip in `public/art/video/` | Shown for                                                           |
+| --------------------------- | ------------------------------------------------------------------- |
+| `startup.mp4`               | Startup style: startups, agencies, and seed or growth product companies. A small studio with plants and a client wall |
+| `product.mp4`               | Established or giant product companies: a modern open-plan office, two monitors          |
+| `enterprise.mp4`            | Enterprises of any size: long rows of desks under office lights                 |
+| `remote.mp4`                | Remote companies: a home office at night                            |
+| `home.mp4`                  | Between jobs                                                        |
 
-To swap the clip, keep the same camera and measure the new glass. The current box was found by sampling frames across the clip and keeping the solid dark screen area that stays put while the camera drifts. A flat magenta screen in the first frame also works well. With reduced motion turned on, the clip pauses on the poster.
+Each clip has a matching `-poster.jpg` still frame, and `videoFor()` in `src/content/sceneVideo.ts` picks the clip.
+
+The glass of the character's main monitor is set in `src/content/sceneVideo.ts` as its four corners, in pixels of the video frame, because angled monitors aren't rectangles. The whole 9:16 frame is always shown, never cropped. It fits the screen above the tab bar, like `object-fit: contain` anchored to the bottom, so it's as large as the phone allows. The **top bar** then fills exactly the space the clip leaves above it. When that space is too thin to read, for example under a notch or on a short phone, the bar keeps a minimum height and frosts over the top edge of the clip instead of shrinking it. Space left on the sides of short or wide screens is filled with a blur of the poster frame. The top bar shows the week, age, and work clock (or Free time), your title and company, money, and energy, mood, and health as labeled horizontal bars with icons. It lays itself out by its own height: three rows when the gap is tall, and two when it's tight, with the time merged into the title line. Tapping it opens **Me**. `src/ui/useFitRect.ts` maps the frame onto the screen with the same math at runtime, and `src/ui/glass.ts` places the corners. Only the glass itself takes the **Work** / **End the day** tap, not the wall or desk around it, and the work screen grows out of the glass's exact shape.
+
+Each clip's corners were read off a zoomed pixel grid of the monitor the character faces (in the product office, the right-hand one of his two), then checked at the start, middle, and end of the loop so they hold while the camera drifts. In the startup and enterprise offices that monitor is seen from the side and is only about 15–25 points wide on a phone. There the tap area is padded evenly on both sides to 44 points, Apple's minimum comfortable tap size, while the open animation still starts from the glass itself. With reduced motion turned on, the clip pauses on the poster.
 
 The clip is silent. Its sound became the game's music: `public/art/audio/room-theme.m4a`, played by `src/ui/music.ts`.
 
@@ -615,13 +670,16 @@ The clip is silent. Its sound became the game's music: `public/art/audio/room-th
 - Browsers only allow sound after a tap, so music starts on the player's first tap or key press and fades in.
 - **Me → Settings → Music** turns it off with a fade, and the choice is saved on the device. The music pauses while the app is in the background.
 
-When you swap in a new clip, trim any intro frames that don't loop cleanly, and bump `CLIP_VERSION` in `sceneVideo.ts` so the browser and the iOS app fetch the new file. The current clip was cut 0.5 s in, because the source fades in from a magenta screen:
+When you swap in a new clip, bump `CLIP_VERSION` in `sceneVideo.ts` so the browser and the iOS app fetch the new file. Generated clips rarely end where they start, so the office clips cross-fade their last second into their first, which makes the loop seamless. Skip any opening frames that don't belong in the loop first: the first 4 frames of each source are slightly off, and the startup and product sources open on a white monitor that switches to code at 1.5 s and 4.3 s, so they start after the switch. With `START` as the first frame to keep and `END` as the source's frame count minus `START` minus 24, the 24-frame fade starts at `(END - 24) / 24` seconds:
 
 ```sh
-ffmpeg -ss 0.5 -i source.mp4 -an -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p \
-  -movflags +faststart public/art/video/home.mp4
-ffmpeg -ss 3 -i public/art/video/home.mp4 -frames:v 1 -q:v 4 public/art/video/home-poster.jpg
+ffmpeg -i source.mp4 -an -filter_complex \
+  "[0:v]trim=start_frame=START+24,setpts=PTS-STARTPTS[body];[0:v]trim=start_frame=START:end_frame=START+24,setpts=PTS-STARTPTS[head];[body][head]xfade=transition=fade:duration=1:offset=(END-24)/24[v]" \
+  -map "[v]" -c:v libx264 -crf 23 -preset slow -pix_fmt yuv420p -movflags +faststart public/art/video/startup.mp4
+ffmpeg -ss 2 -i public/art/video/startup.mp4 -frames:v 1 -q:v 4 public/art/video/startup-poster.jpg
 ```
+
+`home.mp4` came in before this and was only cut 0.5 s in, past a magenta intro, so its loop still has a small jump.
 
 To make music from a clip, cross-fade its last half-second into its first so the loop is seamless, then bump `MUSIC_SRC` in `music.ts`:
 

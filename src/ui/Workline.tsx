@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { TIER_LABEL, TYPE_LABEL } from "../content/companies";
+import { TIER_LABEL, WORKPLACE_LABEL, workplaceOf } from "../content/companies";
 import { deviceById } from "../content/gear";
 import {
     careerStatus,
@@ -39,12 +39,13 @@ import {
 import { trackOf } from "../game/ladder";
 import { moodSeconds } from "../game/life";
 import { TicketFor } from "./WorkSession";
+import { t, tn } from "../i18n";
 
 /** Cash and stock parts of one payday, as a small bar and a line of text. */
 export function PaySplit({ pay }: { pay: PayPackage }) {
   if (!pay.ticker || pay.stock <= 0) {
     return (
-      <span className="pay-split">All cash. This company is not listed.</span>
+      <span className="pay-split">{t("All cash. This company is not listed.")}</span>
     );
   }
   const cashShare = Math.round((pay.cash / pay.total) * 100);
@@ -53,16 +54,19 @@ export function PaySplit({ pay }: { pay: PayPackage }) {
       <span className="pay-bar" aria-hidden="true">
         <i style={{ width: `${cashShare}%` }} />
       </span>
-      {formatMoney(pay.cash)} cash + {formatMoney(pay.stock)} in {pay.ticker}{" "}
-      stock
+            {t("{cash} cash + {stock} in {ticker} stock", {
+        cash: formatMoney(pay.cash),
+        stock: formatMoney(pay.stock),
+        ticker: pay.ticker,
+      })}
     </span>
   );
 }
 
 function closesText(left: number): string {
-  if (left <= 0) return "Closes today";
-  if (left === 1) return "Closes tomorrow";
-  return `Closes in ${left} days`;
+    if (left <= 0) return t("Closes today");
+  if (left === 1) return t("Closes tomorrow");
+  return t("Closes in {n} days", { n: left });
 }
 
 function CompanyBadge({ companyId }: { companyId: string }) {
@@ -106,29 +110,36 @@ export function WorklineFeed({
   return (
     <section className="screen workline">
       <div className="workline-head">
-        <span className="workline-logo">Workline</span>
+        <span className="workline-logo">{t("Workline")}</span>
         <span className="workline-sub">
-          Jobs and news from people you might know
-        </span>
+          {t("Jobs and news from people you might know")}</span>
       </div>
       <div className="workline-me">
-        <strong>{status.title}</strong>
+                <strong>{t(status.title)}</strong>
         <span>
-          {state.company?.name} · Payday {formatMoney(current)}
+          {state.company?.name} · {t("Payday {amount}", { amount: formatMoney(current) })}
         </span>
                 <span className="workline-cv">
-          Your CV: skill {cv.skill} · {cv.experience} week{cv.experience === 1 ? "" : "s"} of
-          experience · reputation {cv.reputation}
+                    {tn(
+            cv.experience,
+            "Your CV: skill {skill} · {n} week of experience · reputation {reputation}",
+            "Your CV: skill {skill} · {n} weeks of experience · reputation {reputation}",
+            { skill: cv.skill, reputation: cv.reputation },
+          )}
           {cv.certificates > 0
-            ? ` · ${cv.certificates} certificate${cv.certificates > 1 ? "s" : ""}`
+            ? ` · ${tn(cv.certificates, "{n} certificate", "{n} certificates")}`
             : ""}
         </span>
         <span className="workline-count">
-          {posts.length} job{posts.length === 1 ? "" : "s"} picked for you. HR reads your CV first.
+                    {tn(
+            posts.length,
+            "{n} job picked for you. HR reads your CV first.",
+            "{n} jobs picked for you. HR reads your CV first.",
+          )}
         </span>
       </div>
       {items.length === 0 ? (
-        <p className="ask">Nothing new yet. New posts show up each morning.</p>
+        <p className="ask">{t("Nothing new yet. New posts show up each morning.")}</p>
       ) : null}
       {items.map((item) =>
         item.kind === "job" ? (
@@ -152,11 +163,11 @@ export function WorklineFeed({
               </span>
               <span>
                 <strong>{item.post.author}</strong>
-                <small>{item.post.role}</small>
+                                <small>{t(item.post.role)}</small>
               </span>
             </div>
-            <p>{item.post.text}</p>
-            <span className="social-likes">{item.post.likes} likes</span>
+            <p>{t(item.post.text)}</p>
+            <span className="social-likes">{t("{n} likes", { n: item.post.likes })}</span>
           </article>
         ),
       )}
@@ -210,7 +221,7 @@ function JobCard({
         <span className="job-company">
           <strong>{company.name}</strong>
           <small>
-            {TIER_LABEL[company.tier]} · {TYPE_LABEL[company.type]}
+                        {t(TIER_LABEL[company.tier])} · {t(WORKPLACE_LABEL[workplaceOf(company)])}
           </small>
         </span>
         <span className={`job-closes${left <= 1 ? " soon" : ""}`}>
@@ -218,16 +229,17 @@ function JobCard({
         </span>
       </div>
             <h3 className="job-role">
-        {LEVEL_TITLE[post.level]}
+                {t(LEVEL_TITLE[post.level])}
         {gap > 0 ? (
-          <span className="stretch-tag">{gap === 1 ? "Step up" : `${gap} levels up`}</span>
+          <span className="stretch-tag">
+            {gap === 1 ? t("Step up") : t("{n} levels up", { n: gap })}
+          </span>
         ) : null}
       </h3>
       <p className="job-pay">
-        Payday {formatMoney(pay.total)}
+                {t("Payday {amount}", { amount: formatMoney(pay.total) })}
         <span className={raise >= 0 ? "change up" : "change down"}>
-          {raise >= 0 ? "+" : ""}
-          {raise}% vs now
+          {t("{percent}% vs now", { percent: `${raise >= 0 ? "+" : ""}${raise}` })}
         </span>
       </p>
       <PaySplit pay={pay} />
@@ -236,31 +248,31 @@ function JobCard({
           <span
             key={benefit}
             className={`benefit benefit-${benefit}`}
-            title={BENEFIT_HINT[benefit]}
+                        title={t(BENEFIT_HINT[benefit])}
           >
-            {BENEFIT_LABEL[benefit]}
+            {t(BENEFIT_LABEL[benefit])}
           </span>
         ))}
       </div>
       <p className="job-work">
-        Work:{" "}
-        {LEVEL_GAMES[post.level]
-          .map((game) => WORK_GAME_LABEL[game])
-          .join(", ")}
+                {t("Work: {games}", {
+          games: LEVEL_GAMES[post.level].map((game) => t(WORK_GAME_LABEL[game])).join(", "),
+        })}
       </p>
             {lines.length > 0 ? (
         <div className="job-needs">
           <span className="job-needs-head">
-            HR is looking for
-            {post.application ? null : <b className={`fit-badge fit-${fit}`}>{FIT_LABEL[fit]}</b>}
+                        {t("HR is looking for")}
+            {post.application ? null : <b className={`fit-badge fit-${fit}`}>{t(FIT_LABEL[fit])}</b>}
           </span>
           <ul>
             {lines.map((line) => (
               <li key={line.id} className={line.met ? "met" : "short"}>
                 <span aria-hidden="true">{line.met ? "✓" : "✗"}</span>
-                {line.label} {line.need}
-                {line.id === "experience" ? " weeks" : ""}
-                {line.met ? null : <small> · you have {line.have}</small>}
+                                {line.id === "experience"
+                  ? t("{label} {n} weeks", { label: t(line.label), n: line.need })
+                  : `${t(line.label)} ${line.need}`}
+                {line.met ? null : <small> · {t("you have {n}", { n: line.have })}</small>}
               </li>
             ))}
           </ul>
@@ -268,20 +280,18 @@ function JobCard({
       ) : null}
       {post.application === "rejected" ? (
         <button type="button" className="job-apply" disabled>
-          Not moving forward
-        </button>
+          {t("Not moving forward")}</button>
       ) : post.application === "shortlisted" ? (
         <button type="button" className="job-apply" disabled={tired} onClick={onInterview}>
-          {tired
-            ? `Interview needs ${cost} energy`
-            : `Shortlisted · Interview, ${interviewRounds(post, currentLevel)} rounds`}
+                    {tired
+            ? t("Interview needs {n} energy", { n: cost })
+            : t("Shortlisted · Interview, {n} rounds", { n: interviewRounds(post, currentLevel) })}
         </button>
       ) : (
         <>
           <button type="button" className="job-apply" onClick={onApply}>
-            Send CV
-          </button>
-          <small className={`fit-note fit-${fit}`}>{FIT_NOTE[fit]}</small>
+            {t("Send CV")}</button>
+                    <small className={`fit-note fit-${fit}`}>{t(FIT_NOTE[fit])}</small>
         </>
       )}
     </article>
@@ -330,26 +340,26 @@ function OfferScreen({
   if (outcome === "pulled") {
     return (
       <section className="screen interview">
-        <p className="kicker">Offer · {company.name}</p>
-        <h2>The offer is gone</h2>
+                <p className="kicker">{t("Offer · {company}", { company: company.name })}</p>
+        <h2>{t("The offer is gone")}</h2>
         <p className="ask">
-          {OUTCOME_TEXT.pulled} {company.name} won't talk to you for a few days.
+          {t(OUTCOME_TEXT.pulled)}{" "}
+          {t("{company} won't talk to you for a few days.", { company: company.name })}
         </p>
         <button type="button" className="primary" onClick={onPulled}>
-          Back to Workline
-        </button>
+          {t("Back to Workline")}</button>
       </section>
     );
   }
 
   return (
     <section className="screen interview">
-      <p className="kicker">Offer · {company.name}</p>
-      <h2>You got the offer</h2>
+            <p className="kicker">{t("Offer · {company}", { company: company.name })}</p>
+      <h2>{t("You got the offer")}</h2>
       <div className="offer-summary">
-        <span>Role</span>
-        <strong>{LEVEL_TITLE[offer.level]}</strong>
-        <span>Payday</span>
+        <span>{t("Role")}</span>
+                <strong>{t(LEVEL_TITLE[offer.level])}</strong>
+        <span>{t("Payday")}</span>
         <strong>
           {formatMoney(pay.total)}
           {pay.total > before.total ? (
@@ -360,41 +370,43 @@ function OfferScreen({
           ) : null}
           <PaySplit pay={pay} />
         </strong>
-                <span>Place</span>
+                <span>{t("Place")}</span>
         <strong>
-          {TIER_LABEL[company.tier]} · {TYPE_LABEL[company.type]}
+                    {t(TIER_LABEL[company.tier])} · {t(WORKPLACE_LABEL[workplaceOf(company)])}
         </strong>
-        <span>Next promotion</span>
+        <span>{t("Next promotion")}</span>
         <strong>
           {taskScale < 1
-            ? `${Math.round((1 - taskScale) * 100)}% fewer tasks, thanks to your CV`
-            : "Tasks start from zero"}
+            ? t("{percent}% fewer tasks, thanks to your CV", {
+                percent: Math.round((1 - taskScale) * 100),
+              })
+            : t("Tasks start from zero")}
         </strong>
       </div>
       <div className="job-benefits">
         {offer.benefits.map((benefit) => (
           <span key={benefit} className={`benefit benefit-${benefit}`}>
-            {BENEFIT_LABEL[benefit]} · {BENEFIT_HINT[benefit]}
+                        {t(BENEFIT_LABEL[benefit])} · {t(BENEFIT_HINT[benefit])}
           </span>
         ))}
       </div>
       {outcome ? (
         <p className={`negotiate-result result-${outcome}`}>
-          {OUTCOME_TEXT[outcome]}
+                    {t(OUTCOME_TEXT[outcome])}
         </p>
       ) : null}
       {!outcome && asking ? (
         <div className="negotiate">
           <div className="leverage">
-            <span>Your leverage</span>
-            <strong>{leverageLabel(power)}</strong>
+            <span>{t("Your leverage")}</span>
+                        <strong>{t(leverageLabel(power))}</strong>
             <span className="leverage-bar" aria-hidden="true">
               <i style={{ width: `${Math.min(100, power)}%` }} />
             </span>
-            <small>
-              Built from your reputation, your{" "}
-              {track === "manager" ? "team relationship" : "skill"}, and your
-              mood.
+                        <small>
+              {track === "manager"
+                ? t("Built from your reputation, your team relationship, and your mood.")
+                : t("Built from your reputation, your skill, and your mood.")}
             </small>
           </div>
           {(["small", "big"] as const).map((size) => {
@@ -407,14 +419,12 @@ function OfferScreen({
                 onClick={() => ask(size)}
               >
                 <strong>
-                  {size === "small"
-                    ? "Ask for a little more"
-                    : "Ask for a lot more"}
+                                    {size === "small" ? t("Ask for a little more") : t("Ask for a lot more")}
                 </strong>
                 <small>
-                  +{Math.round(ASK_RAISE[size] * 100)}% salary ·{" "}
-                  {chanceLabel(chance)}
-                  {size === "big" ? " · they may walk away" : ""}
+                                    {t("+{percent}% salary", { percent: Math.round(ASK_RAISE[size] * 100) })} ·{" "}
+                  {t(chanceLabel(chance))}
+                  {size === "big" ? ` · ${t("they may walk away")}` : ""}
                 </small>
               </button>
             );
@@ -424,8 +434,7 @@ function OfferScreen({
             className="text-button"
             onClick={() => setAsking(false)}
           >
-            Never mind
-          </button>
+            {t("Never mind")}</button>
         </div>
       ) : null}
       <div className="offer-actions">
@@ -434,7 +443,7 @@ function OfferScreen({
           className="primary"
           onClick={() => onAccept(offer)}
         >
-          Accept and join {company.name}
+                    {t("Accept and join {company}", { company: company.name })}
         </button>
         {!outcome && !asking ? (
           <button
@@ -442,16 +451,14 @@ function OfferScreen({
             className="offer-secondary"
             onClick={() => setAsking(true)}
           >
-            Negotiate
-          </button>
+            {t("Negotiate")}</button>
         ) : null}
         <button
           type="button"
           className="offer-secondary reject"
           onClick={onReject}
         >
-          Reject offer
-        </button>
+          {t("Reject offer")}</button>
       </div>
     </section>
   );
@@ -488,15 +495,15 @@ export function InterviewSession({
   if (result === "fail") {
     return (
       <section className="screen interview">
-        <p className="kicker">Interview · {company?.name}</p>
-        <h2>They went another way</h2>
+                <p className="kicker">{t("Interview · {company}", { company: company?.name ?? "" })}</p>
+        <h2>{t("They went another way")}</h2>
         <p className="ask">
-          {company?.name} will not look at you again for a few days. Other posts
-          are still open.
+          {t("{company} will not look at you again for a few days. Other posts are still open.", {
+            company: company?.name ?? "",
+          })}
         </p>
         <button type="button" className="primary" onClick={onFail}>
-          Back to Workline
-        </button>
+          {t("Back to Workline")}</button>
       </section>
     );
   }
@@ -518,11 +525,12 @@ export function InterviewSession({
     <section className="screen interview">
       <div className="review-head">
         <p className="kicker">
-          Interview · {company?.name} · {LEVEL_TITLE[post.level]}
+                    {t("Interview · {company}", { company: company?.name ?? "" })} ·{" "}
+          {t(LEVEL_TITLE[post.level])}
         </p>
         <div
           className="ship-lights"
-          aria-label={`Round ${round + 1} of ${rounds}`}
+                    aria-label={t("Round {round} of {rounds}", { round: round + 1, rounds })}
         >
           {Array.from({ length: rounds }, (_, index) => (
             <span key={index} className={index < round ? "on" : ""} />
@@ -530,8 +538,11 @@ export function InterviewSession({
         </div>
       </div>
       <p className="ask">
-        Round {round + 1} of {rounds}: {WORK_GAME_LABEL[picked.game]}. A miss
-        ends the interview.
+                {t("Round {round} of {rounds}: {game}. A miss ends the interview.", {
+          round: round + 1,
+          rounds,
+          game: t(WORK_GAME_LABEL[picked.game]),
+        })}
       </p>
       <TicketFor
         key={seed}

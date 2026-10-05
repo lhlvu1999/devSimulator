@@ -37,16 +37,10 @@ import {
   sideStage,
 } from "../game/pursuits";
 import type { StatKey } from "../game/types";
+import { t } from "../i18n";
+import { statWord } from "./statWords";
 
-const STAT_WORD: Partial<Record<StatKey, string>> = {
-  energy: "energy",
-  mood: "mood",
-  health: "health",
-  skill: "skill",
-  reputation: "reputation",
-  relationship: "team",
-  money: "money",
-};
+
 
 function EffectTags({
   effects,
@@ -64,7 +58,7 @@ function EffectTags({
             className={`pantry-effect ${amount > 0 ? "up" : "down"}`}
           >
             {amount > 0 ? "+" : "−"}
-            {Math.abs(amount)} {STAT_WORD[key] ?? key}
+                                    {Math.abs(amount)} {statWord(key)}
           </span>
         );
       })}
@@ -75,12 +69,10 @@ function EffectTags({
 export function GoalPicker({ onPick }: { onPick: (goal: GoalId) => void }) {
   return (
     <section className="screen life-screen">
-      <p className="kicker">Age 22 · A whole career ahead</p>
-      <h1>What is this life for?</h1>
+      <p className="kicker">{t("Age 22 · A whole career ahead")}</p>
+      <h1>{t("What is this life for?")}</h1>
       <p className="ask">
-        Every day in the game is a week of your life. The run ends when you
-        reach your goal, burn out, or turn 60.
-      </p>
+        {t("Every day in the game is a week of your life. The run ends when you reach your goal, burn out, or turn 60.")}</p>
       {(Object.keys(GOALS) as GoalId[]).map((id) => (
         <button
           key={id}
@@ -88,9 +80,9 @@ export function GoalPicker({ onPick }: { onPick: (goal: GoalId) => void }) {
           className={`goal-card goal-${id}`}
           onClick={() => onPick(id)}
         >
-          <strong>{GOALS[id].title}</strong>
-          <span>{GOALS[id].blurb}</span>
-          <small>{GOALS[id].target}</small>
+                    <strong>{t(GOALS[id].title)}</strong>
+          <span>{t(GOALS[id].blurb)}</span>
+          <small>{t(GOALS[id].target)}</small>
         </button>
       ))}
     </section>
@@ -110,15 +102,16 @@ type Spend = { cost: number; energy: number; slots: number; kind: SlotKind };
 /** Why a plan can't happen right now, or null if it can. */
 function blockedBy(state: CareerState, spend: Spend): string | null {
   if (slotsLeft(state, spend.kind) < spend.slots)
-    return spend.kind === "night" ? "No weeknights left" : "No weekend left";
-  if (state.stats.money < spend.cost) return `Needs ${formatMoney(spend.cost)}`;
-  if (state.stats.energy < spend.energy) return "Too tired";
+        return spend.kind === "night" ? t("No weeknights left") : t("No weekend left");
+  if (state.stats.money < spend.cost) return t("Needs {amount}", { amount: formatMoney(spend.cost) });
+  if (state.stats.energy < spend.energy) return t("Too tired");
   return null;
 }
 
 function spendLabel(spend: Spend): string {
-  const parts = [spend.cost > 0 ? formatMoney(spend.cost) : "Free"];
-  if (spend.slots > 1) parts.push(`${spend.slots} ${spend.kind === "night" ? "nights" : "days"}`);
+    const parts = [spend.cost > 0 ? formatMoney(spend.cost) : t("Free")];
+  if (spend.slots > 1)
+    parts.push(t(spend.kind === "night" ? "{n} nights" : "{n} days", { n: spend.slots }));
   return parts.join(" · ");
 }
 
@@ -140,30 +133,24 @@ export function FreeTime({
   return (
     <section className="screen life-screen">
       <p className="kicker">
-        Week {weekOfYear(state.day)} · Age {ageOn(state.day)}
+                {t("Week {week} · Age {age}", { week: weekOfYear(state.day), age: ageOn(state.day) })}
       </p>
-      <h2>Free time</h2>
+      <h2>{t("Free time")}</h2>
       {jobless ? (
         <p className="life-warning">
-          No job right now. Look for one on Workline, and use the time to
-          recover.
-        </p>
+          {t("No job right now. Look for one on Workline, and use the time to recover.")}</p>
       ) : null}
       {state.offWeek === "sick" ? (
         <p className="life-warning">
-          You're sick this week and can't work. Rest up.
-        </p>
+          {t("You're sick this week and can't work. Rest up.")}</p>
       ) : null}
       {state.offWeek === "burnout" ? (
         <p className="life-warning">
-          You burned out. No work this week. Do something that fills you back
-          up.
-        </p>
+          {t("You burned out. No work this week. Do something that fills you back up.")}</p>
       ) : null}
       {timing < 0 ? (
         <p className="life-warning">
-          Your mood is low, so work feels slower and every ticket has less time.
-        </p>
+          {t("Your mood is low, so work feels slower and every ticket has less time.")}</p>
       ) : null}
 
       <div className="time-pools">
@@ -172,8 +159,8 @@ export function FreeTime({
       </div>
 
       <div className="sleep-pick">
-        <span className="sleep-label">Sleep this week</span>
-        <div className="segmented" role="radiogroup" aria-label="Sleep this week">
+        <span className="sleep-label">{t("Sleep this week")}</span>
+        <div className="segmented" role="radiogroup" aria-label={t("Sleep this week")}>
           {(Object.keys(SLEEP) as SleepMode[]).map((mode) => {
             const next = setSleep(state, mode);
             return (
@@ -186,12 +173,12 @@ export function FreeTime({
                 disabled={state.sleep !== mode && next === state}
                 onClick={() => onChange(next)}
               >
-                {SLEEP[mode].label}
+                                {t(SLEEP[mode].label)}
               </button>
             );
           })}
         </div>
-        <small>{SLEEP[state.sleep].blurb}</small>
+                <small>{t(SLEEP[state.sleep].blurb)}</small>
       </div>
 
       {note ? <p className="projection">{note}</p> : null}
@@ -204,9 +191,9 @@ export function FreeTime({
             role="tab"
             aria-selected={tab === item.id}
             className={tab === item.id ? "on" : ""}
-            onClick={() => setTab(item.id)}
+                        onClick={() => setTab(item.id)}
           >
-            {item.label}
+            {t(item.label)}
           </button>
         ))}
       </div>
@@ -221,8 +208,8 @@ export function FreeTime({
             return (
               <li key={activity.id} className="shop-row">
                 <span className="shop-info">
-                  <strong>{activity.name}</strong>
-                  <small>{activity.blurb}</small>
+                                    <strong>{t(activity.name)}</strong>
+                  <small>{t(activity.blurb)}</small>
                   <EffectTags
                     effects={{
                       ...activity.effects,
@@ -246,24 +233,22 @@ export function FreeTime({
 
       {jobless ? (
         <button type="button" className="offer-secondary" onClick={onWorkline}>
-          Open Workline
-        </button>
+          {t("Open Workline")}</button>
       ) : null}
       <button type="button" className="primary" onClick={onEndWeek}>
-        End the week
-      </button>
+        {t("End the week")}</button>
     </section>
   );
 }
 
 function SlotPool({ label, count }: { label: string; count: number }) {
   return (
-    <div className="slot-row" aria-label={`${label}: ${count} left`}>
-      <span>{label}</span>
+        <div className="slot-row" aria-label={t("{label}: {n} left", { label: t(label), n: count })}>
+      <span>{t(label)}</span>
       {Array.from({ length: Math.max(count, 0) }, (_, index) => (
         <i key={index} />
       ))}
-      {count === 0 ? <em>None</em> : null}
+      {count === 0 ? <em>{t("None")}</em> : null}
     </div>
   );
 }
@@ -291,7 +276,7 @@ function WhenButtons({
             title={blocked ?? undefined}
             onClick={() => onPick(kind)}
           >
-            {kind === "night" ? "Weeknight" : "Weekend"}
+                        {kind === "night" ? t("Weeknight") : t("Weekend")}
           </button>
         );
       })}
@@ -311,24 +296,26 @@ function PursuitList({
   const sideLive = sideIsActive(pursuits.side, state.day);
   return (
     <div className="pursuits">
-      <h3 className="list-title">Courses</h3>
-      <p className="pursuit-note">One lesson per weeknight. Finish for a certificate.</p>
+      <h3 className="list-title">{t("Courses")}</h3>
+      <p className="pursuit-note">{t("One lesson per weeknight. Finish for a certificate.")}</p>
       <ul className="shop-list">
         {COURSES.map((course) => {
           const done = pursuits.courses[course.id];
           const finished = done >= course.lessons;
           const cost = { cost: course.cost, energy: course.energy, slots: 1, kind: "night" as const };
-          const blocked = finished ? "Certified" : blockedBy(state, cost);
+                    const blocked = finished ? t("Certified") : blockedBy(state, cost);
           return (
             <li key={course.id} className={`shop-row${finished ? " using" : ""}`}>
               <span className="shop-info">
-                <strong>{course.name}</strong>
-                <small>{course.blurb}</small>
+                                <strong>{t(course.name)}</strong>
+                <small>{t(course.blurb)}</small>
                 <span className="stats-meter tone-sage">
                   <span style={{ width: `${(done / course.lessons) * 100}%` }} />
                 </span>
                 <small>
-                  {finished ? "Certificate earned" : `Lesson ${done} of ${course.lessons}`}
+                                    {finished
+                    ? t("Certificate earned")
+                    : t("Lesson {done} of {lessons}", { done, lessons: course.lessons })}
                 </small>
                 {finished ? null : <EffectTags effects={done + 1 >= course.lessons ? { ...course.lesson, ...course.finish } : course.lesson} />}
               </span>
@@ -338,15 +325,15 @@ function PursuitList({
                 disabled={blocked !== null}
                 onClick={() => onChange(takeLesson(state, course.id))}
               >
-                {blocked ?? `Lesson · ${formatMoney(course.cost)}`}
+                                {blocked ?? t("Lesson · {amount}", { amount: formatMoney(course.cost) })}
               </button>
             </li>
           );
         })}
       </ul>
 
-      <h3 className="list-title">Hobbies</h3>
-      <p className="pursuit-note">Keep it up every week to build a streak. Streaks add up.</p>
+      <h3 className="list-title">{t("Hobbies")}</h3>
+      <p className="pursuit-note">{t("Keep it up every week to build a streak. Streaks add up.")}</p>
       <ul className="shop-list">
         {HOBBIES.map((hobby) => {
           const progress = pursuits.hobbies[hobby.id];
@@ -354,10 +341,14 @@ function PursuitList({
           return (
             <li key={hobby.id} className="shop-row pursuit-row">
               <span className="shop-info">
-                <strong>{hobby.name}</strong>
-                <small>{hobby.blurb}</small>
+                                <strong>{t(hobby.name)}</strong>
+                <small>{t(hobby.blurb)}</small>
                 <small className="streak">
-                  {streak > 1 ? `${streak}-week streak` : streak === 1 ? "Started this streak" : "No streak yet"}
+                  {streak > 1
+                    ? t("{n}-week streak", { n: streak })
+                    : streak === 1
+                      ? t("Started this streak")
+                      : t("No streak yet")}
                 </small>
                 <EffectTags effects={{ ...hobbyEffects(hobby, nextStreak(progress, state.day)), energy: -hobby.energy }} />
               </span>
@@ -371,15 +362,19 @@ function PursuitList({
         })}
       </ul>
 
-      <h3 className="list-title">Side project</h3>
+      <h3 className="list-title">{t("Side project")}</h3>
       <ul className="shop-list">
         <li className="shop-row pursuit-row">
           <span className="shop-info">
-            <strong>{side.stage.name}</strong>
+                        <strong>{t(side.stage.name)}</strong>
             <small>
               {side.next
-                ? `${pursuits.side.sessions} sessions · ${side.next.from - pursuits.side.sessions} more to ${side.next.name}`
-                : `${pursuits.side.sessions} sessions · as big as it gets`}
+                ? t("{n} sessions · {more} more to {stage}", {
+                    n: pursuits.side.sessions,
+                    more: side.next.from - pursuits.side.sessions,
+                    stage: t(side.next.name),
+                  })
+                : t("{n} sessions · as big as it gets", { n: pursuits.side.sessions })}
             </small>
             <span className="stats-meter tone-clay">
               <span
@@ -390,10 +385,12 @@ function PursuitList({
             </span>
             <small>
               {side.stage.income > 0
-                ? sideLive
-                  ? `Earns about ${formatMoney(side.stage.income)} a week while you keep at it.`
-                  : "Stalled. Work on it to win users back."
-                : "Earns nothing yet. Launch comes at 12 sessions."}
+                                ? sideLive
+                  ? t("Earns about {amount} a week while you keep at it.", {
+                      amount: formatMoney(side.stage.income),
+                    })
+                  : t("Stalled. Work on it to win users back.")
+                : t("Earns nothing yet. Launch comes at 12 sessions.")}
             </small>
             <EffectTags effects={{ ...SIDE_SESSION.effects, energy: -SIDE_SESSION.energy }} />
           </span>
@@ -426,11 +423,11 @@ export function EventCard({
     >
       <div className={`event-card kind-${event.kind}`}>
         <span className="news-kicker">
-          {event.kind === "company"
-            ? "At work"
+                    {event.kind === "company"
+            ? t("At work")
             : event.kind === "season"
-              ? "Holiday"
-              : "In life"}
+              ? t("Holiday")
+              : t("In life")}
         </span>
         <h2>{event.title}</h2>
         <p>{event.body}</p>
@@ -468,28 +465,27 @@ export function EndingScreen({
   return (
     <section className={`screen life-screen ending-${ending.kind}`}>
       <p className="kicker">
-        Age {ending.age} · Week {ending.week}
+                {t("Age {age} · Week {week}", { age: ending.age, week: ending.week })}
       </p>
       <h1>{ending.title}</h1>
       <p className="ask">{ending.story}</p>
       <div className="ending-score">
-        <span>Score</span>
+        <span>{t("Score")}</span>
         <strong>{ending.score.toLocaleString("en-US")}</strong>
       </div>
       <div className="offer-summary">
-        <span>Net worth</span>
+        <span>{t("Net worth")}</span>
         <strong>{formatMoney(ending.netWorth)}</strong>
-        <span>Goal</span>
-        <strong>{state.goal ? GOALS[state.goal].title : "None"}</strong>
-        <span>Health</span>
+        <span>{t("Goal")}</span>
+                <strong>{state.goal ? t(GOALS[state.goal].title) : t("None")}</strong>
+        <span>{t("Health")}</span>
         <strong>{state.stats.health}</strong>
-        <span>Mood</span>
+        <span>{t("Mood")}</span>
         <strong>{state.stats.mood}</strong>
       </div>
       <AchievementList earned={state.achievements} />
       <button type="button" className="primary" onClick={onRestart}>
-        Start a new life
-      </button>
+        {t("Start a new life")}</button>
     </section>
   );
 }
@@ -501,8 +497,8 @@ function AchievementList({ earned }: { earned: readonly string[] }) {
         const done = earned.includes(item.id);
         return (
           <li key={item.id} className={done ? "done" : undefined}>
-            <strong>{item.title}</strong>
-            <small>{item.blurb}</small>
+                        <strong>{t(item.title)}</strong>
+            <small>{t(item.blurb)}</small>
           </li>
         );
       })}
@@ -513,9 +509,10 @@ function AchievementList({ earned }: { earned: readonly string[] }) {
 /** Age, goal progress, and achievements, for the stats panel. */
 function nextHolidayText(day: number): string {
   const holiday = nextHoliday(day);
-  if (holiday.inWeeks === 0) return `${holiday.name} this week`;
-  if (holiday.inWeeks === 1) return `${holiday.name} next week`;
-  return `${holiday.name} in ${holiday.inWeeks} weeks`;
+    const name = t(holiday.name);
+  if (holiday.inWeeks === 0) return t("{holiday} this week", { holiday: name });
+  if (holiday.inWeeks === 1) return t("{holiday} next week", { holiday: name });
+  return t("{holiday} in {n} weeks", { holiday: name, n: holiday.inWeeks });
 }
 
 export function LifeCard({ state }: { state: CareerState }) {
@@ -524,29 +521,29 @@ export function LifeCard({ state }: { state: CareerState }) {
   return (
     <div className="career-card life-card">
       <div className="career-head">
-        <span>Life</span>
-        <strong>
-          Age {ageOn(state.day)} · Week {weekOfYear(state.day)}
+        <span>{t("Life")}</span>
+                <strong>
+          {t("Age {age} · Week {week}", { age: ageOn(state.day), week: weekOfYear(state.day) })}
         </strong>
         <small>
-          {seasonOf(state.day)} · {nextHolidayText(state.day)}
+          {t(seasonOf(state.day))} · {nextHolidayText(state.day)}
         </small>
-        <small>Net worth {formatMoney(worth)}</small>
+        <small>{t("Net worth {amount}", { amount: formatMoney(worth) })}</small>
       </div>
       {state.goal ? (
         <div className="goal-progress">
           <div className="stats-row">
-            <span>{GOALS[state.goal].title}</span>
+                        <span>{t(GOALS[state.goal].title)}</span>
             <span>{Math.round(progress * 100)}%</span>
           </div>
           <span className="stats-meter tone-clay">
             <span style={{ width: `${Math.round(progress * 100)}%` }} />
           </span>
-          <small>{GOALS[state.goal].target}</small>
+                    <small>{t(GOALS[state.goal].target)}</small>
         </div>
       ) : null}
       <span className="career-games">
-        Achievements {state.achievements.length}/{ACHIEVEMENTS.length}
+                {t("Achievements {done}/{total}", { done: state.achievements.length, total: ACHIEVEMENTS.length })}
       </span>
     </div>
   );

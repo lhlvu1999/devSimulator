@@ -9,6 +9,12 @@ import {
 } from "../game/tidy";
 import type { CodeGrade } from "../game/types";
 import { useTicketClock } from "./useTicketClock";
+import { t } from "../i18n";
+
+/** A scene's everyday name: its key without the number pool scenes carry, like "office8". */
+function sceneName(scene: string): string {
+  return scene.replace(/\d+$/, "");
+}
 
 const SWATCHES: Swatch[] = ["cream", "sage", "clay", "blue"];
 
@@ -55,7 +61,7 @@ export function TidyTicket({
     <div className={`tidy scene-${ticket.scene}${settled ? " settled" : ""}`}>
       <div className="tidy-meta">
         <span>{left}s</span>
-        <span>{ticket.scene}</span>
+                <span>{t(sceneName(ticket.scene))}</span>
       </div>
       <p className="ask">{ticket.note}</p>
       <div className="tidy-board">
@@ -71,7 +77,7 @@ export function TidyTicket({
               }`}
               onClick={() => tapPiece(piece.id, piece.kind)}
             >
-              {piece.label}
+                            {t(piece.label)}
             </button>
           ),
         )}
@@ -83,12 +89,12 @@ export function TidyTicket({
               if (held) setPlaced(true);
             }}
           >
-            {placed ? ticket.loose?.label : ticket.slotLabel}
+                        {t((placed ? ticket.loose?.label : ticket.slotLabel) ?? "")}
           </button>
         ) : null}
         {ticket.paint ? (
           <span className={`tidy-paint paint-${color}`}>
-            {ticket.paint.label}
+                        {t(ticket.paint.label)}
           </span>
         ) : null}
       </div>
@@ -100,7 +106,7 @@ export function TidyTicket({
           }`}
           onClick={() => setHeld(true)}
         >
-          {ticket.loose.label}
+                    {t(ticket.loose.label)}
         </button>
       ) : null}
       {ticket.paint ? (
@@ -114,11 +120,11 @@ export function TidyTicket({
                   ? " hinted"
                   : ""
               }`}
-              aria-label={SWATCH_LABEL[swatch]}
+                            aria-label={t(SWATCH_LABEL[swatch])}
               onClick={() => setColor(swatch)}
             >
               <span className={`tidy-dot paint-${swatch}`} />
-              <span>{SWATCH_LABEL[swatch]}</span>
+                            <span>{t(SWATCH_LABEL[swatch])}</span>
             </button>
           ))}
         </div>

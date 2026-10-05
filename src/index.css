@@ -7,7 +7,12 @@
   --line: #ddd4c6;
   --accent: #9a3412;
   --warn: #9f1239;
-  font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+    font-family: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+}
+
+/* Iowan can't stack Vietnamese marks on letters like ơ and ư. Lora can, and ships with the app. */
+html[lang="vi"] {
+  font-family: "Lora Variable", Georgia, serif;
 }
 
 * {
@@ -2958,6 +2963,22 @@ button.primary:disabled {
   background: #efe6d6;
 }
 
+/* Same colors as the working style in the top bar. */
+.type-chip.workplace-startup {
+  background: #e2ecd8;
+  color: #4f6f3d;
+}
+
+.type-chip.workplace-big {
+  background: #dce7f1;
+  color: #3d5a78;
+}
+
+.type-chip.workplace-remote {
+  background: #f4e0d4;
+  color: #8a4f33;
+}
+
 .offer-meters {
   display: grid;
   gap: 4px;
@@ -4583,4 +4604,26 @@ button.primary:disabled {
 .diff-chip.diff-hard {
   background: #3f342c;
   color: #f6efe6;
+}
+
+.settings-lang {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1.5px solid rgba(63, 52, 44, 0.2);
+  border-radius: 10px;
+  font-weight: 650;
+}
+
+.settings-lang > span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-lang small {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: #6b5e52;
 }

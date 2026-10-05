@@ -1,4 +1,5 @@
 import type { Stats } from "./types";
+import { t as tr } from "../i18n";
 
 export type PlacementOutcome = "win" | "loss" | "draw";
 
@@ -20,8 +21,9 @@ export function fresherProfile(
   if (outcome === "loss") {
     return {
       label: "Low fresher",
-      blurb:
+            blurb: tr(
         "The placement game went to the other side. Offers stay at the low end of fresher work: more guidance, less scope.",
+      ),
       stats: stats({
         money: 600,
         energy: 74,
@@ -36,8 +38,9 @@ export function fresherProfile(
   if (outcome === "draw") {
     return {
       label: "Low fresher",
-      blurb:
+            blurb: tr(
         "A draw is a low fresher result. Companies will offer supervised work more often than ownership.",
+      ),
       stats: stats({
         money: 700,
         energy: 78,
@@ -52,7 +55,10 @@ export function fresherProfile(
   if (moves <= 3) {
     return {
       label: "High fresher",
-      blurb: `You won in ${moves} moves. That is the top of the fresher band: faster learning, more energy expected, still not a mid-level hire.`,
+            blurb: tr(
+        "You won in {n} moves. That is the top of the fresher band: faster learning, more energy expected, still not a mid-level hire.",
+        { n: moves },
+      ),
       stats: stats({
         money: 900,
         energy: 90,
@@ -67,8 +73,7 @@ export function fresherProfile(
   if (moves === 4) {
     return {
       label: "Mid fresher",
-      blurb:
-        "You won in 4 moves. Offers sit in the middle of fresher work: real tickets, a manager nearby.",
+            blurb: tr("You won in 4 moves. Offers sit in the middle of fresher work: real tickets, a manager nearby."),
       stats: stats({
         money: 800,
         energy: 84,
@@ -82,7 +87,9 @@ export function fresherProfile(
   }
   return {
     label: "Low fresher",
-    blurb: `You won in ${moves} moves. A win, and still the low fresher band. The first offers will be narrower.`,
+        blurb: tr("You won in {n} moves. A win, and still the low fresher band. The first offers will be narrower.", {
+      n: moves,
+    }),
     stats: stats({
       money: 720,
       energy: 78,

@@ -12,6 +12,7 @@ import {
 import type { CodeGrade } from "../game/types";
 import { gameSeconds } from "../game/workGames";
 import { useTicketClock } from "./useTicketClock";
+import { t } from "../i18n";
 
 type TicketProps<P> = {
   puzzle: P;
@@ -61,11 +62,10 @@ export function OneOnOneTicket({
       <div className="tidy-meta">
         <span>{left}s</span>
         <span>
-          One-on-one · {Math.min(index + 1, puzzle.rounds.length)}/
-          {puzzle.rounds.length}
+                    {t("One-on-one")} · {Math.min(index + 1, puzzle.rounds.length)}/{puzzle.rounds.length}
         </span>
       </div>
-      <p className="ask">Pick the reply that fits how they feel.</p>
+      <p className="ask">{t("Pick the reply that fits how they feel.")}</p>
       {round ? (
         <>
           <div className="talk">
@@ -75,8 +75,8 @@ export function OneOnOneTicket({
               <b />
             </span>
             <div className="bubble">
-              <span className="talk-name">{round.name}</span>
-              <strong>{round.says}</strong>
+                            <span className="talk-name">{round.name}</span>
+              <strong>{t(round.says)}</strong>
             </div>
           </div>
           <div className="reply-list">
@@ -87,15 +87,15 @@ export function OneOnOneTicket({
                 className={`reply${wrong === choice.text ? " wiggle" : ""}${
                   puzzle.hint && index === 0 && choice.right ? " hinted" : ""
                 }`}
-                onClick={() => reply(choice.text, choice.right)}
+                                onClick={() => reply(choice.text, choice.right)}
               >
-                {choice.text}
+                {t(choice.text)}
               </button>
             ))}
           </div>
         </>
       ) : (
-        <p className="ask">Everyone feels heard.</p>
+        <p className="ask">{t("Everyone feels heard.")}</p>
       )}
       {settled ? <Payoff /> : null}
     </div>
@@ -133,14 +133,12 @@ export function SprintTicket({
     <div className={`tidy sprint${settled ? " settled" : ""}`}>
       <div className="tidy-meta">
         <span>{left}s</span>
-        <span>Sprint planning</span>
+        <span>{t("Sprint planning")}</span>
       </div>
       <p className="ask">
-        Fill the sprint exactly to the team's capacity.
-        {puzzle.tasks.some((task) => task.must)
-          ? " The starred task must be in."
-          : ""}
-        {helped ? " A teammate already added one." : ""}
+                {t("Fill the sprint exactly to the team's capacity.")}
+        {puzzle.tasks.some((task) => task.must) ? ` ${t("The starred task must be in.")}` : ""}
+        {helped ? ` ${t("A teammate already added one.")}` : ""}
       </p>
       <div
         className={`capacity${over ? " over" : used === puzzle.capacity ? " full" : ""}`}
@@ -157,7 +155,7 @@ export function SprintTicket({
           )}
         </div>
         <span>
-          {used} / {puzzle.capacity} points
+                    {t("{used} / {capacity} points", { used, capacity: puzzle.capacity })}
         </span>
       </div>
       <div className="sprint-cards">
@@ -171,8 +169,8 @@ export function SprintTicket({
               onClick={() => toggle(task.id, task.locked)}
             >
               <span className="sprint-name">
-                {task.must ? "★ " : ""}
-                {task.name}
+                                {task.must ? "★ " : ""}
+                {t(task.name)}
               </span>
               <span className="sprint-points">
                 {Array.from({ length: task.points }, (_, index) => (
@@ -224,29 +222,28 @@ export function RoadmapTicket({
       <div className="tidy-meta">
         <span>{left}s</span>
         <span>
-          Roadmap · {Math.min(index, puzzle.features.length)}/
-          {puzzle.features.length}
+                    {t("Roadmap")} · {Math.min(index, puzzle.features.length)}/{puzzle.features.length}
         </span>
       </div>
-      <p className="ask">{ROADMAP_RULE}</p>
+            <p className="ask">{t(ROADMAP_RULE)}</p>
       {feature ? (
         <div className="feature-card">
-          <strong>{feature.name}</strong>
+                    <strong>{t(feature.name)}</strong>
           <span className={`size impact-${feature.impact}`}>
-            {feature.impact === "big" ? "Big" : "Small"} impact
+            {feature.impact === "big" ? t("Big impact") : t("Small impact")}
           </span>
           <span className={`size effort-${feature.effort}`}>
-            {feature.effort === "big" ? "Big" : "Small"} effort
+            {feature.effort === "big" ? t("Big effort") : t("Small effort")}
           </span>
           {puzzle.hint && index === 0 ? (
             <span className="inbox-hint">
-              Teammate: this goes in {SLOT_LABEL[slotFor(feature)]}.
+              {t("Teammate: this goes in {slot}.", { slot: t(SLOT_LABEL[slotFor(feature)]) })}
             </span>
           ) : null}
         </div>
       ) : (
         <div className="feature-card">
-          <strong>The roadmap is set.</strong>
+          <strong>{t("The roadmap is set.")}</strong>
         </div>
       )}
       <div className="roadmap-columns">
@@ -258,12 +255,12 @@ export function RoadmapTicket({
             disabled={settled}
             onClick={() => place(slot)}
           >
-            <span className="roadmap-title">{SLOT_LABEL[slot]}</span>
+                        <span className="roadmap-title">{t(SLOT_LABEL[slot])}</span>
             {puzzle.features
               .filter((item) => placed[item.id] === slot)
               .map((item) => (
-                <span key={item.id} className="roadmap-chip">
-                  {item.name}
+                                <span key={item.id} className="roadmap-chip">
+                  {t(item.name)}
                 </span>
               ))}
           </button>

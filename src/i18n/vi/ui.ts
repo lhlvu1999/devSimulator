@@ -1,0 +1,481 @@
+/** Vietnamese for screens: buttons, labels, and hints. Keys are the English source. */
+export const VI_UI: Record<string, string> = {
+  // Shell, tabs, and the room
+  Play: "Chơi",
+  Sandbox: "Sandbox",
+  Home: "Nhà",
+  Invest: "Đầu tư",
+  Jobs: "Việc làm",
+  Shop: "Cửa hàng",
+  Me: "Tôi",
+  Main: "Điều hướng chính",
+  Work: "Làm việc",
+  Desk: "Bàn làm việc",
+  Back: "Quay lại",
+  "Job hunt": "Tìm việc",
+  "Sick week": "Tuần ốm",
+  "Burnout week": "Tuần kiệt sức",
+  "Free time": "Thời gian rảnh",
+  "Between jobs": "Đang nghỉ việc",
+  "Open your stats": "Xem chỉ số của bạn",
+  "Week {week} · Age {age}": "Tuần {week} · {age} tuổi",
+  "Age {age} · Week {week}": "{age} tuổi · Tuần {week}",
+  Offers: "Lời mời làm việc",
+  "The week is done": "Hết một tuần",
+  "Net worth {amount}.": "Tài sản ròng {amount}.",
+  "Net worth {amount}": "Tài sản ròng {amount}",
+  "Net worth": "Tài sản ròng",
+  "Next week": "Tuần tiếp theo",
+
+  // Placement
+  "Dev Simulator": "Dev Simulator",
+  Placement: "Xếp lớp",
+  "Play tic-tac-toe against a new opponent. A faster win sets a higher fresher profile. The result stays inside the fresher band.":
+    "Chơi cờ ca-rô 3x3 với một đối thủ mới. Thắng càng nhanh, hồ sơ fresher của bạn càng cao. Kết quả chỉ nằm trong mức fresher.",
+  "Tic-tac-toe": "Cờ ca-rô 3x3",
+  "Top left": "Trên trái",
+  Top: "Trên",
+  "Top right": "Trên phải",
+  Left: "Trái",
+  Center: "Giữa",
+  Right: "Phải",
+  "Bottom left": "Dưới trái",
+  Bottom: "Dưới",
+  "Bottom right": "Dưới phải",
+  "You are X.": "Bạn là X.",
+  "Your move.": "Đến lượt bạn.",
+  "{n} moves so far.": "Đã đi {n} nước.",
+  "You won in {n} moves.": "Bạn thắng sau {n} nước.",
+  "The board filled. That is a draw.": "Hết ô trống. Hòa.",
+  "The other side won.": "Đối thủ thắng.",
+  "See job offers": "Xem lời mời làm việc",
+  Pay: "Lương",
+  Learn: "Học hỏi",
+  "Easy days": "Nhẹ nhàng",
+
+  // Goal and life
+  "Age 22 · A whole career ahead": "22 tuổi · Cả sự nghiệp phía trước",
+  "What is this life for?": "Bạn sống để làm gì?",
+  "Every day in the game is a week of your life. The run ends when you reach your goal, burn out, or turn 60.":
+    "Mỗi ngày trong game là một tuần đời bạn. Hành trình kết thúc khi bạn đạt mục tiêu, kiệt sức, hoặc tròn 60 tuổi.",
+  Life: "Cuộc sống",
+  Score: "Điểm",
+  Goal: "Mục tiêu",
+  None: "Không có",
+  "Start a new life": "Bắt đầu cuộc đời mới",
+  "{holiday} this week": "{holiday} tuần này",
+  "{holiday} next week": "{holiday} tuần sau",
+  "{holiday} in {n} weeks": "{holiday} sau {n} tuần",
+  "Achievements {done}/{total}": "Thành tựu {done}/{total}",
+  "At work": "Ở công ty",
+  Holiday: "Ngày lễ",
+  "In life": "Đời sống",
+
+  // Free time
+  Weeknights: "Tối trong tuần",
+  Weekend: "Cuối tuần",
+  Weeknight: "Tối trong tuần",
+  Pursuits: "Theo đuổi",
+  "No weeknights left": "Hết buổi tối",
+  "No weekend left": "Hết cuối tuần",
+  "Needs {amount}": "Cần {amount}",
+  "Too tired": "Mệt quá rồi",
+  Free: "Miễn phí",
+  "{n} nights": "{n} tối",
+  "{n} days": "{n} ngày",
+  "{label}: {n} left": "{label}: còn {n}",
+  "No job right now. Look for one on Workline, and use the time to recover.":
+    "Hiện bạn chưa có việc. Hãy tìm trên Workline và tranh thủ nghỉ ngơi.",
+  "You're sick this week and can't work. Rest up.":
+    "Tuần này bạn ốm, không đi làm được. Nghỉ ngơi đi nhé.",
+  "You burned out. No work this week. Do something that fills you back up.":
+    "Bạn kiệt sức rồi. Tuần này không làm việc. Hãy làm gì đó để nạp lại năng lượng.",
+  "Your mood is low, so work feels slower and every ticket has less time.":
+    "Tâm trạng đang tệ nên làm việc chậm hơn, mỗi ticket có ít thời gian hơn.",
+  "Sleep this week": "Giấc ngủ tuần này",
+  "Open Workline": "Mở Workline",
+  "End the week": "Kết thúc tuần",
+  Courses: "Khóa học",
+  "One lesson per weeknight. Finish for a certificate.":
+    "Mỗi tối một buổi học. Học xong nhận chứng chỉ.",
+  Certified: "Đã có chứng chỉ",
+  "Certificate earned": "Đã nhận chứng chỉ",
+  "Lesson {done} of {lessons}": "Buổi {done}/{lessons}",
+  "Lesson · {amount}": "Học · {amount}",
+  Hobbies: "Sở thích",
+  "Keep it up every week to build a streak. Streaks add up.":
+    "Duy trì mỗi tuần để có chuỗi. Chuỗi càng dài càng lợi.",
+  "{n}-week streak": "Chuỗi {n} tuần",
+  "Started this streak": "Vừa bắt đầu chuỗi",
+  "No streak yet": "Chưa có chuỗi",
+  "Side project": "Dự án riêng",
+  "{n} sessions · {more} more to {stage}":
+    "{n} buổi · thêm {more} buổi để lên {stage}",
+  "{n} sessions · as big as it gets": "{n} buổi · đã lớn hết cỡ",
+  "Earns about {amount} a week while you keep at it.":
+    "Kiếm khoảng {amount} mỗi tuần nếu bạn duy trì.",
+  "Stalled. Work on it to win users back.":
+    "Đang chững lại. Làm tiếp để kéo người dùng quay lại.",
+  "Earns nothing yet. Launch comes at 12 sessions.":
+    "Chưa kiếm được gì. Ra mắt sau 12 buổi.",
+
+    // Stat words in effect tags, like "+12 energy"
+  "money": "tiền",
+  "energy": "năng lượng",
+  "mood": "tâm trạng",
+  "health": "sức khỏe",
+  "skill": "kỹ năng",
+  "reputation": "uy tín",
+  "team": "quan hệ",
+
+  // Me and settings
+  Money: "Tiền",
+  Energy: "Năng lượng",
+  Mood: "Tâm trạng",
+  Health: "Sức khỏe",
+  Skill: "Kỹ năng",
+  Reputation: "Uy tín",
+  Relationship: "Quan hệ",
+  "Pays rent and buys gear, snacks, and investments.":
+    "Trả tiền nhà, mua đồ, đồ ăn vặt và đầu tư.",
+  "Every task uses some. It comes back each week.":
+    "Việc nào cũng tốn một ít. Hồi lại mỗi tuần.",
+  "How you feel about work and life lately.":
+    "Cảm giác của bạn về công việc và cuộc sống gần đây.",
+  "Your body. When it runs low, every task feels heavier.":
+    "Cơ thể bạn. Khi xuống thấp, việc gì cũng nặng nề hơn.",
+  "What you know. It never tops out. It brings harder work and opens early promotions.":
+    "Những gì bạn biết. Không có giới hạn. Mở ra việc khó hơn và cơ hội thăng chức sớm.",
+  "How the company sees you. Bigger promotions look at it.":
+    "Công ty nhìn nhận bạn thế nào. Thăng chức lớn sẽ xét đến.",
+  "How close you are with your team. Teammates help more when it is high.":
+    "Mức độ gắn kết với team. Càng cao, đồng đội càng hỗ trợ nhiều.",
+  Settings: "Cài đặt",
+  Language: "Ngôn ngữ",
+  "Changes every screen right away.": "Đổi ngay trên mọi màn hình.",
+  Music: "Nhạc nền",
+  "Soft keys and typing from the room.":
+    "Tiếng phím và giai điệu nhẹ trong phòng.",
+  "Start a brand new life? This save is gone for good.":
+    "Bắt đầu lại từ đầu? Bản lưu này sẽ mất vĩnh viễn.",
+  "Start over": "Chơi lại",
+  "Keep playing": "Chơi tiếp",
+  "Erase this save and begin again at placement.":
+    "Xóa bản lưu và bắt đầu lại từ vòng xếp lớp.",
+  "What is {stat}?": "{stat} là gì?",
+  "Manager track": "Hướng quản lý",
+  "Engineer track": "Hướng kỹ sư",
+  "Payday {amount}": "Lương {amount}",
+  "Next: {title}": "Tiếp theo: {title}",
+  "review next week": "review vào tuần sau",
+  "review ready": "sẵn sàng review",
+  "Your CV cut the tasks here by {percent}%.":
+    "CV của bạn giúp giảm {percent}% số việc ở đây.",
+  "Top of the manager track.": "Đỉnh cao của hướng quản lý.",
+  "Top of the engineer track.": "Đỉnh cao của hướng kỹ sư.",
+  "Work: {games}": "Công việc: {games}",
+  "Become {title}? Progress toward the next level carries over at half.":
+    "Chuyển thành {title}? Tiến độ lên cấp tiếp theo được giữ lại một nửa.",
+  Switch: "Chuyển",
+  Stay: "Ở lại",
+  "Go back to engineering as {title}": "Quay về làm kỹ sư với vị trí {title}",
+  "Move to managing as {title}": "Chuyển sang quản lý với vị trí {title}",
+  "{cash} cash + {stock} in {ticker} stock":
+    "{cash} tiền mặt + {stock} cổ phiếu {ticker}",
+
+  // Invest
+  "Low risk": "Rủi ro thấp",
+  "Medium risk": "Rủi ro vừa",
+  "High risk": "Rủi ro cao",
+  Cash: "Tiền mặt",
+  Invested: "Đã đầu tư",
+  Stocks: "Cổ phiếu",
+  "{n} companies": "{n} công ty",
+  "In the paper: {names}": "Lên báo: {names}",
+  "A quiet week in business news.": "Một tuần tin tức kinh doanh yên ắng.",
+  "Yours {amount} in {n} company": "Của bạn {amount} ở {n} công ty",
+  "Yours {amount} in {n} companies": "Của bạn {amount} ở {n} công ty",
+  "Yours {amount}": "Của bạn {amount}",
+  "Paid partly in {ticker}": "Một phần lương bằng {ticker}",
+  "Owned {n}": "Đang có {n}",
+  Blackjack: "Blackjack",
+  "One hand at a time": "Từng ván một",
+  "Your stocks": "Cổ phiếu của bạn",
+  "{amount} ({percent}) since you bought": "{amount} ({percent}) kể từ khi mua",
+  "{amount} last week": "{amount} tuần trước",
+  "{n} share · paid {amount} avg": "{n} cổ phiếu · giá mua TB {amount}",
+  "{n} shares · paid {amount} avg": "{n} cổ phiếu · giá mua TB {amount}",
+  "{percent}% of your stocks": "{percent}% danh mục",
+  "your employer": "công ty bạn",
+  "You don't own any stocks yet. Pick a company below to buy.":
+    "Bạn chưa có cổ phiếu nào. Chọn một công ty bên dưới để mua.",
+  "Paydays add {ticker} shares here on their own.":
+    "Mỗi kỳ lương sẽ tự cộng cổ phiếu {ticker} vào đây.",
+  "Today's paper": "Báo hôm nay",
+  "Headlines are right about 3 times in 4.":
+    "Tin trên báo đúng khoảng 3 trên 4 lần.",
+  "All companies": "Tất cả công ty",
+  "You own {n} · {amount}": "Bạn có {n} · {amount}",
+  "Your employer": "Công ty bạn",
+  "Hiring on Workline": "Đang tuyển trên Workline",
+  "In the paper": "Lên báo",
+  "You own": "Bạn có",
+  Worth: "Giá trị",
+  "Paid avg": "Giá mua TB",
+  Gain: "Lãi/lỗ",
+  "{percent} today": "{percent} hôm nay",
+  "{n} weeks": "{n} tuần",
+  "Low {low} · High {high}": "Thấp {low} · Cao {high}",
+  "Part of every payday arrives as this stock.":
+    "Một phần lương mỗi kỳ được trả bằng cổ phiếu này.",
+  Buy: "Mua",
+  Sell: "Bán",
+  "One less": "Bớt một",
+  Amount: "Số lượng",
+  "One more": "Thêm một",
+  "Max {n}": "Tối đa {n}",
+  "You need {amount} for one.": "Bạn cần {amount} để mua một.",
+  "You have none to sell.": "Bạn không có gì để bán.",
+  "Pay {amount} · Cash after {after}": "Trả {amount} · Còn lại {after}",
+  "Get {amount} · {n} left": "Nhận {amount} · còn {n}",
+  "Buy {n}": "Mua {n}",
+  "Sell {n}": "Bán {n}",
+  "Prices move when the week ends.": "Giá thay đổi khi hết tuần.",
+  "Nothing about this company today.":
+    "Hôm nay không có tin gì về công ty này.",
+  "Without news it drifts a little.": "Không có tin thì giá chỉ nhích nhẹ.",
+  "Leans up next week": "Tuần sau có thể tăng",
+  "Leans down next week": "Tuần sau có thể giảm",
+  "Right about 3 times in 4.": "Đúng khoảng 3 trên 4 lần.",
+
+  // Blackjack
+  "How to play": "Cách chơi",
+  "Get closer to 21 than the dealer without going over.":
+    "Có tổng điểm gần 21 hơn nhà cái mà không vượt quá.",
+  "2 to 10 count as shown. J, Q, K count 10. A counts 11 or 1.":
+    "Lá 2 đến 10 tính đúng số. J, Q, K tính 10. A tính 11 hoặc 1.",
+  "Hit takes one more card. Stand stops, then the dealer draws until 17 or more.":
+    "Rút: lấy thêm một lá. Dừng: ngừng lại, nhà cái rút đến khi được 17 trở lên.",
+  "A win pays your bet. 21 with your first two cards is a blackjack and pays 1.5×. A tie gives the bet back.":
+    "Thắng được bằng tiền cược. 21 với hai lá đầu là blackjack, trả 1,5×. Hòa thì hoàn tiền cược.",
+  "Got it": "Đã hiểu",
+  Dealer: "Nhà cái",
+  You: "Bạn",
+  "On the table {amount}": "Trên bàn {amount}",
+  "Hit|blackjack": "Rút",
+  "Stand|blackjack": "Dừng",
+  "Your bet": "Tiền cược",
+  "Cash {amount}": "Tiền mặt {amount}",
+  "Lower the bet": "Giảm cược",
+  Bet: "Cược",
+  "Raise the bet": "Tăng cược",
+  Min: "Tối thiểu",
+  "All in": "Tất tay",
+  "Deal again": "Chia ván mới",
+  Deal: "Chia bài",
+  "You need {amount} to play": "Bạn cần {amount} để chơi",
+  "Blackjack. You take {amount}.": "Blackjack! Bạn nhận {amount}.",
+  "The hand wins {amount}.": "Bạn thắng {amount}.",
+  "The hand loses {amount}.": "Bạn thua {amount}.",
+  "Push. The stake comes back.": "Hòa. Bạn được hoàn cược.",
+  "The hand is still open.": "Ván vẫn đang diễn ra.",
+
+    "{card} of {suit}": "{card} {suit}",
+  "Spades": "bích",
+  "Hearts": "cơ",
+  "Diamonds": "rô",
+  "Clubs": "chuồn",
+
+  // Shop
+  Pantry: "Đồ ăn uống",
+  Machines: "Máy tính",
+  "Black Friday: 30% off machines this week.":
+    "Black Friday: giảm 30% máy tính tuần này.",
+  "Used right away. Energy {energy} · Health {health}":
+    "Dùng ngay khi mua. Năng lượng {energy} · Sức khỏe {health}",
+  "A better machine gives every task more time.":
+    "Máy xịn hơn cho bạn thêm thời gian với mỗi việc.",
+  "+{n}s on every task": "+{n} giây mỗi việc",
+  "Base time": "Thời gian gốc",
+  "Was {amount}": "Giá cũ {amount}",
+  "Switched to the {device}.": "Đã chuyển sang {device}.",
+  "{device} is on your desk.": "{device} đã nằm trên bàn bạn.",
+  "In use": "Đang dùng",
+  Use: "Dùng",
+  "Your own home": "Nhà của bạn",
+  "A house with a garden": "Một ngôi nhà có vườn",
+  "The keys are on the hook by the door.": "Chìa khóa treo cạnh cửa.",
+  "This is your life goal.": "Đây là mục tiêu sống của bạn.",
+  "Room for the cat to roam.": "Đủ chỗ cho mèo chạy nhảy.",
+  "{saved} of {price} saved": "Đã để dành {saved}/{price}",
+  "You bought a home. Welcome in.": "Bạn đã mua nhà. Chào mừng về nhà.",
+
+  // Work board and sessions
+  "{n}h of overtime left": "Còn {n}h OT",
+  "The week is over": "Hết tuần rồi",
+  "{n}h left this week": "Còn {n}h trong tuần",
+  "Energy {n}": "Năng lượng {n}",
+  "Your lead sets the order. Take the top ticket.":
+    "Lead đã xếp thứ tự. Làm ticket trên cùng nhé.",
+  "Pick what to work on. Watch the deadlines.":
+    "Tự chọn việc để làm. Để ý deadline.",
+  "Startups can push into overtime, at a cost.":
+    "Startup cho phép OT, nhưng có cái giá của nó.",
+  "The board is clear. Wrap up early and enjoy the free time.":
+    "Hết ticket rồi. Nghỉ sớm và tận hưởng thời gian rảnh.",
+  "Wrap up the week": "Chốt tuần",
+  "Stopping now gives +{n} free-time slot.":
+    "Dừng bây giờ được thêm {n} lượt rảnh.",
+  "Stopping now gives +{n} free-time slots.":
+    "Dừng bây giờ được thêm {n} lượt rảnh.",
+  "Overtime has cost {n} free-time slot.": "OT đã lấy mất {n} lượt rảnh.",
+  "Overtime has cost {n} free-time slots.": "OT đã lấy mất {n} lượt rảnh.",
+  "No extra free time this week.": "Tuần này không có thêm thời gian rảnh.",
+  "Continue part {part}/{parts}": "Làm tiếp phần {part}/{parts}",
+  "Start part {part}/{parts}": "Bắt đầu phần {part}/{parts}",
+  Continue: "Làm tiếp",
+  Start: "Bắt đầu",
+  overtime: "OT",
+  "{n} energy": "{n} năng lượng",
+  "Queued by your lead": "Lead xếp sau",
+  "Not enough time left this week": "Tuần này không đủ thời gian",
+  "Needs {n} energy": "Cần {n} năng lượng",
+  "{n} parts × {hours}h": "{n} phần × {hours}h",
+  "{done} of {parts} parts done": "Xong {done}/{parts} phần",
+  "Dropped in mid-week": "Phát sinh giữa tuần",
+  "Follow-up to {key}": "Việc tiếp nối {key}",
+  "Part {part} of {parts}": "Phần {part}/{parts}",
+  Promoted: "Thăng chức",
+  Nice: "Tuyệt",
+  "Promotion review": "Review thăng chức",
+  "You tried this week. The review opens again next week.":
+    "Tuần này bạn đã thử rồi. Tuần sau review lại mở.",
+  "Clear {n} harder tickets in a row. A miss ends the review.":
+    "Hoàn thành liên tiếp {n} ticket khó. Hụt một cái là kết thúc review.",
+  "Start review": "Bắt đầu review",
+  "Not this time": "Lần này chưa được",
+  "The panel liked your work but wants to see a little more. The review opens again next week.":
+    "Hội đồng thích kết quả của bạn nhưng muốn thấy thêm chút nữa. Tuần sau review lại mở.",
+  "Back to work": "Quay lại làm việc",
+  "Round {round} of {rounds}": "Vòng {round}/{rounds}",
+  "Round {round} of {rounds}: {game}.": "Vòng {round}/{rounds}: {game}.",
+
+  // Mini-game screens
+  "Tap what changed between the design and the app.":
+    "Chạm vào chỗ khác nhau giữa bản thiết kế và app.",
+  "{n} left": "còn {n}",
+  "All found": "Đã tìm hết",
+  Design: "Thiết kế",
+  "The app": "App",
+  "{board} tile {n}": "{board} ô {n}",
+  "Tap tiles to turn them. Connect the button to the server.":
+    "Chạm vào ô để xoay. Nối nút bấm tới server.",
+  "A teammate already set the first pieces.":
+    "Đồng đội đã đặt sẵn vài mảnh đầu.",
+  Button: "Nút bấm",
+  Server: "Server",
+  "Pipe {n}": "Ống {n}",
+  "Tap Ship while the marker is in the green window. Three releases in a row.":
+    "Bấm Ship khi vạch nằm trong vùng xanh. Ba lần release liên tiếp.",
+  Ship: "Ship",
+  "{n} of 3 released": "Đã release {n}/3",
+  "Sort the inbox": "Dọn hộp thư",
+  "Teammate: this one is urgent.": "Đồng đội: cái này gấp đấy.",
+  "Teammate: this one is not urgent.": "Đồng đội: cái này không gấp.",
+  "Inbox zero.": "Hộp thư trống trơn.",
+  "← Later": "← Để sau",
+  "Now →": "Làm ngay →",
+  Later: "Để sau",
+  Now: "Làm ngay",
+  Next: "Tiếp theo",
+  "Pick the reply that fits how they feel.":
+    "Chọn câu trả lời hợp với cảm xúc của họ.",
+  "Everyone feels heard.": "Ai cũng thấy được lắng nghe.",
+  "Fill the sprint exactly to the team's capacity.":
+    "Xếp sprint vừa khít năng lực của team.",
+  "The starred task must be in.": "Việc có dấu sao bắt buộc phải có.",
+  "A teammate already added one.": "Đồng đội đã thêm sẵn một việc.",
+  "{used} / {capacity} points": "{used} / {capacity} điểm",
+  "Big impact": "Tác động lớn",
+  "Small impact": "Tác động nhỏ",
+  "Big effort": "Công sức lớn",
+  "Small effort": "Công sức nhỏ",
+  "Teammate: this goes in {slot}.": "Đồng đội: cái này xếp vào {slot}.",
+  "The roadmap is set.": "Roadmap đã xong.",
+
+    // Workline
+  "Workline": "Workline",
+  "All cash. This company is not listed.":
+    "Toàn bộ là tiền mặt. Công ty này chưa niêm yết.",
+  "Closes today": "Hết hạn hôm nay",
+  "Closes tomorrow": "Hết hạn ngày mai",
+  "Closes in {n} days": "Hết hạn sau {n} ngày",
+  "Jobs and news from people you might know":
+    "Việc làm và tin tức từ những người bạn có thể biết",
+  "Your CV: skill {skill} · {n} week of experience · reputation {reputation}":
+    "CV của bạn: kỹ năng {skill} · {n} tuần kinh nghiệm · uy tín {reputation}",
+  "Your CV: skill {skill} · {n} weeks of experience · reputation {reputation}":
+    "CV của bạn: kỹ năng {skill} · {n} tuần kinh nghiệm · uy tín {reputation}",
+  "{n} certificate": "{n} chứng chỉ",
+  "{n} certificates": "{n} chứng chỉ",
+  "{n} job picked for you. HR reads your CV first.":
+    "{n} việc làm dành cho bạn. HR sẽ đọc CV trước.",
+  "{n} jobs picked for you. HR reads your CV first.":
+    "{n} việc làm dành cho bạn. HR sẽ đọc CV trước.",
+  "Nothing new yet. New posts show up each morning.":
+    "Chưa có gì mới. Tin tuyển dụng mới lên mỗi sáng.",
+  "{n} likes": "{n} lượt thích",
+  "You meet every requirement. HR will call.":
+    "Bạn đáp ứng mọi yêu cầu. HR sẽ gọi.",
+  "Close. HR might call.": "Gần đạt. HR có thể sẽ gọi.",
+  "A long shot. HR rarely calls this far off.":
+    "Khó lắm. Thiếu nhiều thế này HR hiếm khi gọi.",
+  "Step up": "Lên một cấp",
+  "{n} levels up": "Lên {n} cấp",
+  "{percent}% vs now": "{percent}% so với hiện tại",
+  "HR is looking for": "HR đang tìm",
+  "{label} {n} weeks": "{label} {n} tuần",
+  "you have {n}": "bạn có {n}",
+  "Not moving forward": "Không được chọn",
+  "Interview needs {n} energy": "Phỏng vấn cần {n} năng lượng",
+  "Shortlisted · Interview, {n} rounds":
+    "Lọt vào danh sách · Phỏng vấn {n} vòng",
+  "Send CV": "Gửi CV",
+  "They said yes. The new pay is below.":
+    "Họ đồng ý. Mức lương mới ở bên dưới.",
+  "They held firm. The offer stays the same.":
+    "Họ giữ nguyên. Offer không đổi.",
+  "They felt pushed and pulled the offer.": "Họ thấy bị ép và đã rút offer.",
+  "Offer · {company}": "Offer · {company}",
+  "The offer is gone": "Offer đã bị rút",
+  "{company} won't talk to you for a few days.":
+    "{company} sẽ không liên lạc với bạn vài ngày tới.",
+  "Back to Workline": "Quay lại Workline",
+  "You got the offer": "Bạn nhận được offer",
+  Role: "Vị trí",
+  Payday: "Lương",
+  Place: "Nơi làm",
+  "Next promotion": "Lần thăng chức tới",
+  "{percent}% fewer tasks, thanks to your CV":
+    "Ít hơn {percent}% việc, nhờ CV của bạn",
+  "Tasks start from zero": "Việc tính lại từ đầu",
+  "Your leverage": "Lợi thế của bạn",
+  "Built from your reputation, your team relationship, and your mood.":
+    "Dựa trên uy tín, quan hệ với team và tâm trạng của bạn.",
+  "Built from your reputation, your skill, and your mood.":
+    "Dựa trên uy tín, kỹ năng và tâm trạng của bạn.",
+  "Ask for a little more": "Xin thêm một chút",
+  "Ask for a lot more": "Xin thêm nhiều",
+  "+{percent}% salary": "+{percent}% lương",
+  "they may walk away": "họ có thể rút lui",
+  "Never mind": "Thôi",
+  "Accept and join {company}": "Nhận offer và gia nhập {company}",
+  Negotiate: "Thương lượng",
+  "Reject offer": "Từ chối offer",
+  "Interview · {company}": "Phỏng vấn · {company}",
+  "They went another way": "Họ đã chọn người khác",
+  "{company} will not look at you again for a few days. Other posts are still open.":
+    "{company} sẽ không xem xét bạn trong vài ngày. Các tin khác vẫn đang mở.",
+  "Round {round} of {rounds}: {game}. A miss ends the interview.":
+    "Vòng {round}/{rounds}: {game}. Hụt một lần là kết thúc phỏng vấn.",
+};

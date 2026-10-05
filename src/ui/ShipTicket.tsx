@@ -4,6 +4,7 @@ import { inZone, markerAt, type ShipPuzzle } from "../game/ship";
 import type { CodeGrade } from "../game/types";
 import { gameSeconds } from "../game/workGames";
 import { useTicketClock } from "./useTicketClock";
+import { t } from "../i18n";
 
 export function ShipTicket({
   puzzle,
@@ -53,13 +54,12 @@ export function ShipTicket({
     <div className={`tidy ship${settled ? " settled" : ""}`}>
       <div className="tidy-meta">
         <span>{left}s</span>
-        <span>Ship it</span>
+        <span>{t("Ship it")}</span>
       </div>
       <p className="ask">
-        Tap <strong>Ship</strong> while the marker is in the green window. Three
-        releases in a row.
+                {t("Tap Ship while the marker is in the green window. Three releases in a row.")}
       </p>
-      <div className="ship-lights" aria-label={`${hits} of 3 released`}>
+            <div className="ship-lights" aria-label={t("{n} of 3 released", { n: hits })}>
         {puzzle.zones.map((_, index) => (
           <span key={index} className={index < hits ? "on" : ""} />
         ))}
@@ -79,8 +79,7 @@ export function ShipTicket({
         disabled={settled}
         onClick={ship}
       >
-        Ship
-      </button>
+        {t("Ship")}</button>
       {settled ? (
         <div className="tidy-payoff" aria-hidden="true">
           <span className="tidy-check" />

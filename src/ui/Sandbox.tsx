@@ -21,7 +21,22 @@ import {
 } from "../content/gear";
 import { careerStatus, type CareerState } from "../game/career";
 import { ALL_LEVELS, LEVEL_TITLE, trackOf } from "../game/ladder";
-import { jumpToLevel, meetMilestones, topUp } from "../game/sandbox";
+import {
+  jumpToCompany,
+  jumpToLevel,
+  meetMilestones,
+  topUp,
+} from "../game/sandbox";
+import {
+  COMPANIES,
+  WORKPLACE_LABEL,
+  workplaceOf,
+} from "../content/companies";
+
+/** One company per office: a startup, an agency, a young and an established product company, an enterprise, and a remote one. */
+const OFFICE_PICKS = ["loft", "relay", "northwind", "lumen", "keel", "harbor"]
+  .map((id) => COMPANIES.find((company) => company.id === id))
+  .filter((company) => company !== undefined);
 import { GameView } from "./GameView";
 
 type SlotKey =
@@ -187,6 +202,17 @@ function CareerTools({
           >
             {trackOf(level) === "manager" ? "◆ " : ""}
             {LEVEL_TITLE[level]}
+          </Chip>
+        ))}
+      </ChipRow>
+      <ChipRow label="Company style">
+        {OFFICE_PICKS.map((company) => (
+          <Chip
+            key={company.id}
+            on={career.company?.id === company.id}
+            onClick={() => onCareer(jumpToCompany(career, company.id))}
+          >
+            {company.name} · {WORKPLACE_LABEL[workplaceOf(company)]}
           </Chip>
         ))}
       </ChipRow>

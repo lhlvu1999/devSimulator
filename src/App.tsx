@@ -5,7 +5,7 @@ import {
   careerStatus,
   chooseGoal,
   createCareer,
-    applyToPost,
+  applyToPost,
   declinePost,
   endDay,
   failInterview,
@@ -25,7 +25,7 @@ import { isStock, type MarketId } from "./game/market";
 import type { PlacementOutcome } from "./game/placement";
 import { clearGame, loadGame, saveGame } from "./game/save";
 import type { JobPost } from "./game/workline";
-import { HOME_VIDEO } from "./content/sceneVideo";
+import { videoFor } from "./content/sceneVideo";
 import { OfferCard } from "./ui/kit";
 import {
   InvestDesk,
@@ -39,6 +39,7 @@ import { GameView, type NavTab, type ScenePanel } from "./ui/GameView";
 import { MeScreen } from "./ui/MeScreen";
 import { TopHud } from "./ui/TopHud";
 import { useMusic } from "./ui/music";
+import { t, useLang } from "./i18n";
 import { Sandbox } from "./ui/Sandbox";
 import { useSceneLayout } from "./ui/useSceneLayout";
 import {
@@ -81,6 +82,7 @@ const devTools = import.meta.env.DEV && !Capacitor.isNativePlatform();
 
 export function App() {
   const [music, setMusic] = useMusic();
+  useLang();
   const [career, setCareer] = useState<CareerState>(
     () => loadGame() ?? createCareer(),
   );
@@ -113,12 +115,12 @@ export function App() {
   const shown = forced ? "screen" : panel;
   const glassLabel =
     career.company === null
-      ? "Job hunt"
+      ? t("Job hunt")
       : career.offWeek === "sick"
-        ? "Sick week"
+        ? t("Sick week")
         : career.offWeek === "burnout"
-          ? "Burnout week"
-          : "Free time";
+          ? t("Burnout week")
+          : t("Free time");
 
   return (
     <main className="phone">
@@ -129,14 +131,14 @@ export function App() {
             className={mode === "play" ? "on" : ""}
             onClick={() => setMode("play")}
           >
-            Play
+            {t("Play")}
           </button>
           <button
             type="button"
             className={mode === "sandbox" ? "on" : ""}
             onClick={() => setMode("sandbox")}
           >
-            Sandbox
+            {t("Sandbox")}
           </button>
         </nav>
       ) : null}
@@ -161,7 +163,7 @@ export function App() {
           panel={panel}
           workDone={career.workDone}
           boxes={scene.boxes}
-                                        video={HOME_VIDEO}
+          video={videoFor(career.company)}
           hud={<TopHud state={career} onOpen={() => setPanel("me")} />}
           screenTone={
             panel === "market"
@@ -221,14 +223,14 @@ export function App() {
           ) : null}
           {career.section === "offers" ? (
             <section className="screen">
-              <h1>Offers</h1>
+              <h1>{t("Offers")}</h1>
               <p className="ask">{career.placementBlurb}</p>
               <div className="offer-list">
                 {career.offers.map((company) => (
                   <OfferCard
                     key={company.id}
                     company={company}
-                    note={company.summary}
+                    note={t(company.summary)}
                     onPick={() => setCareer(acceptOffer(career, company.id))}
                   />
                 ))}
@@ -269,7 +271,7 @@ export function App() {
             <MarketScreen state={career} id={market} onChange={setCareer} />
           ) : null}
           {shown === "workline" ? (
-                        <WorklineFeed
+            <WorklineFeed
               state={career}
               onApply={(post) => setCareer(applyToPost(career, post.id))}
               onInterview={(post) => {
@@ -321,8 +323,8 @@ export function App() {
                   ? () => setCareer(switchTrack(career))
                   : undefined
               }
-                            onRestart={restart}
-                            music={music}
+              onRestart={restart}
+              music={music}
               onMusic={setMusic}
             />
           ) : null}
@@ -346,23 +348,28 @@ export function App() {
           {career.section === "summary" ? (
             <section className="screen">
               <p className="kicker">
-                Age {ageOn(career.day - 1)} · Week {weekOfYear(career.day - 1)}
+                {t("Age {age} · Week {week}", {
+                  age: ageOn(career.day - 1),
+                  week: weekOfYear(career.day - 1),
+                })}
               </p>
-              <h1>The week is done</h1>
+              <h1>{t("The week is done")}</h1>
               <ul className="ledger">
                 {career.log.map((line) => (
                   <li key={line}>{line}</li>
                 ))}
               </ul>
               <p className="projection">
-                Net worth {formatMoney(netWorth(career))}.
+                {t("Net worth {amount}.", {
+                  amount: formatMoney(netWorth(career)),
+                })}
               </p>
               <button
                 type="button"
                 className="primary"
                 onClick={() => setCareer(nextMorning(career))}
               >
-                Next week
+                {t("Next week")}
               </button>
             </section>
           ) : null}

@@ -2,6 +2,7 @@ import type { CompanyType } from "../content/companies";
 import { TICKET_TITLES, URGENT_TITLES } from "../content/ticketTitles";
 import { LEVEL_GAMES, picksOwnWork, type Level } from "./ladder";
 import { rollDifficulty, type Difficulty } from "./difficulty";
+import { t as tr, tn } from "../i18n";
 import { nextUnit } from "./rng";
 import { skillRating } from "./skill";
 import type { CodeGrade, Stats } from "./types";
@@ -33,7 +34,7 @@ export type BoardTicket = {
   /** The overdue hit has been applied. */
   overdue: boolean;
   urgent: boolean;
-    /** The ticket this one came out of. */
+  /** The ticket this one came out of. */
   parent: string | null;
   /** How hard its mini-games are, from the title's mix of work. */
   difficulty: Difficulty;
@@ -145,19 +146,23 @@ const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const;
 
 /** "Tue 14:00" for an hour inside the work week. */
 export function hourLabel(hour: number): string {
-  if (hour > WEEK_HOURS) return `Overtime +${hour - WEEK_HOURS}h`;
-  if (hour === WEEK_HOURS) return "Fri 17:00";
-  return `${WEEKDAYS[Math.floor(hour / 8)]} ${9 + (hour % 8)}:00`;
+  if (hour > WEEK_HOURS) return tr("Overtime +{n}h", { n: hour - WEEK_HOURS });
+  if (hour === WEEK_HOURS) return `${tr("Fri")} 17:00`;
+  return `${tr(WEEKDAYS[Math.floor(hour / 8)] ?? "Mon")} ${9 + (hour % 8)}:00`;
+}
+
+/** The time of day without the weekday, for places too tight for "Mon 9:00". */
+export function clockLabel(hour: number): string {
+  if (hour > WEEK_HOURS) return hourLabel(hour);
+  if (hour === WEEK_HOURS) return "17:00";
+  return `${9 + (hour % 8)}:00`;
 }
 
 function spanLabel(hours: number): string {
   if (hours < 8) return `${hours}h`;
-  if (hours < WEEK_HOURS) {
-    const days = Math.round(hours / 8);
-    return `${days} day${days === 1 ? "" : "s"}`;
-  }
-  const weeks = Math.round(hours / WEEK_HOURS);
-  return `${weeks} week${weeks === 1 ? "" : "s"}`;
+  if (hours < WEEK_HOURS)
+    return tn(Math.round(hours / 8), "{n} day", "{n} days");
+  return tn(Math.round(hours / WEEK_HOURS), "{n} week", "{n} weeks");
 }
 
 export type DueTone = "overdue" | "soon" | "ok";
@@ -170,7 +175,7 @@ export function dueInfo(
   const now = clockAt(day, hour);
   if (ticket.dueAt < now)
     return {
-      label: `Overdue ${spanLabel(now - ticket.dueAt)}`,
+      label: tr("Overdue {span}", { span: spanLabel(now - ticket.dueAt) }),
       tone: "overdue",
     };
   const weekOffset = Math.floor(ticket.dueAt / WEEK_HOURS) - (day - 1);
@@ -178,10 +183,10 @@ export function dueInfo(
     ticket.dueAt - Math.floor(ticket.dueAt / WEEK_HOURS) * WEEK_HOURS;
   const label =
     weekOffset <= 0
-      ? `Due ${hourLabel(inWeek)}`
+      ? tr("Due {when}", { when: hourLabel(inWeek) })
       : weekOffset === 1
-        ? `Due next ${hourLabel(inWeek)}`
-        : `Due in ${weekOffset} weeks`;
+        ? tr("Due next {when}", { when: hourLabel(inWeek) })
+        : tr("Due in {n} weeks", { n: weekOffset });
   return { label, tone: ticket.dueAt - now <= 8 ? "soon" : "ok" };
 }
 
@@ -290,7 +295,7 @@ function dealOne(
   const sizeRoll = nextUnit(picked.rngState);
   const priorityRoll = nextUnit(sizeRoll.rngState);
   const dueRoll = nextUnit(priorityRoll.rngState);
-    const titleRoll = nextUnit(dueRoll.rngState);
+  const titleRoll = nextUnit(dueRoll.rngState);
   const difficultyRoll = nextUnit(titleRoll.rngState);
 
   const size: TicketSize =
@@ -337,7 +342,7 @@ function dealOne(
     createdAt: now,
     dueAt: now + window,
     overdue: false,
-        urgent: kind === "urgent",
+    urgent: kind === "urgent",
     parent: parent?.key ?? null,
     difficulty: rollDifficulty(
       ctx.level,
@@ -351,7 +356,7 @@ function dealOne(
       tickets: [...board.tickets, ticket],
       nextNumber: board.nextNumber + 1,
     },
-        ticket,
+    ticket,
     rngState: difficultyRoll.rngState,
   };
 }
@@ -572,8 +577,9 @@ export function doneReward(
   timing: Timing,
   salary: number,
 ): Partial<Stats> {
-    if (timing === "late") return {};
-  if (timing === "onTime") return priority === "critical" ? { reputation: 1 } : {};
+  if (timing === "late") return {};
+  if (timing === "onTime")
+    return priority === "critical" ? { reputation: 1 } : {};
   const reputation = { low: 0, medium: 0, high: 1, critical: 2 }[priority];
   const cash =
     priority === "critical"
@@ -581,7 +587,7 @@ export function doneReward(
       : priority === "high"
         ? Math.round(salary * 0.04)
         : 0;
-    return { reputation, mood: 1, money: cash };
+  return { reputation, mood: 1, money: cash };
 }
 
 /** Unused hours become free time. Overtime eats it. */

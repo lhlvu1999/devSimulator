@@ -4,6 +4,7 @@ import { spotSolved, type SpotPuzzle, type SpotTile } from "../game/spot";
 import type { CodeGrade } from "../game/types";
 import { gameSeconds } from "../game/workGames";
 import { useTicketClock } from "./useTicketClock";
+import { t } from "../i18n";
 
 export function SpotTicket({
   puzzle,
@@ -41,15 +42,15 @@ export function SpotTicket({
     <div className={`tidy spot${settled ? " settled" : ""}`}>
       <div className="tidy-meta">
         <span>{left}s</span>
-        <span>Spot the bug</span>
+        <span>{t("Spot the bug")}</span>
       </div>
       <p className="ask">
-        Tap what changed between the design and the app.{" "}
-        <strong>{remaining > 0 ? `${remaining} left` : "All found"}</strong>
+                {t("Tap what changed between the design and the app.")}{" "}
+        <strong>{remaining > 0 ? t("{n} left", { n: remaining }) : t("All found")}</strong>
       </p>
       <div className="spot-boards">
         <SpotBoard
-          label="Design"
+                    label={t("Design")}
           tiles={puzzle.design}
           columns={puzzle.columns}
           found={found}
@@ -58,7 +59,7 @@ export function SpotTicket({
           onTap={tap}
         />
         <SpotBoard
-          label="The app"
+                    label={t("The app")}
           tiles={puzzle.shipped}
           columns={puzzle.columns}
           found={found}
@@ -109,7 +110,7 @@ function SpotBoard({
             className={`spot-cell${found.includes(index) ? " found" : ""}${
               miss === index ? " wiggle" : ""
             }${hint === index && !found.includes(index) ? " hinted" : ""}`}
-            aria-label={`${label} tile ${index + 1}`}
+                        aria-label={t("{board} tile {n}", { board: label, n: index + 1 })}
             onClick={() => onTap(index)}
           >
             {tile ? (

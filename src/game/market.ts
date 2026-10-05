@@ -1,3 +1,4 @@
+import { t } from "../i18n";
 import { nextUnit } from "./rng";
 
 /** Listed companies. Many also hire on Workline; the rest are invest-only names on the market. */
@@ -256,8 +257,8 @@ export function stockForCompany(
 }
 
 export function marketLabel(id: MarketId): string {
-  if (id === "crypto") return "Crypto";
-  if (id === "gold") return "Gold";
+  if (id === "crypto") return t("Crypto");
+  if (id === "gold") return t("Gold");
   return stockById(id).name;
 }
 
@@ -276,8 +277,8 @@ export const MARKET_BLURB = {
 } as const;
 
 export function marketBlurb(id: MarketId): string {
-  if (id === "crypto") return MARKET_BLURB.crypto;
-  if (id === "gold") return MARKET_BLURB.gold;
+    if (id === "crypto") return t(MARKET_BLURB.crypto);
+  if (id === "gold") return t(MARKET_BLURB.gold);
   const risk = stockById(id).risk;
   const feel =
     risk === "High"
@@ -285,41 +286,55 @@ export function marketBlurb(id: MarketId): string {
       : risk === "Low"
         ? "It barely moves in a quiet week."
         : "It moves a little most days.";
-  return `${MARKET_BLURB.stock} ${feel}`;
+    return `${t(MARKET_BLURB.stock)} ${t(feel)}`;
 }
 
 export type NewsTone = "good" | "bad";
 
-export type StockNews = { stockId: StockId; tone: NewsTone; headline: string };
+export type StockNews = {
+  stockId: StockId;
+  tone: NewsTone;
+  /** The headline in English, as it was printed. */
+  headline: string;
+  /** The template it came from, so it can be shown in another language. Missing on older saves. */
+  template?: string;
+};
 
-const HEADLINES: Record<NewsTone, readonly ((name: string) => string)[]> = {
+/** The headline in the player's language. */
+export function newsHeadline(news: StockNews): string {
+  if (!news.template) return news.headline;
+  return t(news.template, { name: stockById(news.stockId).name });
+}
+
+/** English templates; {name} is the company. Shown in the player's language when read. */
+const HEADLINES: Record<NewsTone, readonly string[]> = {
   good: [
-    (name) => `${name} signs a big three-year deal.`,
-    (name) => `${name}'s new app update gets great reviews.`,
-    (name) => `${name} sales beat what everyone expected.`,
-    (name) => `A famous investor buys a large stake in ${name}.`,
-    (name) => `${name} opens a second office.`,
-    (name) => `${name} wins an award for its product.`,
-    (name) => `${name} lands its biggest customer yet.`,
-    (name) => `${name} raises guidance for the year.`,
-    (name) => `${name} launches in a new country.`,
-    (name) => `${name} partners with a major platform.`,
-    (name) => `${name} reports record quarterly profit.`,
-    (name) => `${name}'s new hire gets glowing press.`,
+    "{name} signs a big three-year deal.",
+    "{name}'s new app update gets great reviews.",
+    "{name} sales beat what everyone expected.",
+    "A famous investor buys a large stake in {name}.",
+    "{name} opens a second office.",
+    "{name} wins an award for its product.",
+    "{name} lands its biggest customer yet.",
+    "{name} raises guidance for the year.",
+    "{name} launches in a new country.",
+    "{name} partners with a major platform.",
+    "{name} reports record quarterly profit.",
+    "{name}'s new hire gets glowing press.",
   ],
   bad: [
-    (name) => `${name} recalls a product.`,
-    (name) => `${name}'s CEO leaves without a clear reason.`,
-    (name) => `${name} sales come in below what was promised.`,
-    (name) => `A big customer leaves ${name} for a rival.`,
-    (name) => `${name}'s app is down for most of the day.`,
-    (name) => `${name} is fined for a data mistake.`,
-    (name) => `${name} delays its next product launch.`,
-    (name) => `${name} cuts staff after a weak quarter.`,
-    (name) => `${name} faces a lawsuit from a rival.`,
-    (name) => `${name}'s supply chain hits a snag.`,
-    (name) => `${name} loses a key patent case.`,
-    (name) => `${name} warns profits will be lower this year.`,
+    "{name} recalls a product.",
+    "{name}'s CEO leaves without a clear reason.",
+    "{name} sales come in below what was promised.",
+    "A big customer leaves {name} for a rival.",
+    "{name}'s app is down for most of the day.",
+    "{name} is fined for a data mistake.",
+    "{name} delays its next product launch.",
+    "{name} cuts staff after a weak quarter.",
+    "{name} faces a lawsuit from a rival.",
+    "{name}'s supply chain hits a snag.",
+    "{name} loses a key patent case.",
+    "{name} warns profits will be lower this year.",
   ],
 };
 
@@ -356,7 +371,8 @@ export function rollNews(seed: number): {
     news.push({
       stockId: stock.id,
       tone,
-            headline: line ? line(stock.name) : "",
+                        headline: line ? line.replace("{name}", stock.name) : "",
+            template: line,
     });
   }
   return { news, rngState };
@@ -454,17 +470,24 @@ export function rollPrices(
   const biggest = [...changes].sort(
     (a, b) => Math.abs(b.change) - Math.abs(a.change),
   )[0];
-  const notes = [
-    `Stocks: ${up} up, ${STOCKS.length - up} down.${
+    const notes = [
+    `${t("Stocks: {up} up, {down} down.", { up, down: STOCKS.length - up })}${
       biggest
-        ? ` Biggest move: ${biggest.stock.name} ${biggest.change > 0 ? "+" : ""}${Math.round(biggest.change * 1000) / 10}%.`
+                ? ` ${t("Biggest move: {name} {percent}%.", {
+            name: biggest.stock.name,
+            percent: `${biggest.change > 0 ? "+" : ""}${Math.round(biggest.change * 1000) / 10}`,
+          })}`
         : ""
     }`,
-    `Crypto is ${moved.crypto >= prices.crypto ? "up" : "down"} at ${moved.crypto.toFixed(2)}. Gold is ${moved.gold >= prices.gold ? "up" : "down"} at ${moved.gold.toFixed(2)}.`,
+        `${t(moved.crypto >= prices.crypto ? "Crypto is up at {price}." : "Crypto is down at {price}.", {
+      price: moved.crypto.toFixed(2),
+    })} ${t(moved.gold >= prices.gold ? "Gold is up at {price}." : "Gold is down at {price}.", {
+      price: moved.gold.toFixed(2),
+    })}`,
   ];
   if (crypto.day === "crash")
-    notes.push("Crypto crashed overnight. Gold picked up a little.");
-  if (crypto.day === "spike") notes.push("Crypto shot up overnight.");
+        notes.push(t("Crypto crashed overnight. Gold picked up a little."));
+  if (crypto.day === "spike") notes.push(t("Crypto shot up overnight."));
   return { prices: moved, rngState, notes };
 }
 

@@ -1,3 +1,5 @@
+import { t as tr } from "../i18n";
+import { formatMoney } from "./format";
 import { nextUnit } from "./rng";
 import type { StatKey, Stats } from "./types";
 
@@ -200,13 +202,13 @@ export function sideIncome(
   if (!sideIsActive(side, day))
     return {
       income: 0,
-      note: "Your side project stalled. Users want updates.",
+            note: tr("Your side project stalled. Users want updates."),
       rngState: roll.rngState,
     };
   const income = Math.round(stage.income * (0.8 + roll.value * 0.4));
   return {
     income,
-    note: `Side project (${stage.name}): +$${income}.`,
+        note: tr("Side project ({stage}): +{amount}.", { stage: tr(stage.name), amount: formatMoney(income) }),
     rngState: roll.rngState,
   };
 }

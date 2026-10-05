@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { emptyBoard, newbieMove, winner, type Board } from "../game/tictactoe";
 import type { PlacementOutcome } from "../game/placement";
+import { t } from "../i18n";
 
 const NAMES = [
   "Top left",
@@ -48,19 +49,17 @@ export function Placement({
 
   return (
     <section className="screen">
-      <p className="kicker">Dev Simulator</p>
-      <h1>Placement</h1>
+      <p className="kicker">{t("Dev Simulator")}</p>
+      <h1>{t("Placement")}</h1>
       <p className="prose">
-        Play tic-tac-toe against a new opponent. A faster win sets a higher
-        fresher profile. The result stays inside the fresher band.
-      </p>
-      <div className="board" role="grid" aria-label="Tic-tac-toe">
+        {t("Play tic-tac-toe against a new opponent. A faster win sets a higher fresher profile. The result stays inside the fresher band.")}</p>
+      <div className="board" role="grid" aria-label={t("Tic-tac-toe")}>
         {board.map((cell, index) => (
           <button
             key={NAMES[index]}
             type="button"
             className="cell"
-            aria-label={NAMES[index]}
+            aria-label={t(NAMES[index] ?? "")}
             disabled={Boolean(finished) || cell !== null}
             onClick={() => play(index)}
           >
@@ -72,7 +71,8 @@ export function Placement({
         <PlacementResult outcome={finished} moves={moves} onDone={onDone} />
       ) : (
         <p className="prose muted">
-          You are X. {moves === 0 ? "Your move." : `${moves} moves so far.`}
+                    {t("You are X.")}{" "}
+          {moves === 0 ? t("Your move.") : t("{n} moves so far.", { n: moves })}
         </p>
       )}
     </section>
@@ -90,10 +90,10 @@ function PlacementResult({
 }) {
   const line =
     outcome === "win"
-      ? `You won in ${moves} moves.`
+            ? t("You won in {n} moves.", { n: moves })
       : outcome === "draw"
-        ? "The board filled. That is a draw."
-        : "The other side won.";
+        ? t("The board filled. That is a draw.")
+        : t("The other side won.");
   return (
     <>
       <p className="projection">{line}</p>
@@ -102,8 +102,7 @@ function PlacementResult({
         className="primary"
         onClick={() => onDone(outcome, moves)}
       >
-        See job offers
-      </button>
+        {t("See job offers")}</button>
     </>
   );
 }

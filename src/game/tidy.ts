@@ -2,6 +2,7 @@ import type { CodeGrade } from "./types";
 import type { Difficulty } from "./difficulty";
 import { EXTRA_TIDY_SCENES } from "./pools/tidyScenesExtra";
 import { nextUnit } from "./rng";
+import { t } from "../i18n";
 export type TidyGoal = "remove" | "place" | "color";
 export type Swatch = "cream" | "sage" | "clay" | "blue";
 
@@ -269,7 +270,7 @@ export function dealTicket(
     rngState: startRoll.rngState,
     ticket: {
       scene: sceneId,
-      note: notes.join(" "),
+            note: notes.map((line) => t(line)).join(" "),
       goals,
       pieces,
       loose: goals.includes("place") ? scene.loose : null,

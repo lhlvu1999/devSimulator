@@ -4,9 +4,10 @@ import {
   useState,
   type CSSProperties,
   type PointerEvent as ReactPointerEvent,
-    type ReactNode,
+  type ReactNode,
   type RefObject,
 } from "react";
+import { t } from "../i18n";
 import { boxStyle, type Box, type SceneBoxes } from "../content/sceneLayout";
 import type { SceneVideo } from "../content/sceneVideo";
 import {
@@ -22,8 +23,8 @@ import { deviceById, lookById, type DeviceId } from "../content/gear";
 import { environmentMotion, isMotionLayer } from "../content/motion";
 import { useRoomMotion } from "./useRoomMotion";
 import { useFitRect } from "./useFitRect";
+import { boundsOf, glassOnScreen, polygon, tapShape } from "./glass";
 import "./scene.css";
-
 
 export type ScenePanel =
   | "work"
@@ -81,7 +82,7 @@ export function GameView({
   boxes,
   onEdit,
   screenTone,
-        video,
+  video,
   hud,
   nav,
   glassLabel,
@@ -105,9 +106,9 @@ export function GameView({
   onEdit?: (id: string, box: Box) => void;
   screenTone?: string;
   /** When set, the clip is the whole room and the layered entities are skipped. */
-    video?: SceneVideo;
-  
-    /** The strip above the room. Sandbox leaves it out. */
+  video?: SceneVideo;
+
+  /** The strip above the room. Sandbox leaves it out. */
   hud?: ReactNode;
   /** The bottom tab bar. Sandbox leaves it out. */
   nav?: { active: NavTab; jobCount: number; onTab: (tab: NavTab) => void };
@@ -122,28 +123,29 @@ export function GameView({
   const dual = device.id === "rig" || device.id === "studio";
   const open = locked || panel !== null;
   const frames = useRoomMotion();
-    const worldRef = useRef<HTMLDivElement>(null);
+  const worldRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-    const fitted = useFitRect(frameRef, video ?? null, video?.screen ?? null);
-  const glass = fitted?.box ?? null;
-  const glassStyle = fitted
-    ? ({
-        "--glass-left": `${fitted.box.left}px`,
-        "--glass-top": `${fitted.box.top}px`,
-        "--glass-width": `${fitted.box.width}px`,
-        "--glass-height": `${fitted.box.height}px`,
-        "--clip-top": `${Math.max(0, fitted.shown.top)}px`,
-      } as CSSProperties)
-    : undefined;
+  const fitted = useFitRect(frameRef, video ?? null, video?.screen ?? null);
+  const glassCorners =
+    fitted && video ? glassOnScreen(video.glass, video, fitted.shown) : null;
+  const tapCorners = glassCorners ? tapShape(glassCorners) : null;
+  const glass = tapCorners ? boundsOf(tapCorners) : null;
+  const glassStyle =
+    fitted && glassCorners
+      ? ({
+          "--glass-shape": polygon(glassCorners),
+          "--clip-top": `${Math.max(0, fitted.shown.top)}px`,
+        } as CSSProperties)
+      : undefined;
 
   return (
     <div
       ref={worldRef}
-            className={`world env-${environment}${open ? " focus" : ""}${layout ? " show-layout" : ""}${video ? " has-video" : ""}${nav ? " with-nav" : ""}`}
+      className={`world env-${environment}${open ? " focus" : ""}${layout ? " show-layout" : ""}${video ? " has-video" : ""}${nav ? " with-nav" : ""}`}
       style={glassStyle}
     >
       {video ? (
-                <SceneClip video={video} frameRef={frameRef} />
+        <SceneClip video={video} frameRef={frameRef} />
       ) : (
         <>
           {(
@@ -234,11 +236,12 @@ export function GameView({
         </>
       )}
       {locked || layout || FULL_SCREEN.includes(panel) ? null : video &&
-        glass ? (
+        glass &&
+        tapCorners ? (
         <button
           type="button"
           className={`glass-option${workDone ? " done" : ""}`}
-          aria-label={workDone ? (glassLabel ?? "Free time") : "Work"}
+          aria-label={workDone ? (glassLabel ?? t("Free time")) : t("Work")}
           style={{
             left: glass.left,
             top: glass.top,
@@ -247,7 +250,12 @@ export function GameView({
           }}
           onClick={workDone ? onEndDay : onWork}
         >
-          {workDone ? <span>{glassLabel ?? "Free time"}</span> : null}
+          <i
+            className="glass-hit"
+            aria-hidden="true"
+            style={{ clipPath: polygon(tapCorners, glass) }}
+          />
+          {workDone ? <span>{glassLabel ?? t("Free time")}</span> : null}
         </button>
       ) : (
         <button
@@ -259,7 +267,7 @@ export function GameView({
           }}
           onClick={workDone ? onEndDay : onWork}
         >
-          {workDone ? (glassLabel ?? "Free time") : "Work"}
+          {workDone ? (glassLabel ?? t("Free time")) : t("Work")}
         </button>
       )}
       {FULL_SCREEN.includes(panel) || locked ? (
@@ -274,7 +282,7 @@ export function GameView({
         >
           {!locked && (panel === "work" || panel === "free") ? (
             <button type="button" className="monitor-close" onClick={onClose}>
-              Desk
+              {t("Desk")}
             </button>
           ) : null}
           {!locked &&
@@ -286,13 +294,13 @@ export function GameView({
               className="monitor-close"
               onClick={onBack ?? onClose}
             >
-              Back
+              {t("Back")}
             </button>
           ) : null}
           {children}
         </div>
       ) : null}
-            {hud && !locked ? <div className="scene-hud">{hud}</div> : null}
+      {hud && !locked ? <div className="scene-hud">{hud}</div> : null}
       {nav && !locked && !layout && !NO_NAV.includes(panel) ? (
         <BottomNav nav={nav} />
       ) : null}
@@ -307,7 +315,7 @@ function BottomNav({
   nav: { active: NavTab; jobCount: number; onTab: (tab: NavTab) => void };
 }) {
   return (
-    <nav className="bottom-nav" aria-label="Main">
+    <nav className="bottom-nav" aria-label={t("Main")}>
       {NAV_ITEMS.map((item) => (
         <button
           key={item.id}
@@ -318,9 +326,11 @@ function BottomNav({
         >
           <span className="nav-icon" aria-hidden="true">
             <i />
-            {item.id === "jobs" && nav.jobCount > 0 ? <b>{nav.jobCount}</b> : null}
+            {item.id === "jobs" && nav.jobCount > 0 ? (
+              <b>{nav.jobCount}</b>
+            ) : null}
           </span>
-          <span className="nav-label">{item.label}</span>
+          <span className="nav-label">{t(item.label)}</span>
         </button>
       ))}
     </nav>
@@ -354,10 +364,10 @@ function SceneClip({
     const element = ref.current;
     if (!element) return;
     element.playbackRate = video.playbackRate;
-        if (still) element.pause();
+    if (still) element.pause();
     else void element.play().catch(() => undefined);
   }, [still, video.playbackRate, video.src]);
-  
+
   useEffect(() => {
     const element = ref.current;
     if (!element || still) return;
@@ -368,25 +378,30 @@ function SceneClip({
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, [still]);
-    return (
+  return (
     <>
-      <img className="scene-backdrop" src={video.poster} alt="" aria-hidden="true" />
+      <img
+        className="scene-backdrop"
+        src={video.poster}
+        alt=""
+        aria-hidden="true"
+      />
       <div ref={frameRef} className="scene-frame">
-    <video
-      ref={ref}
-      className="scene-clip"
-      src={video.src}
-      poster={video.poster}
-      autoPlay={!still}
-      loop
-      muted
-      playsInline
-      preload="auto"
-      aria-hidden="true"
-            onLoadedMetadata={(event) => {
-        event.currentTarget.playbackRate = video.playbackRate;
-      }}
-    />
+        <video
+          ref={ref}
+          className="scene-clip"
+          src={video.src}
+          poster={video.poster}
+          autoPlay={!still}
+          loop
+          muted
+          playsInline
+          preload="auto"
+          aria-hidden="true"
+          onLoadedMetadata={(event) => {
+            event.currentTarget.playbackRate = video.playbackRate;
+          }}
+        />
       </div>
     </>
   );
