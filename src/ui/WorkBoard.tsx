@@ -14,6 +14,15 @@ import {
 import { partPlan, type CareerState } from "../game/career";
 import { DIFFICULTY_LABEL } from "../game/difficulty";
 import { WORK_GAME_LABEL } from "../game/workGames";
+import { getLang, t, tn } from "../i18n";
+
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"] as const;
+
+/** One letter per day in English; Vietnamese days are short already (T2–T6). */
+function dayMark(index: number): string {
+  const day = t(WEEKDAYS[index] ?? "Mon");
+  return getLang() === "en" ? day.charAt(0) : day;
+}
 
 export function WorkBoard({
   state,
@@ -41,13 +50,13 @@ export function WorkBoard({
         <div className="clock-head">
           <strong className="clock-now">{hourLabel(hour)}</strong>
           <span>
-            {hour >= WEEK_HOURS
+                        {hour >= WEEK_HOURS
               ? overtime
-                ? `${Math.max(0, WEEK_HOURS + OVERTIME_HOURS - hour)}h of overtime left`
-                : "The week is over"
-              : `${WEEK_HOURS - hour}h left this week`}
+                ? t("{n}h of overtime left", { n: Math.max(0, WEEK_HOURS + OVERTIME_HOURS - hour) })
+                : t("The week is over")
+              : t("{n}h left this week", { n: WEEK_HOURS - hour })}
           </span>
-          <span>Energy {state.stats.energy}</span>
+          <span>{t("Energy {n}", { n: state.stats.energy })}</span>
         </div>
         <div className="clock-track" aria-hidden="true">
           <div className="clock-week">
@@ -62,7 +71,7 @@ export function WorkBoard({
                 key={index}
                 style={{ left: `${(index / dayMarks.length) * 100}%` }}
               >
-                {["M", "T", "W", "T", "F"][index]}
+                                {dayMark(index)}
               </i>
             ))}
           </div>
@@ -78,10 +87,10 @@ export function WorkBoard({
           ) : null}
         </div>
         <p className="board-hint">
-          {assigned
-            ? "Your lead sets the order. Take the top ticket."
-            : "Pick what to work on. Watch the deadlines."}
-          {overtime ? " Startups can push into overtime, at a cost." : ""}
+                    {assigned
+            ? t("Your lead sets the order. Take the top ticket.")
+            : t("Pick what to work on. Watch the deadlines.")}
+          {overtime ? ` ${t("Startups can push into overtime, at a cost.")}` : ""}
         </p>
       </div>
 
@@ -95,8 +104,7 @@ export function WorkBoard({
 
       {tickets.length === 0 ? (
         <p className="board-empty">
-          The board is clear. Wrap up early and enjoy the free time.
-        </p>
+          {t("The board is clear. Wrap up early and enjoy the free time.")}</p>
       ) : (
         <ul className="ticket-list">
           {tickets.map((ticket) => (
@@ -113,14 +121,13 @@ export function WorkBoard({
 
       <div className="board-footer">
         <button type="button" className="primary" onClick={onFinish}>
-          Wrap up the week
-        </button>
+          {t("Wrap up the week")}</button>
         <small>
-          {slots > 0
-            ? `Stopping now gives +${slots} free-time slot${slots > 1 ? "s" : ""}.`
+                    {slots > 0
+            ? tn(slots, "Stopping now gives +{n} free-time slot.", "Stopping now gives +{n} free-time slots.")
             : slots < 0
-              ? `Overtime has cost ${-slots} free-time slot${slots < -1 ? "s" : ""}.`
-              : "No extra free time this week."}
+              ? tn(-slots, "Overtime has cost {n} free-time slot.", "Overtime has cost {n} free-time slots.")
+              : t("No extra free time this week.")}
         </small>
       </div>
     </div>
@@ -144,17 +151,20 @@ function TicketCard({
   const due = dueInfo(ticket, state.day, state.board.hour);
   const fits = canStart(state.board, ticket, company.type);
   const enough = state.stats.energy >= plan.energy;
-  const part =
-    ticket.parts > 1 ? ` part ${ticket.partsDone + 1}/${ticket.parts}` : "";
+    const verb =
+    ticket.parts > 1
+      ? t(ticket.partsDone > 0 ? "Continue part {part}/{parts}" : "Start part {part}/{parts}", {
+          part: ticket.partsDone + 1,
+          parts: ticket.parts,
+        })
+      : t(ticket.partsDone > 0 ? "Continue" : "Start");
   const action = locked
-    ? "Queued by your lead"
+    ? t("Queued by your lead")
     : !fits
-      ? "Not enough time left this week"
+      ? t("Not enough time left this week")
       : !enough
-        ? `Needs ${plan.energy} energy`
-        : `${ticket.partsDone > 0 ? "Continue" : "Start"}${part} · ${plan.hours}h${
-            plan.overtime > 0 ? " overtime" : ""
-          } · ${plan.energy} energy`;
+        ? t("Needs {n} energy", { n: plan.energy })
+        : `${verb} · ${plan.hours}h${plan.overtime > 0 ? ` ${t("overtime")}` : ""} · ${t("{n} energy", { n: plan.energy })}`;
 
   return (
     <li
@@ -165,27 +175,27 @@ function TicketCard({
       <div className="ticket-top">
         <span className="ticket-key">{ticket.key}</span>
                 <span className={`ticket-type game-${ticket.game}`}>
-          {WORK_GAME_LABEL[ticket.game]}
+                    {t(WORK_GAME_LABEL[ticket.game])}
         </span>
         <span className={`diff-chip diff-${ticket.difficulty}`}>
-          {DIFFICULTY_LABEL[ticket.difficulty]}
+                    {t(DIFFICULTY_LABEL[ticket.difficulty])}
         </span>
         <span className={`prio-pill prio-${ticket.priority}`}>
-          {PRIORITY_LABEL[ticket.priority]}
+                    {t(PRIORITY_LABEL[ticket.priority])}
         </span>
       </div>
-      <strong className="ticket-title">{ticket.title}</strong>
+            <strong className="ticket-title">{t(ticket.title)}</strong>
       <div className="ticket-meta">
         <span className="ticket-size">
           {ticket.size} ·{" "}
           {ticket.parts > 1
-            ? `${ticket.parts} parts × ${ticket.partHours}h`
+                        ? t("{n} parts × {hours}h", { n: ticket.parts, hours: ticket.partHours })
             : `${ticket.partHours}h`}
         </span>
         {ticket.parts > 1 ? (
           <span
             className="part-dots"
-            aria-label={`${ticket.partsDone} of ${ticket.parts} parts done`}
+                        aria-label={t("{done} of {parts} parts done", { done: ticket.partsDone, parts: ticket.parts })}
           >
             {Array.from({ length: ticket.parts }, (_, index) => (
               <i
@@ -199,9 +209,9 @@ function TicketCard({
       </div>
       {ticket.urgent || ticket.parent ? (
         <span className="ticket-origin">
-          {ticket.urgent
-            ? "Dropped in mid-week"
-            : `Follow-up to ${ticket.parent}`}
+                    {ticket.urgent
+            ? t("Dropped in mid-week")
+            : t("Follow-up to {key}", { key: ticket.parent ?? "" })}
         </span>
       ) : null}
       <button

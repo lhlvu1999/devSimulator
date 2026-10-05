@@ -2,13 +2,26 @@ import type { CareerState } from "./career";
 import { nextLevel } from "./ladder";
 import { weekOfYear } from "./life";
 import { emptyBoard } from "./board";
-import { MARKET_IDS, STOCK_IDS, emptyHoldings, stockForCompany, type Prices } from "./market";
+import {
+  MARKET_IDS,
+  STOCK_IDS,
+  emptyHoldings,
+  stockForCompany,
+  type Prices,
+} from "./market";
 import { payPackage } from "./pay";
 import { nextUnit } from "./rng";
 import { skillRating } from "./skill";
 import { addStats } from "./stats";
+import { formatMoney } from "./format";
+import { t as tr, type Params } from "../i18n";
 import type { Stats } from "./types";
 import { recruiterPost } from "./workline";
+import {
+  applyWorkplaceEvent,
+  workplaceCandidates,
+  type WorkplaceEventId,
+} from "./workplaceEvents";
 
 export type EventId =
   | "layoffs"
@@ -28,7 +41,14 @@ export type EventId =
   | "summerTrip"
   | "midAutumn"
   | "blackFriday"
-  | "yearParty";
+  | "yearParty"
+  | WorkplaceEventId;
+
+export type EventOutcome = {
+  state: CareerState;
+  note: string;
+  laidOff: boolean;
+};
 
 export type EventChoice = {
   id: string;
@@ -41,6 +61,8 @@ export type LifeEvent = {
   id: EventId;
   kind: "company" | "life" | "season";
   title: string;
+  /** Values for a title template, like the company's name. */
+  titleParams?: Params;
   body: string;
   choices: EventChoice[];
   /** Money asked for or paid out, when the event names an amount. */
@@ -66,7 +88,28 @@ export function newYearBonus(
 }
 
 /** Holidays land on fixed weeks of the year and replace any random event that week. */
+/** Titles and choices are fixed text, translated as the event is created. Bodies translate where they're built. */
+function localizeEvent(event: LifeEvent): LifeEvent {
+  return {
+    ...event,
+    title: tr(event.title, event.titleParams),
+    choices: event.choices.map((choice) => ({
+      ...choice,
+      label: tr(choice.label),
+      detail: tr(choice.detail),
+    })),
+  };
+}
+
 export function seasonalEvent(
+  state: CareerState,
+  growth: number,
+): LifeEvent | null {
+  const event = seasonalEventInEnglish(state, growth);
+  return event ? localizeEvent(event) : null;
+}
+
+function seasonalEventInEnglish(
   state: CareerState,
   growth: number,
 ): LifeEvent | null {
@@ -77,10 +120,21 @@ export function seasonalEvent(
 
   if (week === 1) {
     const bonus = company ? newYearBonus(cash, tenure, growth) : 0;
-    const direction = growth >= 0 ? "grew" : "shrank";
     const body = company
-      ? `Fireworks over the city. You've been at ${company.name} for ${tenure} weeks, and the company ${direction} ${Math.abs(Math.round(growth * 100))}% last year. Your New Year bonus is $${bonus.toLocaleString("en-US")}. Pick a resolution.`
-      : "Fireworks over the city. No company to thank this year, but a fresh start. Pick a resolution.";
+      ? tr(
+          growth >= 0
+            ? "Fireworks over the city. You've been at {company} for {weeks} weeks, and the company grew {percent}% last year. Your New Year bonus is {amount}. Pick a resolution."
+            : "Fireworks over the city. You've been at {company} for {weeks} weeks, and the company shrank {percent}% last year. Your New Year bonus is {amount}. Pick a resolution.",
+          {
+            company: company.name,
+            weeks: tenure,
+            percent: Math.abs(Math.round(growth * 100)),
+            amount: formatMoney(bonus),
+          },
+        )
+      : tr(
+          "Fireworks over the city. No company to thank this year, but a fresh start. Pick a resolution.",
+        );
     return {
       id: "newYear",
       kind: "season",
@@ -122,7 +176,13 @@ export function seasonalEvent(
       kind: "season",
       title: "Lunar New Year",
       body: lucky
-        ? `Red envelopes and family dinners. ${company?.name} gives you $${lucky.toLocaleString("en-US")} in lucky money.`
+        ? tr(
+            "Red envelopes and family dinners. {company} gives you {amount} in lucky money.",
+            {
+              company: company?.name ?? "",
+              amount: formatMoney(lucky),
+            },
+          )
         : "Red envelopes and family dinners. Stay six months at a company to get lucky money.",
       amount: lucky,
       choices: [
@@ -147,7 +207,9 @@ export function seasonalEvent(
           id: "summerTrip",
           kind: "season",
           title: "Company summer trip",
-          body: `${company.name} is taking everyone to the beach for two days.`,
+          body: tr("{company} is taking everyone to the beach for two days.", {
+            company: company.name,
+          }),
           choices: [
             {
               id: "go",
@@ -167,7 +229,7 @@ export function seasonalEvent(
           id: "summerTrip",
           kind: "season",
           title: "Summer is here",
-          body: "Everyone is posting beach photos.",
+          body: tr("Everyone is posting beach photos."),
           choices: [
             {
               id: "beach",
@@ -189,7 +251,7 @@ export function seasonalEvent(
       id: "midAutumn",
       kind: "season",
       title: "Mid-Autumn Festival",
-      body: "Lanterns in the street and mooncakes in every shop.",
+      body: tr("Lanterns in the street and mooncakes in every shop."),
       choices: company
         ? [
             {
@@ -220,7 +282,9 @@ export function seasonalEvent(
       id: "blackFriday",
       kind: "season",
       title: "Black Friday",
-      body: `Machines in the Shop are ${Math.round((1 - SALE_PRICE) * 100)}% off this week only.`,
+      body: tr("Machines in the Shop are {percent}% off this week only.", {
+        percent: Math.round((1 - SALE_PRICE) * 100),
+      }),
       choices: [
         {
           id: "ok",
@@ -237,7 +301,10 @@ export function seasonalEvent(
       kind: "season",
       title: company ? "Year-end party" : "Holiday parties",
       body: company
-        ? `${company.name} rents a hall. There's karaoke. There's always karaoke.`
+        ? tr(
+            "{company} rents a hall. There's karaoke. There's always karaoke.",
+            { company: company.name },
+          )
         : "Friends are throwing a holiday party.",
       choices: company
         ? [
@@ -289,7 +356,10 @@ function candidates(state: CareerState): Candidate[] {
         id: "layoffs",
         kind: "company",
         title: "Layoffs announced",
-        body: `${company.name} is cutting teams this week. Everyone waits for an email. A good reputation and a close team make you harder to cut.`,
+        body: tr(
+          "{company} is cutting teams this week. Everyone waits for an email. A good reputation and a close team make you harder to cut.",
+          { company: company.name },
+        ),
         choices: [
           {
             id: "wait",
@@ -308,7 +378,12 @@ function candidates(state: CareerState): Candidate[] {
         id: "startupFolds",
         kind: "company",
         title: "The startup ran out of money",
-        body: `${company.name} could not raise its next round. The office closes on Friday.`,
+        body: tr(
+          "{company} could not raise its next round. The office closes on Friday.",
+          {
+            company: company.name,
+          },
+        ),
         choices: [
           {
             id: "pack",
@@ -326,8 +401,15 @@ function candidates(state: CareerState): Candidate[] {
       make: () => ({
         id: "acquisition",
         kind: "company",
-        title: `${company.name} is being bought`,
-        body: `A bigger company is buying ${company.name}. ${listed.id} jumps on the news.`,
+        title: "{company} is being bought",
+        titleParams: { company: company.name },
+        body: tr(
+          "A bigger company is buying {company}. {ticker} jumps on the news.",
+          {
+            company: company.name,
+            ticker: listed.id,
+          },
+        ),
         choices: [
           {
             id: "cheer",
@@ -346,7 +428,7 @@ function candidates(state: CareerState): Candidate[] {
         id: "newManager",
         kind: "company",
         title: "A new manager",
-        body: "Your manager moved on. The new one doesn't know you yet.",
+        body: tr("Your manager moved on. The new one doesn't know you yet."),
         choices: [
           {
             id: "coffee",
@@ -369,7 +451,9 @@ function candidates(state: CareerState): Candidate[] {
         id: "conference",
         kind: "company",
         title: "Conference invite",
-        body: "You're invited to speak at a small conference. The company won't pay for it.",
+        body: tr(
+          "You're invited to speak at a small conference. The company won't pay for it.",
+        ),
         choices: [
           {
             id: "go",
@@ -382,6 +466,7 @@ function candidates(state: CareerState): Candidate[] {
       }),
     });
   }
+  list.push(...workplaceCandidates(state));
   if (company && nextLevel(state.level) && state.stats.reputation >= 25) {
     list.push({
       weight: 2,
@@ -389,7 +474,9 @@ function candidates(state: CareerState): Candidate[] {
         id: "recruiter",
         kind: "company",
         title: "A recruiter messaged you",
-        body: '"I came across your profile and think you\'d be perfect for a role one step up."',
+        body: tr(
+          '"I came across your profile and think you\'d be perfect for a role one step up."',
+        ),
         choices: [
           {
             id: "look",
@@ -414,7 +501,9 @@ function candidates(state: CareerState): Candidate[] {
         id: "crash",
         kind: "life",
         title: "Market crash",
-        body: "Every screen is red. Stocks fall hard and crypto falls harder.",
+        body: tr(
+          "Every screen is red. Stocks fall hard and crypto falls harder.",
+        ),
         choices: [
           {
             id: "hold",
@@ -438,7 +527,12 @@ function candidates(state: CareerState): Candidate[] {
       id: "family",
       kind: "life",
       title: "Family needs help",
-      body: `A relative is short on rent this month and asks for $${familyAsk.toLocaleString("en-US")}.`,
+      body: tr(
+        "A relative is short on rent this month and asks for {amount}.",
+        {
+          amount: formatMoney(familyAsk),
+        },
+      ),
       amount: familyAsk,
       choices: [
         {
@@ -457,7 +551,7 @@ function candidates(state: CareerState): Candidate[] {
       id: "wedding",
       kind: "life",
       title: "A friend's wedding",
-      body: "An old friend is getting married. Flights, a gift, a suit.",
+      body: tr("An old friend is getting married. Flights, a gift, a suit."),
       choices: [
         {
           id: "go",
@@ -480,7 +574,7 @@ function candidates(state: CareerState): Candidate[] {
       id: "phone",
       kind: "life",
       title: "Your phone broke",
-      body: "It slipped out of your pocket at the worst angle.",
+      body: tr("It slipped out of your pocket at the worst angle."),
       choices: [
         {
           id: "buy",
@@ -503,7 +597,7 @@ function candidates(state: CareerState): Candidate[] {
       id: "vet",
       kind: "life",
       title: "The cat is sick",
-      body: "The cat won't eat and keeps sleeping in odd places.",
+      body: tr("The cat won't eat and keeps sleeping in odd places."),
       choices: [
         {
           id: "vet",
@@ -526,7 +620,7 @@ function candidates(state: CareerState): Candidate[] {
       id: "raffle",
       kind: "life",
       title: "You won the office raffle",
-      body: "A gift card you never entered for. Someone put your name in.",
+      body: tr("A gift card you never entered for. Someone put your name in."),
       choices: [
         { id: "claim", label: "Claim it", detail: "A small treat.", cost: 0 },
       ],
@@ -550,7 +644,8 @@ export function rollEvent(
   let mark = pick.value * total;
   for (const item of pool) {
     mark -= item.weight;
-    if (mark < 0) return { event: item.make(), rngState: pick.rngState };
+    if (mark < 0)
+      return { event: localizeEvent(item.make()), rngState: pick.rngState };
   }
   return { event: null, rngState: pick.rngState };
 }
@@ -583,12 +678,15 @@ export function applyEvent(
     event: null,
     stats: addStats(state.stats, { money: -choice.cost }),
   };
-  const bump = (effects: Partial<Stats>, note: string) => ({
+  /** Outcome with a note that is already in the player's language. */
+  const bumpText = (effects: Partial<Stats>, note: string) => ({
     state: { ...paid, stats: addStats(paid.stats, effects) },
     note,
     laidOff: false,
   });
-  const loseJob = (severance: number, note: string) => ({
+  const bump = (effects: Partial<Stats>, note: string, params?: Params) =>
+    bumpText(effects, tr(note, params));
+  const loseJob = (severance: number, note: string, params?: Params) => ({
     state: {
       ...paid,
       company: null,
@@ -596,9 +694,12 @@ export function applyEvent(
       workDone: true,
       stats: addStats(paid.stats, { money: severance, mood: -10 }),
     },
-    note,
+    note: tr(note, params),
     laidOff: true,
   });
+
+  const atWork = applyWorkplaceEvent(paid, event, choice.id, seed);
+  if (atWork) return atWork;
 
   switch (event.id) {
     case "layoffs": {
@@ -606,7 +707,8 @@ export function applyEvent(
         const severance = payPackage(state.company, state.level).cash * 2;
         return loseJob(
           severance,
-          `You were laid off. Severance: $${severance.toLocaleString("en-US")}. Workline is the next stop.`,
+          "You were laid off. Severance: {amount}. Workline is the next stop.",
+          { amount: formatMoney(severance) },
         );
       }
       const safe = bump(
@@ -636,7 +738,9 @@ export function applyEvent(
         prices[listed.id] = Math.round(prices[listed.id] * 1.3 * 100) / 100;
       return {
         state: { ...paid, prices, stats: addStats(paid.stats, { mood: 5 }) },
-        note: `${listed?.id ?? "The stock"} jumped 30% on the news.`,
+        note: tr("{ticker} jumped 30% on the news.", {
+          ticker: listed?.id ?? tr("The stock"),
+        }),
         laidOff: false,
       };
     }
@@ -653,7 +757,7 @@ export function applyEvent(
     case "conference":
       return choice.id === "go"
         ? bump(
-                        { skill: 40, reputation: 4, mood: 3 },
+            { skill: 40, reputation: 4, mood: 3 },
             "Your talk went well. People want to connect.",
           )
         : bump({}, "Maybe next year.");
@@ -664,15 +768,15 @@ export function applyEvent(
         companyId: state.company?.id ?? null,
         level: state.level,
         reputation: state.stats.reputation,
-                relationship: state.stats.relationship,
+        relationship: state.stats.relationship,
         skill: skillRating(state.stats.skill),
         seed,
       });
       return {
         state: { ...paid, feed: added.feed },
         note: added.post
-          ? "A stretch role is waiting at the top of Workline."
-          : "The role was already filled.",
+          ? tr("A stretch role is waiting at the top of Workline.")
+          : tr("The role was already filled."),
         laidOff: false,
       };
     }
@@ -693,13 +797,15 @@ export function applyEvent(
             costBasis: emptyHoldings(),
             stats: addStats(paid.stats, { money: cash, mood: -2 }),
           },
-          note: `You sold everything for $${cash.toLocaleString("en-US")}.`,
+          note: tr("You sold everything for {amount}.", {
+            amount: formatMoney(cash),
+          }),
           laidOff: false,
         };
       }
       return {
         state: { ...paid, prices, stats: addStats(paid.stats, { mood: -3 }) },
-        note: "You held on and tried not to look.",
+        note: tr("You held on and tried not to look."),
         laidOff: false,
       };
     }
@@ -729,7 +835,7 @@ export function applyEvent(
       > = {
         health: { effects: { health: 5 }, note: "Resolution: get healthier." },
         learn: {
-                    effects: { skill: 30 },
+          effects: { skill: 30 },
           note: "Resolution: learn something new.",
         },
         friends: {
@@ -742,22 +848,32 @@ export function applyEvent(
         },
       };
       const pick = resolutions[choice.id] ?? resolutions.health;
-      return bump(
-        { ...pick?.effects, money: bonus },
-        bonus > 0
-          ? `${pick?.note} New Year bonus: $${bonus.toLocaleString("en-US")}.`
-          : (pick?.note ?? ""),
-      );
+      const resolution = tr(pick?.note ?? "");
+      return bonus > 0
+        ? bump(
+            { ...pick?.effects, money: bonus },
+            "{resolution} New Year bonus: {amount}.",
+            {
+              resolution,
+              amount: formatMoney(bonus),
+            },
+          )
+        : bumpText({ ...pick?.effects, money: bonus }, resolution);
     }
     case "lunarNewYear": {
       const lucky = event.amount ?? 0;
       const extra =
-        lucky > 0 ? ` Lucky money: $${lucky.toLocaleString("en-US")}.` : "";
+        lucky > 0
+          ? ` ${tr("Lucky money: {amount}.", { amount: formatMoney(lucky) })}`
+          : "";
       return choice.id === "home"
-        ? bump({ money: lucky, mood: 12 }, `Home for the holiday.${extra}`)
-        : bump(
+        ? bumpText(
+            { money: lucky, mood: 12 },
+            `${tr("Home for the holiday.")}${extra}`,
+          )
+        : bumpText(
             { money: lucky, mood: 3 },
-            `A quiet holiday in the city.${extra}`,
+            `${tr("A quiet holiday in the city.")}${extra}`,
           );
     }
     case "summerTrip":
@@ -782,7 +898,7 @@ export function applyEvent(
     case "blackFriday":
       return {
         state: { ...paid, saleWeek: state.day },
-        note: "The Shop sale is on until the week ends.",
+        note: tr("The Shop sale is on until the week ends."),
         laidOff: false,
       };
     case "yearParty":
@@ -798,4 +914,5 @@ export function applyEvent(
       }
       return bump(state.company ? { relationship: -2 } : {}, "An early night.");
   }
+  return { state: paid, note: "", laidOff: false };
 }

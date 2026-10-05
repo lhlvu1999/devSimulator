@@ -26,6 +26,7 @@ import { ShipTicket } from "./ShipTicket";
 import { SpotTicket } from "./SpotTicket";
 import { TidyTicket } from "./TidyTicket";
 import { WiresTicket } from "./WiresTicket";
+import { t } from "../i18n";
 
 const REVIEW_ROUNDS = 3;
 
@@ -67,10 +68,12 @@ export function WorkSession({
       <div className="screen">
         <div className="ticket-play-head">
           <span className="ticket-key">{active.key}</span>
-          <strong>{active.title}</strong>
+                    <strong>{t(active.title)}</strong>
           <small>
-            {active.parts > 1 ? `Part ${active.partsDone + 1} of ${active.parts} · ` : ""}
-            {active.partHours}h · {device.name}
+            {active.parts > 1
+              ? `${t("Part {part} of {parts}", { part: active.partsDone + 1, parts: active.parts })} · `
+              : ""}
+            {active.partHours}h · {t(device.name)}
             {device.timeBonus > 0 ? ` +${device.timeBonus}s` : ""}
           </small>
         </div>
@@ -98,27 +101,27 @@ export function WorkSession({
     <div className="screen">
       {news ? (
         <div className="review-banner promoted">
-          <strong>Promoted</strong>
+          <strong>{t("Promoted")}</strong>
           {news.map((line) => (
             <span key={line}>{line}</span>
           ))}
           <button type="button" onClick={() => setNews(null)}>
-            Nice
-          </button>
+            {t("Nice")}</button>
         </div>
       ) : null}
       {status.ready ? (
         <div className={`review-banner${status.triedToday ? " waiting" : ""}`}>
-          <strong>Promotion review · {status.nextTitle}</strong>
+                    <strong>
+            {t("Promotion review")} · {status.nextTitle ? t(status.nextTitle) : ""}
+          </strong>
           <span>
             {status.triedToday
-              ? "You tried this week. The review opens again next week."
-              : `Clear ${REVIEW_ROUNDS} harder tickets in a row. A miss ends the review.`}
+              ? t("You tried this week. The review opens again next week.")
+              : t("Clear {n} harder tickets in a row. A miss ends the review.", { n: REVIEW_ROUNDS })}
           </span>
           {status.triedToday ? null : (
             <button type="button" onClick={() => setReviewing(true)}>
-              Start review
-            </button>
+              {t("Start review")}</button>
           )}
         </div>
       ) : null}
@@ -155,19 +158,16 @@ function ReviewSession({
   if (failed) {
     return (
       <div className="screen review-screen">
-        <p className="kicker">Promotion review</p>
-        <h2>Not this time</h2>
+        <p className="kicker">{t("Promotion review")}</p>
+        <h2>{t("Not this time")}</h2>
         <p className="ask">
-          The panel liked your work but wants to see a little more. The review
-          opens again next week.
-        </p>
+          {t("The panel liked your work but wants to see a little more. The review opens again next week.")}</p>
         <button
           type="button"
           className="primary"
           onClick={() => onDone(false, seed)}
         >
-          Back to work
-        </button>
+          {t("Back to work")}</button>
       </div>
     );
   }
@@ -175,10 +175,12 @@ function ReviewSession({
   return (
     <div className="screen review-screen">
       <div className="review-head">
-        <p className="kicker">Promotion review · {status.nextTitle}</p>
+                <p className="kicker">
+          {t("Promotion review")} · {status.nextTitle ? t(status.nextTitle) : ""}
+        </p>
         <div
           className="ship-lights"
-          aria-label={`Round ${round + 1} of ${REVIEW_ROUNDS}`}
+          aria-label={t("Round {round} of {rounds}", { round: round + 1, rounds: REVIEW_ROUNDS })}
         >
           {Array.from({ length: REVIEW_ROUNDS }, (_, index) => (
             <span key={index} className={index < round ? "on" : ""} />
@@ -186,7 +188,11 @@ function ReviewSession({
         </div>
       </div>
       <p className="ask">
-        Round {round + 1} of {REVIEW_ROUNDS}: {WORK_GAME_LABEL[picked.game]}.
+                {t("Round {round} of {rounds}: {game}.", {
+          round: round + 1,
+          rounds: REVIEW_ROUNDS,
+          game: t(WORK_GAME_LABEL[picked.game]),
+        })}
       </p>
       <TicketFor
         key={seed}

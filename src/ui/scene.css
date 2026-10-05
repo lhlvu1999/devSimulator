@@ -592,7 +592,7 @@
   /* Set from the fitted clip: how much of the top the clip leaves empty. */
   --clip-top: 0px;
   /* The least the top bar needs to be readable below the status bar. */
-    --hud-min: calc(62px + env(safe-area-inset-top));
+  --hud-min: calc(62px + env(safe-area-inset-top));
 }
 
 .world.with-nav {
@@ -645,9 +645,19 @@
   background: transparent;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+  /* Only the glass itself takes taps, so an angled monitor doesn't catch taps on the wall around it. */
+  pointer-events: none;
+}
+
+.glass-hit {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
 }
 
 .glass-option span {
+  position: relative;
+  pointer-events: auto;
   padding: 6px 12px;
   border: 2px solid #3f342c;
   border-radius: 999px;
@@ -715,15 +725,11 @@
 
 @keyframes glass-open {
   from {
-    clip-path: inset(
-      var(--glass-top) calc(100% - var(--glass-left) - var(--glass-width))
-        calc(100% - var(--glass-top) - var(--glass-height)) var(--glass-left)
-        round 6px
-    );
+    clip-path: var(--glass-shape);
     opacity: 0.6;
   }
   to {
-    clip-path: inset(0 0 0 0 round 14px);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
     opacity: 1;
   }
 }
@@ -1120,7 +1126,7 @@
   box-sizing: border-box;
   height: max(var(--clip-top), var(--hud-min));
   padding-top: env(safe-area-inset-top);
-    container: hud / size;
+  container: hud / size;
   border-bottom: 2px solid #3f342c;
   background: rgba(246, 239, 230, 0.86);
   -webkit-backdrop-filter: blur(10px);
@@ -1134,7 +1140,7 @@
     "title head"
     "stats stats";
   align-content: center;
-  gap: 5px 10px;
+  gap: 5px 8px;
   width: 100%;
   height: 100%;
   padding: 6px 14px;
@@ -1171,7 +1177,7 @@
 
 .hud-money {
   flex: none;
-  padding: 3px 10px;
+  padding: 3px 9px;
   border: 2px solid #3f342c;
   border-radius: 999px;
   background: #fffdf8;
@@ -1186,6 +1192,38 @@
   line-height: 1.2;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+
+/* The working style sits with the money, so it never pushes the title and company off the line. */
+.hud-head-end {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.hud-workplace {
+  padding: 2px 6px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.hud-workplace-startup {
+  background: #e2ecd8;
+  color: #4f6f3d;
+}
+
+.hud-workplace-big {
+  background: #dce7f1;
+  color: #3d5a78;
+}
+
+.hud-workplace-remote {
+  background: #f4e0d4;
+  color: #8a4f33;
 }
 
 .hud-when-inline {
@@ -1298,6 +1336,10 @@
 
   .hud-title {
     font-size: 1.05rem;
+  }
+
+  .hud-workplace {
+    font-size: 0.74rem;
   }
 
   .hud-stat-head {

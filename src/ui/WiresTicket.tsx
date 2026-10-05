@@ -10,6 +10,7 @@ import {
 } from "../game/wires";
 import { gameSeconds } from "../game/workGames";
 import { useTicketClock } from "./useTicketClock";
+import { t } from "../i18n";
 
 export function WiresTicket({
   puzzle: dealt,
@@ -32,11 +33,11 @@ export function WiresTicket({
     <div className={`tidy wires${settled ? " settled" : ""}`}>
       <div className="tidy-meta">
         <span>{left}s</span>
-        <span>Connect the wires</span>
+        <span>{t("Connect the wires")}</span>
       </div>
       <p className="ask">
-        Tap tiles to turn them. Connect the button to the server.
-        {helped ? " A teammate already set the first pieces." : ""}
+                {t("Tap tiles to turn them. Connect the button to the server.")}
+        {helped ? ` ${t("A teammate already set the first pieces.")}` : ""}
       </p>
       <div className="wires-board">
         <div className="wires-rail left">
@@ -47,7 +48,7 @@ export function WiresTicket({
                 row === puzzle.startRow ? "wires-end button" : "wires-end"
               }
             >
-              {row === puzzle.startRow ? "Button" : ""}
+                            {row === puzzle.startRow ? t("Button") : ""}
             </span>
           ))}
         </div>
@@ -62,7 +63,7 @@ export function WiresTicket({
               className={`wire-cell${trace.lit.includes(cell) ? " lit" : ""}${
                 pipe.locked ? " locked" : ""
               }`}
-              aria-label={`Pipe ${cell + 1}`}
+                            aria-label={t("Pipe {n}", { n: cell + 1 })}
               disabled={settled || pipe.locked}
               onClick={() => setPuzzle((current) => turnPipe(current, cell))}
             >
@@ -78,7 +79,7 @@ export function WiresTicket({
                 row === puzzle.endRow ? "wires-end server" : "wires-end"
               }
             >
-              {row === puzzle.endRow ? "Server" : ""}
+                            {row === puzzle.endRow ? t("Server") : ""}
             </span>
           ))}
         </div>

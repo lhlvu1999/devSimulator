@@ -4,6 +4,7 @@ import { INBOX_RULE, type InboxPuzzle, type Lane } from "../game/inbox";
 import type { CodeGrade } from "../game/types";
 import { gameSeconds } from "../game/workGames";
 import { useTicketClock } from "./useTicketClock";
+import { t } from "../i18n";
 
 const SWIPE = 60;
 
@@ -61,13 +62,12 @@ export function InboxTicket({
       <div className="tidy-meta">
         <span>{left}s</span>
         <span>
-          Sort the inbox · {Math.min(index, puzzle.messages.length)}/
-          {puzzle.messages.length}
+                    {t("Sort the inbox")} · {Math.min(index, puzzle.messages.length)}/{puzzle.messages.length}
         </span>
       </div>
-      <p className="ask">{INBOX_RULE}</p>
+            <p className="ask">{t(INBOX_RULE)}</p>
       <div className="inbox-stack">
-        <span className="inbox-lane later">← Later</span>
+        <span className="inbox-lane later">{t("← Later")}</span>
         {message ? (
           <div
             className={`inbox-card${wrong ? " wiggle" : ""}${
@@ -81,27 +81,26 @@ export function InboxTicket({
             onPointerUp={up}
             onPointerCancel={up}
           >
-            <span className="inbox-from">{message.from}</span>
-            <strong>{message.text}</strong>
+                        <span className="inbox-from">{t(message.from)}</span>
+            <strong>{t(message.text)}</strong>
             {puzzle.hint && index === 0 ? (
               <span className="inbox-hint">
-                Teammate: this one is{" "}
-                {message.lane === "now" ? "urgent" : "not urgent"}.
+                                {message.lane === "now"
+                  ? t("Teammate: this one is urgent.")
+                  : t("Teammate: this one is not urgent.")}
               </span>
             ) : null}
           </div>
         ) : (
-          <div className="inbox-card empty">Inbox zero.</div>
+          <div className="inbox-card empty">{t("Inbox zero.")}</div>
         )}
-        <span className="inbox-lane now">Now →</span>
+        <span className="inbox-lane now">{t("Now →")}</span>
       </div>
       <div className="market-trade">
         <button type="button" disabled={settled} onClick={() => sort("later")}>
-          Later
-        </button>
+          {t("Later")}</button>
         <button type="button" disabled={settled} onClick={() => sort("now")}>
-          Now
-        </button>
+          {t("Now")}</button>
       </div>
       {settled ? (
         <div className="tidy-payoff" aria-hidden="true">

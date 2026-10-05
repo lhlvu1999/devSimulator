@@ -4,6 +4,7 @@ import { formatMoney } from "../game/format";
 import { skillRating, skillTier } from "../game/skill";
 import type { StatKey, Stats } from "../game/types";
 import { WORK_GAME_LABEL } from "../game/workGames";
+import { LANGS, setLang, t, useLang } from "../i18n";
 
 const METERS: { key: StatKey; label: string; tone: string }[] = [
   { key: "energy", label: "Energy", tone: "clay" },
@@ -20,10 +21,21 @@ const STAT_HINT: Record<StatKey, string> = {
   energy: "Every task uses some. It comes back each week.",
   mood: "How you feel about work and life lately.",
   health: "Your body. When it runs low, every task feels heavier.",
-    skill: "What you know. It never tops out. It brings harder work and opens early promotions.",
+  skill:
+    "What you know. It never tops out. It brings harder work and opens early promotions.",
   reputation: "How the company sees you. Bigger promotions look at it.",
   relationship:
     "How close you are with your team. Teammates help more when it is high.",
+};
+
+const STAT_NAME: Record<StatKey, string> = {
+  money: "Money",
+  energy: "Energy",
+  mood: "Mood",
+  health: "Health",
+  skill: "Skill",
+  reputation: "Reputation",
+  relationship: "Relationship",
 };
 
 /** Stats, career, life, and settings: everything about you, in one tab. */
@@ -31,8 +43,8 @@ export function MeScreen({
   stats,
   career,
   lifeCard,
-    onSwitchTrack,
-    onRestart,
+  onSwitchTrack,
+  onRestart,
   music,
   onMusic,
 }: {
@@ -40,7 +52,7 @@ export function MeScreen({
   career?: CareerStatus;
   lifeCard?: ReactNode;
   onSwitchTrack?: () => void;
-    onRestart: () => void;
+  onRestart: () => void;
   music: boolean;
   onMusic: (on: boolean) => void;
 }) {
@@ -49,35 +61,39 @@ export function MeScreen({
     setTip((current) => (current === key ? null : key));
   return (
     <section className="screen me-screen">
-      <h2 className="tab-title">Me</h2>
+      <h2 className="tab-title">{t("Me")}</h2>
       <div className="me-card">
         <p className="stats-money">
           <span>
-            Money
+            {t("Money")}
             <StatTip id="money" open={tip === "money"} onToggle={toggleTip} />
           </span>
           <strong>{formatMoney(stats.money)}</strong>
         </p>
         {tip === "money" ? (
-          <p className="stat-hint">{STAT_HINT.money}</p>
+          <p className="stat-hint">{t(STAT_HINT.money)}</p>
         ) : null}
         <ul className="stats-list">
           {METERS.map((meter) => {
-                        const value = stats[meter.key];
+            const value = stats[meter.key];
             const isSkill = meter.key === "skill";
-            const filled = isSkill ? skillRating(value) : Math.max(0, Math.min(100, value));
+            const filled = isSkill
+              ? skillRating(value)
+              : Math.max(0, Math.min(100, value));
             return (
               <li key={meter.key}>
                 <div className="stats-row">
                   <span>
-                    {meter.label}
+                    {t(meter.label)}
                     <StatTip
                       id={meter.key}
                       open={tip === meter.key}
                       onToggle={toggleTip}
                     />
                   </span>
-                                    <span>{isSkill ? `${value} · ${skillTier(value)}` : value}</span>
+                  <span>
+                    {isSkill ? `${value} · ${t(skillTier(value))}` : value}
+                  </span>
                 </div>
                 <span className={`stats-meter tone-${meter.tone}`}>
                   <span
@@ -86,7 +102,7 @@ export function MeScreen({
                   />
                 </span>
                 {tip === meter.key ? (
-                  <p className="stat-hint">{STAT_HINT[meter.key]}</p>
+                  <p className="stat-hint">{t(STAT_HINT[meter.key])}</p>
                 ) : null}
               </li>
             );
@@ -99,7 +115,7 @@ export function MeScreen({
         </div>
       ) : null}
       {lifeCard ? <div className="me-card">{lifeCard}</div> : null}
-            <Settings onRestart={onRestart} music={music} onMusic={onMusic} />
+      <Settings onRestart={onRestart} music={music} onMusic={onMusic} />
     </section>
   );
 }
@@ -114,31 +130,54 @@ function Settings({
   onMusic: (on: boolean) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const lang = useLang();
   return (
     <div className="me-card settings">
-      <span className="settings-title">Settings</span>
+      <span className="settings-title">{t("Settings")}</span>
+      <div className="settings-lang">
+        <span>
+          {t("Language")}
+          <small>{t("Changes every screen right away.")}</small>
+        </span>
+        <div className="segmented" role="radiogroup" aria-label={t("Language")}>
+          {LANGS.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              role="radio"
+              aria-checked={lang === option.id}
+              className={lang === option.id ? "on" : ""}
+              onClick={() => setLang(option.id)}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <button
         type="button"
         role="switch"
-                aria-checked={music}
+        aria-checked={music}
         className="settings-toggle"
         onClick={() => onMusic(!music)}
       >
         <span>
-          Music
-          <small>Soft keys and typing from the room.</small>
+          {t("Music")}
+          <small>{t("Soft keys and typing from the room.")}</small>
         </span>
         <i className={music ? "on" : undefined} aria-hidden="true" />
       </button>
       {confirming ? (
         <div className="settings-confirm">
-          <span>Start a brand new life? This save is gone for good.</span>
+          <span>
+            {t("Start a brand new life? This save is gone for good.")}
+          </span>
           <div className="career-switch-actions">
             <button type="button" className="danger" onClick={onRestart}>
-              Start over
+              {t("Start over")}
             </button>
             <button type="button" onClick={() => setConfirming(false)}>
-              Keep playing
+              {t("Keep playing")}
             </button>
           </div>
         </div>
@@ -148,8 +187,8 @@ function Settings({
           className="settings-row"
           onClick={() => setConfirming(true)}
         >
-          <span>Start a new life</span>
-          <small>Erase this save and begin again at placement.</small>
+          <span>{t("Start a new life")}</span>
+          <small>{t("Erase this save and begin again at placement.")}</small>
         </button>
       )}
     </div>
@@ -169,7 +208,7 @@ function StatTip({
     <button
       type="button"
       className={`stat-tip${open ? " on" : ""}`}
-      aria-label={`What is ${id}?`}
+      aria-label={t("What is {stat}?", { stat: t(STAT_NAME[id]) })}
       aria-expanded={open}
       onClick={() => onToggle(id)}
     >
@@ -186,34 +225,44 @@ function CareerCard({
   onSwitchTrack?: () => void;
 }) {
   const [confirming, setConfirming] = useState(false);
+  const switchTitle = career.switchTo ? t(career.switchTo.title) : "";
   return (
     <div className="career-card">
       <div className="career-head">
         <span>
-          {career.track === "manager" ? "Manager track" : "Engineer track"}
+          {career.track === "manager"
+            ? t("Manager track")
+            : t("Engineer track")}
         </span>
-        <strong>{career.title}</strong>
-        <small>Payday {formatMoney(career.payday)}</small>
+        <strong>{t(career.title)}</strong>
+        <small>
+          {t("Payday {amount}", { amount: formatMoney(career.payday) })}
+        </small>
         {career.pay.ticker && career.pay.stock > 0 ? (
           <small>
-            {formatMoney(career.pay.cash)} cash +{" "}
-            {formatMoney(career.pay.stock)} in {career.pay.ticker} stock
+            {t("{cash} cash + {stock} in {ticker} stock", {
+              cash: formatMoney(career.pay.cash),
+              stock: formatMoney(career.pay.stock),
+              ticker: career.pay.ticker,
+            })}
           </small>
         ) : null}
       </div>
       {career.nextTitle ? (
         <>
           <span className="career-next">
-            Next: {career.nextTitle}
+            {t("Next: {title}", { title: t(career.nextTitle) })}
             {career.ready
               ? career.triedToday
-                ? " · review next week"
-                : " · review ready"
-                            : ""}
+                ? ` · ${t("review next week")}`
+                : ` · ${t("review ready")}`
+              : ""}
           </span>
           {career.taskScale < 1 ? (
             <span className="career-discount">
-              Your CV cut the tasks here by {Math.round((1 - career.taskScale) * 100)}%.
+              {t("Your CV cut the tasks here by {percent}%.", {
+                percent: Math.round((1 - career.taskScale) * 100),
+              })}
             </span>
           ) : null}
           <ul className="career-list">
@@ -241,20 +290,29 @@ function CareerCard({
         </>
       ) : (
         <span className="career-next">
-          Top of the {career.track === "manager" ? "manager" : "engineer"}{" "}
-          track.
+          {career.track === "manager"
+            ? t("Top of the manager track.")
+            : t("Top of the engineer track.")}
         </span>
       )}
       <span className="career-games">
-        Work: {career.games.map((game) => WORK_GAME_LABEL[game]).join(", ")}
+        {t("Work: {games}", {
+          games: career.games
+            .map((game) => t(WORK_GAME_LABEL[game]))
+            .join(", "),
+        })}
       </span>
       {career.switchTo && onSwitchTrack ? (
         <div className="career-switch">
           {confirming ? (
             <>
               <span>
-                Become {career.switchTo.title}? Progress toward the next level
-                carries over at half.
+                {t(
+                  "Become {title}? Progress toward the next level carries over at half.",
+                  {
+                    title: switchTitle,
+                  },
+                )}
               </span>
               <div className="career-switch-actions">
                 <button
@@ -265,18 +323,18 @@ function CareerCard({
                     onSwitchTrack();
                   }}
                 >
-                  Switch
+                  {t("Switch")}
                 </button>
                 <button type="button" onClick={() => setConfirming(false)}>
-                  Stay
+                  {t("Stay")}
                 </button>
               </div>
             </>
           ) : (
             <button type="button" onClick={() => setConfirming(true)}>
               {career.track === "manager"
-                ? `Go back to engineering as ${career.switchTo.title}`
-                : `Move to managing as ${career.switchTo.title}`}
+                ? t("Go back to engineering as {title}", { title: switchTitle })
+                : t("Move to managing as {title}", { title: switchTitle })}
             </button>
           )}
         </div>

@@ -33,14 +33,24 @@ import {
   marketLabel,
   marketRisk,
   newsFor,
+  newsHeadline,
   stockForCompany,
   type MarketId,
   type StockId,
+  type Risk,
   type StockNews,
 } from "../game/market";
 import { portfolioOf, positionOf } from "../game/portfolio";
 import { InvestIcon, iconFor } from "./InvestIcon";
 import { PriceChart } from "./PriceChart";
+import { t, tc, tn } from "../i18n";
+import { effectLine, statWord } from "./statWords";
+
+const RISK_LABEL: Record<Risk, string> = {
+  Low: "Low risk",
+  Medium: "Medium risk",
+  High: "High risk",
+};
 
 const MIN_BET = 10;
 const BET_STEP = 10;
@@ -83,11 +93,11 @@ export function InvestDesk({
     <div className="screen invest-hub">
       <div className="invest-summary">
         <div>
-          <span>Cash</span>
+          <span>{t("Cash")}</span>
           <strong>{formatMoney(state.stats.money)}</strong>
         </div>
         <div>
-          <span>Invested</span>
+          <span>{t("Invested")}</span>
           <strong>{formatMoney(invested)}</strong>
         </div>
       </div>
@@ -99,9 +109,9 @@ export function InvestDesk({
         <span className="invest-card-head">
           <span className="invest-title">
             <InvestIcon id="stock" />
-            <strong>Stocks</strong>
+            <strong>{t("Stocks")}</strong>
           </span>
-          <span className="change flat">{STOCKS.length} companies</span>
+                    <span className="change flat">{t("{n} companies", { n: STOCKS.length })}</span>
         </span>
         <span className="mover-list">
           {movers.map(({ stock, change }) => (
@@ -115,25 +125,29 @@ export function InvestDesk({
         </span>
         {state.news.length > 0 ? (
           <span className="news-line tone-good">
-            In the paper:{" "}
-            {state.news.map((item) => marketLabel(item.stockId)).join(", ")}
+                        {t("In the paper: {names}", {
+              names: state.news.map((item) => marketLabel(item.stockId)).join(", "),
+            })}
           </span>
         ) : (
-          <span className="news-line">A quiet week in business news.</span>
+          <span className="news-line">{t("A quiet week in business news.")}</span>
         )}
         <span className="invest-card-foot">
           <span>
-            Yours {formatMoney(stocks.value)}
+                        {stocks.positions.length > 0
+              ? tn(stocks.positions.length, "Yours {amount} in {n} company", "Yours {amount} in {n} companies", {
+                  amount: formatMoney(stocks.value),
+                })
+              : t("Yours {amount}", { amount: formatMoney(stocks.value) })}
             {stocks.positions.length > 0 ? (
               <>
-                {" "}in {stocks.positions.length}{" "}
-                {stocks.positions.length === 1 ? "company" : "companies"}{" "}
+                {" "}
                 <span className={`change ${changeTone(stocks.gain)}`}>{signedMoney(stocks.gain)}</span>
               </>
             ) : null}
           </span>
           {employer ? (
-            <span className="employer-tag">Paid partly in {employer.id}</span>
+                        <span className="employer-tag">{t("Paid partly in {ticker}", { ticker: employer.id })}</span>
           ) : null}
         </span>
       </button>
@@ -159,9 +173,9 @@ export function InvestDesk({
             <span className="invest-card-foot">
               <span>{formatMoney(state.prices[id])}</span>
               <span className={`risk risk-${marketRisk(id).toLowerCase()}`}>
-                {marketRisk(id)} risk
+                                {t(RISK_LABEL[marketRisk(id)])}
               </span>
-              <span>Owned {state.holdings[id]}</span>
+              <span>{t("Owned {n}", { n: state.holdings[id] })}</span>
             </span>
           </button>
         );
@@ -174,9 +188,9 @@ export function InvestDesk({
         <span className="invest-card-head">
           <span className="invest-title">
             <InvestIcon id="blackjack" />
-            <strong>Blackjack</strong>
+            <strong>{t("Blackjack")}</strong>
           </span>
-          <span className="change flat">One hand at a time</span>
+          <span className="change flat">{t("One hand at a time")}</span>
         </span>
       </button>
     </div>
@@ -225,20 +239,23 @@ export function StocksScreen({
     <section className="screen stocks-screen">
       <div className="screen-title">
         <InvestIcon id="stock" size={44} />
-        <p className="kicker">Stocks</p>
+        <p className="kicker">{t("Stocks")}</p>
       </div>
 
       <div className="portfolio-card">
-        <span className="portfolio-kicker">Your stocks</span>
+        <span className="portfolio-kicker">{t("Your stocks")}</span>
         <strong className="portfolio-value">{formatMoney(book.value)}</strong>
         {book.positions.length > 0 ? (
           <>
             <span className="portfolio-moves">
               <span className={`change ${changeTone(book.gain)}`}>
-                {signedMoney(book.gain)} ({formatChange(book.gainPercent)}) since you bought
+                                {t("{amount} ({percent}) since you bought", {
+                  amount: signedMoney(book.gain),
+                  percent: formatChange(book.gainPercent),
+                })}
               </span>
               <span className={`change ${changeTone(book.weekChange)}`}>
-                {signedMoney(book.weekChange)} last week
+                                {t("{amount} last week", { amount: signedMoney(book.weekChange) })}
               </span>
             </span>
             <span className="alloc-bar" aria-hidden="true">
@@ -260,13 +277,14 @@ export function StocksScreen({
                       <TickerBadge id={id} />
                       <span className="holding-name">
                         <strong>{stock?.name ?? id}</strong>
-                        <small>
-                          {position.shares} {position.shares === 1 ? "share" : "shares"} · paid{" "}
-                          {formatMoney(position.avgCost)} avg
+                                                <small>
+                          {tn(position.shares, "{n} share · paid {amount} avg", "{n} shares · paid {amount} avg", {
+                            amount: formatMoney(position.avgCost),
+                          })}
                         </small>
                         <small>
-                          {weight}% of your stocks
-                          {employer?.id === id ? " · your employer" : ""}
+                          {t("{percent}% of your stocks", { percent: weight })}
+                          {employer?.id === id ? ` · ${t("your employer")}` : ""}
                         </small>
                       </span>
                       <span className="holding-value">
@@ -286,27 +304,29 @@ export function StocksScreen({
           </>
         ) : (
           <p className="portfolio-empty">
-            You don't own any stocks yet. Pick a company below to buy.
-            {employer ? ` Paydays add ${employer.id} shares here on their own.` : ""}
+                        {t("You don't own any stocks yet. Pick a company below to buy.")}
+            {employer
+              ? ` ${t("Paydays add {ticker} shares here on their own.", { ticker: employer.id })}`
+              : ""}
           </p>
         )}
       </div>
 
       <div className="news-card">
-        <span className="news-kicker">Today's paper</span>
+        <span className="news-kicker">{t("Today's paper")}</span>
         {state.news.length > 0 ? (
           state.news.map((item) => (
             <span key={item.stockId} className={`news-line tone-${item.tone}`}>
-              {item.headline}
+                            {newsHeadline(item)}
             </span>
           ))
         ) : (
-          <span className="news-line">A quiet week in business news.</span>
+          <span className="news-line">{t("A quiet week in business news.")}</span>
         )}
-        <span className="news-lean">Headlines are right about 3 times in 4.</span>
+        <span className="news-lean">{t("Headlines are right about 3 times in 4.")}</span>
       </div>
 
-      <h3 className="list-title">All companies</h3>
+      <h3 className="list-title">{t("All companies")}</h3>
       <div className="stock-list">
         {STOCKS.map((stock) => {
           const change = dayChange(state.history[stock.id]);
@@ -322,16 +342,19 @@ export function StocksScreen({
               <TickerBadge id={stock.id} />
               <span className="stock-name">
                 <strong>{stock.name}</strong>
-                <small>{stock.sector}</small>
+                                <small>{t(stock.sector)}</small>
                 <span className="stock-tags">
                   {owned > 0 ? (
                     <i className="own-tag">
-                      You own {owned} · {formatMoney(owned * state.prices[stock.id])}
+                                            {t("You own {n} · {amount}", {
+                        n: owned,
+                        amount: formatMoney(owned * state.prices[stock.id]),
+                      })}
                     </i>
                   ) : null}
-                  {employer?.id === stock.id ? <i className="employer-tag">Your employer</i> : null}
-                  {hiring.has(stock.id) ? <i className="hiring-tag">Hiring on Workline</i> : null}
-                  {inNews ? <i className={`paper-tag tone-${inNews.tone}`}>In the paper</i> : null}
+                  {employer?.id === stock.id ? <i className="employer-tag">{t("Your employer")}</i> : null}
+                  {hiring.has(stock.id) ? <i className="hiring-tag">{t("Hiring on Workline")}</i> : null}
+                  {inNews ? <i className={`paper-tag tone-${inNews.tone}`}>{t("In the paper")}</i> : null}
                 </span>
               </span>
               <span className="stock-spark">
@@ -398,31 +421,31 @@ export function MarketScreen({
           {marketLabel(id)}
           {isStock(id) ? ` · ${id}` : ""}
         </p>
-        <span className={`risk risk-${marketRisk(id).toLowerCase()}`}>
-          {marketRisk(id)} risk
+                <span className={`risk risk-${marketRisk(id).toLowerCase()}`}>
+          {t(RISK_LABEL[marketRisk(id)])}
         </span>
       </div>
       <div className="market-price">
         <strong>{formatMoney(price)}</strong>
         <span className={`change ${changeTone(change)}`}>
-          {formatChange(change)} today
+                    {t("{percent} today", { percent: formatChange(change) })}
         </span>
       </div>
       <div className="market-holding">
         <div>
-          <span>You own</span>
+          <span>{t("You own")}</span>
           <strong>{owned}</strong>
         </div>
         <div>
-          <span>Worth</span>
+          <span>{t("Worth")}</span>
           <strong>{formatMoney(position.value)}</strong>
         </div>
         <div>
-          <span>Paid avg</span>
+          <span>{t("Paid avg")}</span>
           <strong>{owned > 0 ? formatMoney(position.avgCost) : "—"}</strong>
         </div>
         <div>
-          <span>Gain</span>
+          <span>{t("Gain")}</span>
           <strong className={owned > 0 ? `change ${changeTone(position.gain)}` : undefined}>
             {owned > 0 ? `${signedMoney(position.gain)} (${formatChange(position.gainPercent)})` : "—"}
           </strong>
@@ -430,16 +453,15 @@ export function MarketScreen({
       </div>
       <PriceChart series={series} large />
       <div className="market-range">
-        <span>{series.length} weeks</span>
+                <span>{t("{n} weeks", { n: series.length })}</span>
         <span>
-          Low {formatMoney(low)} · High {formatMoney(high)}
+          {t("Low {low} · High {high}", { low: formatMoney(low), high: formatMoney(high) })}
         </span>
       </div>
-      <p className="prose">{marketBlurb(id)}</p>
+            <p className="prose">{marketBlurb(id)}</p>
       {isStock(id) && stockForCompany(state.company?.id)?.id === id ? (
         <p className="employer-note">
-          Part of every payday arrives as this stock.
-        </p>
+          {t("Part of every payday arrives as this stock.")}</p>
       ) : null}
       {isStock(id) ? <NewsCard news={newsFor(state.news, id)} /> : null}
       <div className="trade-panel">
@@ -451,8 +473,7 @@ export function MarketScreen({
             className={mode === "buy" ? "on" : ""}
             onClick={() => switchMode("buy")}
           >
-            Buy
-          </button>
+            {t("Buy")}</button>
           <button
             type="button"
             role="tab"
@@ -460,13 +481,12 @@ export function MarketScreen({
             className={mode === "sell" ? "on" : ""}
             onClick={() => switchMode("sell")}
           >
-            Sell
-          </button>
+            {t("Sell")}</button>
         </div>
         <div className="trade-amount">
           <button
             type="button"
-            aria-label="One less"
+            aria-label={t("One less")}
             disabled={count <= 1}
             onClick={() => pick(count - 1)}
           >
@@ -479,12 +499,12 @@ export function MarketScreen({
             max={Math.max(1, max)}
             value={max < 1 ? 0 : count}
             disabled={max < 1}
-            aria-label="Amount"
+            aria-label={t("Amount")}
             onChange={(event) => pick(Number(event.target.value) || 1)}
           />
           <button
             type="button"
-            aria-label="One more"
+            aria-label={t("One more")}
             disabled={count >= max}
             onClick={() => pick(count + 1)}
           >
@@ -503,17 +523,20 @@ export function MarketScreen({
             </button>
           ))}
           <button type="button" disabled={max < 1} onClick={() => pick(max)}>
-            Max {max}
+                        {t("Max {n}", { n: max })}
           </button>
         </div>
         <p className="trade-total">
           {max < 1
             ? mode === "buy"
-              ? `You need ${formatMoney(unit)} for one.`
-              : "You have none to sell."
+                            ? t("You need {amount} for one.", { amount: formatMoney(unit) })
+              : t("You have none to sell.")
             : mode === "buy"
-              ? `Pay ${formatMoney(total)} · Cash after ${formatMoney(state.stats.money - total)}`
-              : `Get ${formatMoney(total)} · ${owned - count} left`}
+              ? t("Pay {amount} · Cash after {after}", {
+                  amount: formatMoney(total),
+                  after: formatMoney(state.stats.money - total),
+                })
+              : t("Get {amount} · {n} left", { amount: formatMoney(total), n: owned - count })}
         </p>
         <button
           type="button"
@@ -521,10 +544,10 @@ export function MarketScreen({
           disabled={count < 1}
           onClick={confirm}
         >
-          {mode === "buy" ? "Buy" : "Sell"} {count}
+                    {t(mode === "buy" ? "Buy {n}" : "Sell {n}", { n: count })}
         </button>
       </div>
-      <p className="projection">Prices move when the week ends.</p>
+      <p className="projection">{t("Prices move when the week ends.")}</p>
     </section>
   );
 }
@@ -579,11 +602,11 @@ export function BlackjackScreen({
     <section className="screen blackjack-screen">
       <div className="screen-title">
         <InvestIcon id="blackjack" size={44} />
-        <p className="kicker">Blackjack</p>
+        <p className="kicker">{t("Blackjack")}</p>
         <button
           type="button"
           className={`rules-tip${rules ? " on" : ""}`}
-          aria-label="How to play"
+          aria-label={t("How to play")}
           aria-expanded={rules}
           onClick={() => setRules((value) => !value)}
         >
@@ -592,33 +615,27 @@ export function BlackjackScreen({
       </div>
       {rules ? (
         <div className="rules-card" role="note">
-          <strong>How to play</strong>
+          <strong>{t("How to play")}</strong>
           <ul>
-            <li>Get closer to 21 than the dealer without going over.</li>
-            <li>2 to 10 count as shown. J, Q, K count 10. A counts 11 or 1.</li>
+            <li>{t("Get closer to 21 than the dealer without going over.")}</li>
+            <li>{t("2 to 10 count as shown. J, Q, K count 10. A counts 11 or 1.")}</li>
+                        <li>{t("Hit takes one more card. Stand stops, then the dealer draws until 17 or more.")}</li>
             <li>
-              <b>Hit</b> takes one more card. <b>Stand</b> stops, then the
-              dealer draws until 17 or more.
-            </li>
-            <li>
-              A win pays your bet. 21 with your first two cards is a blackjack
-              and pays 1.5×. A tie gives the bet back.
-            </li>
+              {t("A win pays your bet. 21 with your first two cards is a blackjack and pays 1.5×. A tie gives the bet back.")}</li>
           </ul>
           <button type="button" onClick={() => setRules(false)}>
-            Got it
-          </button>
+            {t("Got it")}</button>
         </div>
       ) : null}
       <div className="felt">
         <Hand
-          label="Dealer"
+                    label={t("Dealer")}
           cards={dealer}
           hidden={playing ? 1 : 0}
           total={round && done ? handValue(round.dealer) : null}
         />
         <Hand
-          label="You"
+                    label={t("You")}
           cards={round?.player ?? []}
           hidden={0}
           total={round ? handValue(round.player) : null}
@@ -629,28 +646,26 @@ export function BlackjackScreen({
           </p>
         ) : null}
         {playing ? (
-          <p className="felt-stake">On the table {formatMoney(round.stake)}</p>
+                    <p className="felt-stake">{t("On the table {amount}", { amount: formatMoney(round.stake) })}</p>
         ) : null}
       </div>
       {playing ? (
         <div className="market-trade">
           <button type="button" onClick={() => settle(hitRound(round))}>
-            Hit
-          </button>
+            {tc("blackjack", "Hit")}</button>
           <button type="button" onClick={() => settle(standRound(round))}>
-            Stand
-          </button>
+            {tc("blackjack", "Stand")}</button>
         </div>
       ) : (
         <div className="trade-panel bet-panel">
           <div className="bet-head">
-            <span>Your bet</span>
-            <span>Cash {formatMoney(cash)}</span>
+            <span>{t("Your bet")}</span>
+                        <span>{t("Cash {amount}", { amount: formatMoney(cash) })}</span>
           </div>
           <div className="trade-amount">
             <button
               type="button"
-              aria-label="Lower the bet"
+              aria-label={t("Lower the bet")}
               disabled={!canDeal || stake <= MIN_BET}
               onClick={() => setStake(stake - BET_STEP)}
             >
@@ -664,14 +679,14 @@ export function BlackjackScreen({
               step={BET_STEP}
               value={canDeal ? stake : 0}
               disabled={!canDeal}
-              aria-label="Bet"
+              aria-label={t("Bet")}
               onChange={(event) =>
                 setStake(Number(event.target.value) || MIN_BET)
               }
             />
             <button
               type="button"
-              aria-label="Raise the bet"
+              aria-label={t("Raise the bet")}
               disabled={!canDeal || stake >= cash}
               onClick={() => setStake(stake + BET_STEP)}
             >
@@ -697,8 +712,7 @@ export function BlackjackScreen({
               disabled={!canDeal}
               onClick={() => setStake(MIN_BET)}
             >
-              Min
-            </button>
+              {t("Min")}</button>
             <button
               type="button"
               disabled={!canDeal}
@@ -718,8 +732,7 @@ export function BlackjackScreen({
               disabled={!canDeal}
               onClick={() => setStake(cash)}
             >
-              All in
-            </button>
+              {t("All in")}</button>
           </div>
           <button
             type="button"
@@ -727,9 +740,9 @@ export function BlackjackScreen({
             disabled={!canDeal}
             onClick={start}
           >
-            {canDeal
-              ? `${done ? "Deal again" : "Deal"} · ${formatMoney(stake)}`
-              : `You need ${formatMoney(MIN_BET)} to play`}
+                        {canDeal
+              ? `${done ? t("Deal again") : t("Deal")} · ${formatMoney(stake)}`
+              : t("You need {amount} to play", { amount: formatMoney(MIN_BET) })}
           </button>
         </div>
       )}
@@ -741,19 +754,20 @@ function NewsCard({ news }: { news: StockNews | undefined }) {
   if (!news) {
     return (
       <div className="news-card">
-        <span className="news-kicker">Today's paper</span>
-        <strong>Nothing about this company today.</strong>
-        <span className="news-lean">Without news it drifts a little.</span>
+        <span className="news-kicker">{t("Today's paper")}</span>
+        <strong>{t("Nothing about this company today.")}</strong>
+        <span className="news-lean">{t("Without news it drifts a little.")}</span>
       </div>
     );
   }
-  const lean =
-    news.tone === "good" ? "Leans up next week" : "Leans down next week";
+    const lean = news.tone === "good" ? t("Leans up next week") : t("Leans down next week");
   return (
     <div className={`news-card tone-${news.tone}`}>
-      <span className="news-kicker">Today's paper</span>
-      <strong>{news.headline}</strong>
-      <span className="news-lean">{lean}. Right about 3 times in 4.</span>
+      <span className="news-kicker">{t("Today's paper")}</span>
+      <strong>{newsHeadline(news)}</strong>
+      <span className="news-lean">
+        {lean}. {t("Right about 3 times in 4.")}
+      </span>
     </div>
   );
 }
@@ -796,6 +810,13 @@ function Hand({
   );
 }
 
+const SUIT_NAME: Record<Suit, string> = {
+  spade: "Spades",
+  heart: "Hearts",
+  diamond: "Diamonds",
+  club: "Clubs",
+};
+
 const SUIT_GLYPH: Record<Suit, string> = {
   spade: "♠",
   heart: "♥",
@@ -812,7 +833,7 @@ function PlayingCard({ card, index }: { card: Card; index: number }) {
     <span
       className={`play-card face${red ? " red" : ""}${royal ? " royal" : ""}`}
       style={{ animationDelay: `${index * 90}ms` }}
-      aria-label={`${card.label} of ${suit}s`}
+            aria-label={t("{card} of {suit}", { card: card.label, suit: t(SUIT_NAME[suit]) })}
     >
       <span className="pc-corner top">
         <b>{card.label}</b>
@@ -835,11 +856,7 @@ const SHOP_TABS: { id: ShopTab; label: string }[] = [
   { id: "home", label: "Home" },
 ];
 
-function effectText(effects: Partial<Record<string, number>>): string {
-  return Object.entries(effects)
-    .map(([stat, amount]) => `${(amount ?? 0) > 0 ? "+" : "−"}${Math.abs(amount ?? 0)} ${stat}`)
-    .join(", ");
-}
+
 
 /**
  * One tab at a time, every item a row with a clear button on the right,
@@ -867,7 +884,7 @@ export function ShopDesk({
   return (
     <section className="screen shop-screen">
       <div className="shop-head">
-        <h2 className="tab-title">Shop</h2>
+        <h2 className="tab-title">{t("Shop")}</h2>
         <span className="cash-chip">{formatMoney(state.stats.money)}</span>
       </div>
       <div className="segmented" role="tablist">
@@ -878,9 +895,9 @@ export function ShopDesk({
             role="tab"
             aria-selected={tab === item.id}
             className={tab === item.id ? "on" : ""}
-            onClick={() => setTab(item.id)}
+                        onClick={() => setTab(item.id)}
           >
-            {item.label}
+            {t(item.label)}
           </button>
         ))}
       </div>
@@ -890,13 +907,16 @@ export function ShopDesk({
         </p>
       ) : null}
       {onSale && tab === "machines" ? (
-        <p className="sale-banner">Black Friday: 30% off machines this week.</p>
+        <p className="sale-banner">{t("Black Friday: 30% off machines this week.")}</p>
       ) : null}
 
       {tab === "pantry" ? (
         <>
           <p className="shop-note">
-            Used right away. Energy {state.stats.energy} · Health {state.stats.health}
+                        {t("Used right away. Energy {energy} · Health {health}", {
+              energy: state.stats.energy,
+              health: state.stats.health,
+            })}
           </p>
           <ul className="shop-list">
             {PANTRY.map((item) => {
@@ -905,15 +925,15 @@ export function ShopDesk({
                 <li key={item.id} className="shop-row">
                   <span className={`pantry-icon item-${item.id}`} aria-hidden="true" />
                   <span className="shop-info">
-                    <strong>{item.name}</strong>
-                    <small>{item.blurb}</small>
+                                        <strong>{t(item.name)}</strong>
+                    <small>{t(item.blurb)}</small>
                     <span className="pantry-effects">
                       {(Object.keys(item.effects) as (keyof typeof item.effects)[]).map((stat) => {
                         const amount = item.effects[stat] ?? 0;
                         return (
                           <span key={stat} className={`pantry-effect ${amount > 0 ? "up" : "down"}`}>
                             {amount > 0 ? "+" : "−"}
-                            {Math.abs(amount)} {stat}
+                                                        {Math.abs(amount)} {statWord(stat)}
                           </span>
                         );
                       })}
@@ -924,7 +944,7 @@ export function ShopDesk({
                     className="shop-buy"
                     disabled={short}
                     onClick={() =>
-                      buy(consumeItem(state, item.id), `${item.name}: ${effectText(item.effects)}.`)
+                                            buy(consumeItem(state, item.id), `${t(item.name)}: ${effectLine(item.effects)}.`)
                     }
                   >
                     {formatMoney(item.cost)}
@@ -938,7 +958,7 @@ export function ShopDesk({
 
       {tab === "machines" ? (
         <>
-          <p className="shop-note">A better machine gives every task more time.</p>
+          <p className="shop-note">{t("A better machine gives every task more time.")}</p>
           <ul className="shop-list">
             {DEVICES.map((device) => {
               const owned = state.ownedDevices.includes(device.id);
@@ -949,10 +969,14 @@ export function ShopDesk({
                 <li key={device.id} className={`shop-row${using ? " using" : ""}`}>
                   <span className={`machine-icon machine-${device.id}`} aria-hidden="true" />
                   <span className="shop-info">
-                    <strong>{device.name}</strong>
-                    <small>{device.timeBonus > 0 ? `+${device.timeBonus}s on every task` : "Base time"}</small>
+                                        <strong>{t(device.name)}</strong>
+                    <small>
+                      {device.timeBonus > 0
+                        ? t("+{n}s on every task", { n: device.timeBonus })
+                        : t("Base time")}
+                    </small>
                     {onSale && !owned && price < device.cost ? (
-                      <small className="was-price">Was {formatMoney(device.cost)}</small>
+                      <small className="was-price">{t("Was {amount}", { amount: formatMoney(device.cost) })}</small>
                     ) : null}
                   </span>
                   <button
@@ -962,13 +986,13 @@ export function ShopDesk({
                     onClick={() =>
                       buy(
                         buyGear(state, "device", device.id),
-                        owned
-                          ? `Switched to the ${device.name.toLowerCase()}.`
-                          : `${device.name} is on your desk.`,
+                                                owned
+                          ? t("Switched to the {device}.", { device: t(device.name) })
+                          : t("{device} is on your desk.", { device: t(device.name) }),
                       )
                     }
                   >
-                    {using ? "In use" : owned ? "Use" : formatMoney(price)}
+                                        {using ? t("In use") : owned ? t("Use") : formatMoney(price)}
                   </button>
                 </li>
               );
@@ -981,13 +1005,13 @@ export function ShopDesk({
         <div className={`home-offer${state.ownsHome ? " owned" : ""}`}>
           <span className="home-mark" aria-hidden="true" />
           <span className="home-text">
-            <strong>{state.ownsHome ? "Your own home" : "A house with a garden"}</strong>
+                        <strong>{state.ownsHome ? t("Your own home") : t("A house with a garden")}</strong>
             <small>
               {state.ownsHome
-                ? "The keys are on the hook by the door."
+                ? t("The keys are on the hook by the door.")
                 : state.goal === "home"
-                  ? "This is your life goal."
-                  : "Room for the cat to roam."}
+                  ? t("This is your life goal.")
+                  : t("Room for the cat to roam.")}
             </small>
             {state.ownsHome ? null : (
               <>
@@ -995,7 +1019,10 @@ export function ShopDesk({
                   <span style={{ width: `${Math.min(100, (state.stats.money / HOME_PRICE) * 100)}%` }} />
                 </span>
                 <small>
-                  {formatMoney(Math.min(state.stats.money, HOME_PRICE))} of {formatMoney(HOME_PRICE)} saved
+                                    {t("{saved} of {price} saved", {
+                    saved: formatMoney(Math.min(state.stats.money, HOME_PRICE)),
+                    price: formatMoney(HOME_PRICE),
+                  })}
                 </small>
               </>
             )}
@@ -1005,7 +1032,7 @@ export function ShopDesk({
               type="button"
               className="shop-buy"
               disabled={state.stats.money < HOME_PRICE}
-              onClick={() => buy(buyHome(state), "You bought a home. Welcome in.")}
+                            onClick={() => buy(buyHome(state), t("You bought a home. Welcome in."))}
             >
               {formatMoney(HOME_PRICE)}
             </button>
@@ -1020,10 +1047,10 @@ function blackjackNote(
   outcome: BlackjackRound["outcome"],
   stake: number,
 ): string {
-  if (outcome === "blackjack")
-    return `Blackjack. You take ${formatMoney(Math.round(stake * 1.5))}.`;
-  if (outcome === "win") return `The hand wins ${formatMoney(stake)}.`;
-  if (outcome === "lose") return `The hand loses ${formatMoney(stake)}.`;
-  if (outcome === "push") return "Push. The stake comes back.";
-  return "The hand is still open.";
+    if (outcome === "blackjack")
+    return t("Blackjack. You take {amount}.", { amount: formatMoney(Math.round(stake * 1.5)) });
+  if (outcome === "win") return t("The hand wins {amount}.", { amount: formatMoney(stake) });
+  if (outcome === "lose") return t("The hand loses {amount}.", { amount: formatMoney(stake) });
+  if (outcome === "push") return t("Push. The stake comes back.");
+  return t("The hand is still open.");
 }

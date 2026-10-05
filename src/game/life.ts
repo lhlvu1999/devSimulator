@@ -1,4 +1,5 @@
 import type { CareerState } from "./career";
+import { t as tr } from "../i18n";
 import type { Stats } from "./types";
 
 /** One game day is one week of life. */
@@ -343,25 +344,28 @@ export function endingFor(state: CareerState, netWorth: number): Ending | null {
   else if (state.day >= LAST_DAY) kind = "age";
   if (!kind) return null;
 
-  const goal = state.goal ? GOALS[state.goal].title.toLowerCase() : "live well";
+    const goal = (state.goal ? tr(GOALS[state.goal].title) : tr("live well")).toLowerCase();
   const text: Record<EndingKind, { title: string; story: string }> = {
     goal: {
-      title: "You did it",
-      story: `You set out to ${goal}, and at ${age} you have. The cat approves.`,
+      title: tr("You did it"),
+      story: tr("You set out to {goal}, and at {age} you have. The cat approves.", { goal, age }),
     },
     burnout: {
-      title: "Burned out",
-      story:
+      title: tr("Burned out"),
+      story: tr(
         "One morning you could not open the laptop. You step away to rebuild. It happens to good people.",
+      ),
     },
     health: {
-      title: "Your body said stop",
-      story:
-        "Years of late nights caught up. The doctor's orders come first now.",
+      title: tr("Your body said stop"),
+      story: tr("Years of late nights caught up. The doctor's orders come first now."),
     },
     age: {
-      title: "Retired at 60",
-      story: `The long road is over. You didn't quite ${goal}, but you're still here, and so is the cat.`,
+      title: tr("Retired at 60"),
+      story: tr(
+        "The long road is over. You didn't quite {goal}, but you're still here, and so is the cat.",
+        { goal },
+      ),
     },
   };
   const kindScore: Record<EndingKind, number> = {

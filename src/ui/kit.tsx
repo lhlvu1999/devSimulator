@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
 import type { Company } from "../content/companies";
-import { TIER_LABEL, TYPE_LABEL } from "../content/companies";
+import { TIER_LABEL, WORKPLACE_LABEL, workplaceOf } from "../content/companies";
 import { difficultyStars, type Difficulty } from "../game/difficulty";
 import { formatMoney } from "../game/format";
 import type { StatKey, Stats } from "../game/types";
 import { STAT_KEYS } from "../game/types";
+import { t as tr } from "../i18n";
 
 const STAT_LABELS: Record<StatKey, string> = {
   money: "Money",
@@ -20,7 +21,7 @@ export function StatBoard({ stats }: { stats: Stats }) {
   return (
     <div className="stat-board">
       <div className="money-chip">
-        <span>Money</span>
+        <span>{tr("Money")}</span>
         <strong>{formatMoney(stats.money)}</strong>
       </div>
       {STAT_KEYS.filter((key) => key !== "money").map((key) => (
@@ -72,16 +73,18 @@ export function OfferCard({
     <button type="button" className="offer-card" onClick={onPick}>
       <div className="offer-top">
         <strong>{company.name}</strong>
-        <span className="badge">{TIER_LABEL[company.tier]}</span>
+                <span className="badge">{tr(TIER_LABEL[company.tier])}</span>
       </div>
-      <span className="type-chip">{TYPE_LABEL[company.type]}</span>
+      <span className={`type-chip workplace-${workplaceOf(company)}`}>
+        {tr(WORKPLACE_LABEL[workplaceOf(company)])}
+      </span>
       <div className="offer-meters">
         <MiniMeter
-          label="Pay"
+                    label={tr("Pay")}
           value={Math.min(5, Math.round(company.salary / 450))}
         />
-        <MiniMeter label="Learn" value={Math.min(5, learn)} />
-        <MiniMeter label="Easy days" value={ease} />
+                <MiniMeter label={tr("Learn")} value={Math.min(5, learn)} />
+        <MiniMeter label={tr("Easy days")} value={ease} />
       </div>
       <p>{note}</p>
     </button>

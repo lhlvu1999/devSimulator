@@ -57,6 +57,7 @@ import {
   type SleepMode,
   type SlotKind,
 } from "./life";
+import { t as tr, tn } from "../i18n";
 import { nextUnit, roundByChance } from "./rng";
 import { skillRating } from "./skill";
 import { cvMatch, cvOf, screenChance, taskScaleFor, type Cv } from "./cv";
@@ -94,7 +95,8 @@ import { WORK_GAME_LABEL, type WorkGame } from "./workGames";
 import {
   emptyHoldings,
   pushHistory,
-      rollNews,
+      newsHeadline,
+  rollNews,
   rollPrices,
   seedHistory,
   stockForCompany,
@@ -105,6 +107,7 @@ import {
   type StockNews,
 } from "./market";
 import { payPackage, type PayPackage } from "./pay";
+import { settleLatePay } from "./workplaceEvents";
 import { addShares, bookOf, removeShares } from "./portfolio";
 import {
   OVERDUE_HIT,
@@ -283,7 +286,7 @@ export function finishPlacement(
     placementBlurb: profile.blurb,
     offers: offered.offers,
     rngState: offered.rngState,
-    log: [`Placement: ${profile.label}.`],
+        log: [tr("Placement: {label}.", { label: tr(profile.label) })],
   };
 }
 
@@ -316,7 +319,7 @@ export function acceptOffer(
     joinedDay: state.day,
     feed: refreshed.feed,
     rngState: refreshed.rngState,
-    log: [`You join ${company.name}.`],
+        log: [tr("You join {company}.", { company: company.name })],
   };
   return freshBoard(hired, 0);
 }
@@ -371,8 +374,10 @@ export function applyToPost(state: CareerState, postId: string): CareerState {
     counters: bumpCounter(state.counters, "applications"),
     log: [
       shortlisted
-        ? `${company?.name ?? "The company"} wants to talk. You're shortlisted.`
-        : `${company?.name ?? "The company"} is moving forward with other candidates.`,
+                ? tr("{company} wants to talk. You're shortlisted.", { company: company?.name ?? tr("The company") })
+        : tr("{company} is moving forward with other candidates.", {
+            company: company?.name ?? tr("The company"),
+          }),
     ],
   };
 }
@@ -392,7 +397,9 @@ export function failInterview(state: CareerState, postId: string): CareerState {
       },
     },
     log: [
-      `${company?.name ?? "The company"} passed on you this time. Try them again in a few days.`,
+            tr("{company} passed on you this time. Try them again in a few days.", {
+        company: company?.name ?? tr("The company"),
+      }),
     ],
   };
 }
@@ -421,14 +428,19 @@ export function joinCompany(state: CareerState, post: JobPost): CareerState {
   let book = bookOf(state);
       const taskScale = taskScaleFor(playerCv(state), post.level);
   const notes = [
-    `You join ${company.name} as ${LEVEL_TITLE[post.level]}.${stepUp ? " A step up." : ""}`,
+        tr(stepUp ? "You join {company} as {title}. A step up." : "You join {company} as {title}.", {
+      company: company.name,
+      title: tr(LEVEL_TITLE[post.level]),
+    }),
     taskScale < 1
-      ? `Promotion progress starts fresh, but your CV counts: ${Math.round((1 - taskScale) * 100)}% fewer tasks to your next promotion.`
-      : "Promotion progress starts fresh here.",
+            ? tr("Promotion progress starts fresh, but your CV counts: {percent}% fewer tasks to your next promotion.", {
+          percent: Math.round((1 - taskScale) * 100),
+        })
+      : tr("Promotion progress starts fresh here."),
   ];
   if (post.benefits.includes("bonus")) {
     money += post.bonusCash;
-    notes.push(`Signing bonus: +${formatMoney(post.bonusCash)}.`);
+        notes.push(tr("Signing bonus: +{amount}.", { amount: formatMoney(post.bonusCash) }));
   }
   if (post.benefits.includes("stock")) {
     const listed = stockForCompany(company.id);
@@ -439,12 +451,12 @@ export function joinCompany(state: CareerState, post: JobPost): CareerState {
         post.stockUnits,
         state.prices[listed.id],
       );
-      notes.push(`Sign-on shares: ${post.stockUnits} ${listed.id}.`);
+            notes.push(tr("Sign-on shares: {n} {ticker}.", { n: post.stockUnits, ticker: listed.id }));
     }
   }
   if (post.benefits.includes("gym")) {
     health += 15;
-    notes.push("A gym membership. You feel better already.");
+        notes.push(tr("A gym membership. You feel better already."));
   }
   const joined: CareerState = {
     ...state,
@@ -474,7 +486,7 @@ export function joinCompany(state: CareerState, post: JobPost): CareerState {
       ),
     },
   };
-  notes.push(`Payday is now ${formatMoney(paydayFor(joined))}.`);
+    notes.push(tr("Payday is now {amount}.", { amount: formatMoney(paydayFor(joined)) }));
   return { ...freshBoard(joined, state.board.hour), log: notes };
 }
 
@@ -552,9 +564,9 @@ function sumEffects(effects: readonly Partial<Stats>[]): Partial<Stats> {
 }
 
 const TIMING_NOTE = {
-  early: "well before the deadline",
-  onTime: "on time",
-  late: "late",
+  early: "{key} done well before the deadline.",
+  onTime: "{key} done on time.",
+  late: "{key} done late.",
 } as const;
 
 /**
@@ -593,11 +605,19 @@ export function workTicket(
 
   if (grade === "miss") {
     notes.push(
-      `${key}: the clock ran out. ${result.spent}h gone, and the part is still open.`,
+            tr("{key}: the clock ran out. {hours}h gone, and the part is still open.", {
+        key,
+        hours: result.spent,
+      }),
     );
   } else if (!result.finished) {
     notes.push(
-      `${key}: part ${result.ticket.partsDone} of ${result.ticket.parts} done in ${result.spent}h.`,
+            tr("{key}: part {part} of {parts} done in {hours}h.", {
+        key,
+        part: result.ticket.partsDone,
+        parts: result.ticket.parts,
+        hours: result.spent,
+      }),
     );
   } else if (result.timing) {
     const reward = doneReward(
@@ -607,29 +627,29 @@ export function workTicket(
     );
     effects.push(reward);
     notes.push(
-      `${key} done ${TIMING_NOTE[result.timing]}.` +
-        (reward.money ? ` Bonus ${formatMoney(reward.money)}.` : ""),
+            tr(TIMING_NOTE[result.timing], { key }) +
+        (reward.money ? ` ${tr("Bonus {amount}.", { amount: formatMoney(reward.money) })}` : ""),
     );
     counters = bumpCounter(counters, "ticketsDone");
     if (result.timing === "early")
       counters = bumpCounter(counters, "ticketsEarly");
   }
   if (grade !== "miss" && bonus > 0)
-    notes.push(`Quick work: +${formatMoney(bonus)}.`);
+        notes.push(tr("Quick work: +{amount}.", { amount: formatMoney(bonus) }));
   for (const late of result.newlyOverdue) {
     effects.push(OVERDUE_HIT[late.priority]);
-    notes.push(`${late.key} is overdue. The team noticed.`);
+        notes.push(tr("{key} is overdue. The team noticed.", { key: late.key }));
   }
   if (result.newlyOverdue.length > 0)
     counters = bumpCounter(counters, "overdue", result.newlyOverdue.length);
   for (const fresh of result.arrived) {
     notes.push(
       fresh.urgent
-        ? `Urgent: ${fresh.key} ${fresh.title}.`
-        : `New: ${fresh.key} ${fresh.title}.`,
+                ? tr("Urgent: {key} {title}.", { key: fresh.key, title: tr(fresh.title) })
+        : tr("New: {key} {title}.", { key: fresh.key, title: tr(fresh.title) }),
     );
   }
-  if (result.overtime > 0) notes.push(`${result.overtime}h of overtime.`);
+    if (result.overtime > 0) notes.push(tr("{n}h of overtime.", { n: result.overtime }));
 
         return {
     ...worked,
@@ -718,10 +738,10 @@ export function recordWork(
   const mood = grade === "miss" ? -2 : 0;
   const note =
     grade === "clear"
-      ? "The screen matches the note."
+            ? tr("The screen matches the note.")
       : grade === "late"
-        ? "You got there with almost no time left."
-        : "The clock ran out.";
+                ? tr("You got there with almost no time left.")
+        : tr("The clock ran out.");
   const progress =
     grade === "clear" && game
       ? { ...state.progress, [game]: state.progress[game] + 1 }
@@ -749,7 +769,7 @@ export function recordWork(
       health: state.stats.health - strain,
       money: state.stats.money + (grade === "miss" ? 0 : bonus),
     }),
-    log: [bonus > 0 ? `${note} A little extra, ${formatMoney(bonus)}.` : note],
+        log: [bonus > 0 ? `${note} ${tr("A little extra, {amount}.", { amount: formatMoney(bonus) })}` : note],
   };
 }
 
@@ -826,10 +846,13 @@ export function switchTrack(state: CareerState): CareerState {
   return {
     ...moved,
     log: [
-      `You are now ${LEVEL_TITLE[twin]}. Payday is ${formatMoney(paydayFor(moved))}.`,
+            tr("You are now {title}. Payday is {amount}.", {
+        title: tr(LEVEL_TITLE[twin]),
+        amount: formatMoney(paydayFor(moved)),
+      }),
       trackOf(twin) === "manager"
-        ? "Your work is people and plans now. Your team matters more than your code."
-        : "You are back to building. Your skill matters more again.",
+                ? tr("Your work is people and plans now. Your team matters more than your code.")
+        : tr("You are back to building. Your skill matters more again."),
     ],
   };
 }
@@ -864,8 +887,11 @@ export function passReview(state: CareerState): CareerState {
   return {
     ...promoted,
     log: [
-      `You are now ${LEVEL_TITLE[upcoming]}. Payday rises to ${formatMoney(paydayFor(promoted))}.`,
-      ...added.map((game) => `New work unlocked: ${WORK_GAME_LABEL[game]}.`),
+            tr("You are now {title}. Payday rises to {amount}.", {
+        title: tr(LEVEL_TITLE[upcoming]),
+        amount: formatMoney(paydayFor(promoted)),
+      }),
+      ...added.map((game) => tr("New work unlocked: {game}.", { game: tr(WORK_GAME_LABEL[game]) })),
     ],
   };
 }
@@ -876,7 +902,7 @@ export function failReview(state: CareerState): CareerState {
   return {
     ...state,
     reviewDay: state.day,
-    log: ["The review did not pass this time. You can try again next week."],
+        log: [tr("The review did not pass this time. You can try again next week.")],
   };
 }
 
@@ -885,14 +911,14 @@ export function finishWork(state: CareerState): CareerState {
   if (state.section !== "work" && state.section !== "room") return state;
   const change =
     state.company && !state.workDone ? slotChange(state.board.hour) : 0;
-  const notes = ["Work is done for this week."];
+    const notes = [tr("Work is done for this week.")];
   if (change > 0)
     notes.push(
-      `You wrapped up early: +${change} free-time slot${change > 1 ? "s" : ""}.`,
+            tn(change, "You wrapped up early: +{n} free-time slot.", "You wrapped up early: +{n} free-time slots."),
     );
   if (change < 0)
     notes.push(
-      `Overtime ate ${-change} free-time slot${change < -1 ? "s" : ""}.`,
+            tn(-change, "Overtime ate {n} free-time slot.", "Overtime ate {n} free-time slots."),
     );
         return {
     ...state,
@@ -949,7 +975,7 @@ export function doActivity(state: CareerState, id: string): CareerState {
   return {
     ...spend(state, cost, activity.effects),
     counters: bumpCounter(state.counters, activity.id),
-    log: [`${activity.name}. ${activity.blurb}`],
+        log: [`${tr(activity.name)}. ${tr(activity.blurb)}`],
   };
 }
 
@@ -973,7 +999,7 @@ export function takeLesson(state: CareerState, id: CourseId): CareerState {
     counters: bumpCounter(state.counters, finished ? "certificates" : "lessons"),
     log: [
       finished
-        ? `Certificate earned: ${course.name}. That's worth something.`
+                ? tr("Certificate earned: {course}. That's worth something.", { course: tr(course.name) })
         : `${course.name}: lesson ${done + 1} of ${course.lessons}.`,
     ],
   };
@@ -998,7 +1024,7 @@ export function practiceHobby(state: CareerState, id: HobbyId, kind: SlotKind): 
     },
     log: [
       streak > 1
-        ? `${hobby.name}: ${streak}-week streak. It shows.`
+                ? tr("{hobby}: {n}-week streak. It shows.", { hobby: tr(hobby.name), n: streak })
         : `${hobby.name}. ${hobby.blurb}`,
     ],
   };
@@ -1017,8 +1043,13 @@ export function workOnSide(state: CareerState, kind: SlotKind): CareerState {
     counters: bumpCounter(state.counters, "side"),
     log: [
       after.name !== before.name
-        ? `Your side project is now ${after.name}.${after.income > 0 ? " It earns a little each week while you keep at it." : ""}`
-        : "Side project: another evening of commits.",
+                ? tr(
+            after.income > 0
+              ? "Your side project is now {stage}. It earns a little each week while you keep at it."
+              : "Your side project is now {stage}.",
+            { stage: tr(after.name) },
+          )
+        : tr("Side project: another evening of commits."),
     ],
   };
 }
@@ -1061,7 +1092,7 @@ export function buyHome(state: CareerState): CareerState {
     ...state,
     ownsHome: true,
     stats: addStats(state.stats, { money: -HOME_PRICE, mood: 15 }),
-    log: ["You got the keys. It's yours."],
+        log: [tr("You got the keys. It's yours.")],
   };
 }
 
@@ -1076,7 +1107,7 @@ export function consumeItem(state: CareerState, id: string): CareerState {
   return {
     ...state,
     stats: clampStats(next),
-    log: [`${item.name}. ${item.blurb}`],
+        log: [`${tr(item.name)}. ${tr(item.blurb)}`],
   };
 }
 
@@ -1104,7 +1135,10 @@ export function buyGear(
       ownedDevices: [...state.ownedDevices, device.id],
       stats: { ...state.stats, money: state.stats.money - devicePrice },
       log: [
-        `${device.name} is on the desk. Tasks get ${device.timeBonus} extra seconds.`,
+                tr("{device} is on the desk. Tasks get {n} extra seconds.", {
+          device: tr(device.name),
+          n: device.timeBonus,
+        }),
       ],
     };
   }
@@ -1119,7 +1153,7 @@ export function buyGear(
     lookId: look.id,
     ownedLooks: [...state.ownedLooks, look.id],
     stats: { ...state.stats, money: state.stats.money - lookPrice },
-    log: [`You change into ${look.name}.`],
+        log: [tr("You change into {look}.", { look: tr(look.name) })],
   };
 }
 
@@ -1194,41 +1228,54 @@ export function endDay(state: CareerState): CareerState {
   });
   let money = state.stats.money;
   let book = bookOf(state);
-  const headlines = paper.news.map((item) => item.headline);
+    const headlines = paper.news.map((item) => newsHeadline(item));
     const notes = [
             ...rolled.notes,
     headlines.length > 0
-      ? `Next week's paper: ${headlines.join(" ")}`
-      : "Next week's paper: a quiet week in business news.",
+            ? tr("Next week's paper: {headlines}", { headlines: headlines.join(" ") })
+      : tr("Next week's paper: a quiet week in business news."),
   ];
   const fresh = refreshed.feed.posts.filter(
     (post) => !state.feed.posts.some((old) => old.id === post.id),
   ).length;
   if (fresh > 0)
     notes.push(
-      `Workline: ${fresh} new job post${fresh > 1 ? "s" : ""} for you.`,
+            tn(fresh, "Workline: {n} new job post for you.", "Workline: {n} new job posts for you."),
     );
-  if (state.company && isPayWeek(state.day)) {
+  const late = settleLatePay(
+    state,
+    isPayWeek(state.day),
+    payPackage(state.company, state.level).total,
+  );
+  money += late.extra;
+  notes.push(...late.notes);
+  if (state.company && isPayWeek(state.day) && !late.held) {
     const pay = payPackage(state.company, state.level);
     money += pay.cash;
-    let line = `Payday as ${LEVEL_TITLE[state.level]}. +${formatMoney(pay.cash)} cash`;
+        const title = tr(LEVEL_TITLE[state.level]);
+    const cash = formatMoney(pay.cash);
+    let line = tr("Payday as {title}. +{cash} cash.", { title, cash });
     if (pay.ticker && pay.stock > 0) {
                   const price = state.prices[pay.ticker];
       const shares = Math.floor(pay.stock / price);
       money += pay.stock - shares * price;
       book = addShares(book, pay.ticker, shares, price);
-      line += shares > 0 ? ` and ${shares} ${pay.ticker} shares.` : ".";
-    } else {
-      line += ".";
+            if (shares > 0)
+        line = tr("Payday as {title}. +{cash} cash and {n} {ticker} shares.", {
+          title,
+          cash,
+          n: shares,
+          ticker: pay.ticker,
+        });
     }
     notes.unshift(line);
   }
   if (isPayWeek(state.day)) {
     money = Math.max(0, money - RENT);
-    notes.unshift(`Rent for the month: -${formatMoney(RENT)}.`);
+        notes.unshift(tr("Rent for the month: -{amount}.", { amount: formatMoney(RENT) }));
   }
 
-  let counters = state.counters;
+  let counters = late.counters;
   let yearOpen = state.yearOpen;
   let growth = 0;
   let rngAfterYear = refreshed.rngState;
@@ -1255,8 +1302,11 @@ export function endDay(state: CareerState): CareerState {
       money += bonus;
       notes.unshift(
         bonus > 0
-          ? `Year-end review: ${clean} clean tickets this year. Bonus +${formatMoney(bonus)}.`
-          : "Year-end review: not much to show this year. No bonus.",
+                    ? tr("Year-end review: {n} clean tickets this year. Bonus +{amount}.", {
+              n: clean,
+              amount: formatMoney(bonus),
+            })
+          : tr("Year-end review: not much to show this year. No bonus."),
       );
     }
     counters = { ...counters, yearClean: 0 };
@@ -1276,16 +1326,24 @@ export function endDay(state: CareerState): CareerState {
     if (closed.newlyOverdue.length > 0) {
       counters = bumpCounter(counters, "overdue", closed.newlyOverdue.length);
       notes.push(
-        `Missed deadlines: ${closed.newlyOverdue.map((ticket) => ticket.key).join(", ")}. Your reputation took a hit.`,
+                tr("Missed deadlines: {keys}. Your reputation took a hit.", {
+          keys: closed.newlyOverdue.map((ticket) => ticket.key).join(", "),
+        }),
       );
     }
     if (closed.stillOverdue.length > 0)
       notes.push(
-        `${closed.stillOverdue.length} ticket${closed.stillOverdue.length > 1 ? "s are" : " is"} still overdue from before.`,
+                tn(
+          closed.stillOverdue.length,
+          "{n} ticket is still overdue from before.",
+          "{n} tickets are still overdue from before.",
+        ),
       );
     if (closed.reassigned.length > 0)
       notes.push(
-        `${closed.reassigned.map((ticket) => ticket.key).join(", ")} went to someone else. It was late too long.`,
+                tr("{keys} went to someone else. It was late too long.", {
+          keys: closed.reassigned.map((ticket) => ticket.key).join(", "),
+        }),
       );
   }
   const boardHit = sumEffects(boardHits);
@@ -1294,27 +1352,27 @@ export function endDay(state: CareerState): CareerState {
   let mood = state.stats.mood - WEEKLY_MOOD_DRAIN + (boardHit.mood ?? 0) + sleep.mood;
   let health =
     state.stats.health + WEEKLY_HEALTH_HEAL - agingLoss(nextDay) + sleep.health;
-  if (state.sleep === "late") notes.push("Late nights caught up with you. You start Monday tired.");
-  if (state.sleep === "early") notes.push("Early nights all week. You feel it.");
+    if (state.sleep === "late") notes.push(tr("Late nights caught up with you. You start Monday tired."));
+  if (state.sleep === "early") notes.push(tr("Early nights all week. You feel it."));
     const side = sideIncome(state.pursuits.side, state.day, (state.rngState ^ 0x51de5eed) >>> 0);
   money += side.income;
   if (side.note) notes.push(side.note);
   if (state.company)
-    notes.push("A long week of work wore your mood down a little.");
+        notes.push(tr("A long week of work wore your mood down a little."));
   if (agingLoss(nextDay) > 0)
-    notes.push("You're not 22 anymore. Your body needs more care.");
+        notes.push(tr("You're not 22 anymore. Your body needs more care."));
   const sick = nextUnit(rngAfterYear);
   let offWeek: OffWeek | null = null;
   if (mood < BURNOUT_BELOW && mood > 0) {
     offWeek = "burnout";
-    notes.unshift("You're running on empty. Next week you can't work. Rest.");
+        notes.unshift(tr("You're running on empty. Next week you can't work. Rest."));
   } else if (health < SICK_BELOW && health > 0 && sick.value < SICK_CHANCE) {
     offWeek = "sick";
     money = Math.max(0, money - SICK_BILL);
     health += 4;
     mood -= 2;
     notes.unshift(
-      `You're sick next week. Doctor's bill: -${formatMoney(SICK_BILL)}.`,
+            tr("You're sick next week. Doctor's bill: -{amount}.", { amount: formatMoney(SICK_BILL) }),
     );
   }
 
@@ -1331,10 +1389,10 @@ export function endDay(state: CareerState): CareerState {
     boardSeed = opened.rngState;
     if (opened.helped)
       notes.push(
-        `A teammate picked up ${opened.helped.key} for you. Good team.`,
+                tr("A teammate picked up {key} for you. Good team.", { key: opened.helped.key }),
       );
     if (offWeek)
-      notes.push("Your team covers for you. Every deadline moves a week.");
+            notes.push(tr("Your team covers for you. Every deadline moves a week."));
   }
 
   const settled: CareerState = {
@@ -1367,7 +1425,7 @@ export function endDay(state: CareerState): CareerState {
   };
   const worth = netWorth(settled);
   const earned = checkAchievements(settled, worth);
-  for (const title of earned.unlocked) notes.push(`Achievement: ${title}.`);
+    for (const title of earned.unlocked) notes.push(tr("Achievement: {title}.", { title: tr(title) }));
   const withAchievements = { ...settled, achievements: earned.achievements };
 
   const ending = endingFor(withAchievements, worth);

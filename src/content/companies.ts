@@ -34,6 +34,34 @@ export const TYPE_LABEL: Record<CompanyType, string> = {
   remote: "Remote-first",
 };
 
+/** How a job feels day to day, in the three groups players think in. The room's office clip follows the same grouping. */
+export type Workplace = "startup" | "big" | "remote";
+
+/** A product company still feels like a startup until it's established. */
+export function workplaceOf(
+  company: Pick<Company, "type" | "tier">,
+): Workplace {
+  switch (company.type) {
+    case "startup":
+    case "agency":
+      return "startup";
+    case "remote":
+      return "remote";
+    case "enterprise":
+      return "big";
+    case "product":
+      return company.tier === "seed" || company.tier === "growth"
+        ? "startup"
+        : "big";
+  }
+}
+
+export const WORKPLACE_LABEL: Record<Workplace, string> = {
+  startup: "Startup",
+  big: "Big company",
+  remote: "Remote",
+};
+
 export const COMPANIES: Company[] = [
   {
     id: "loft",
