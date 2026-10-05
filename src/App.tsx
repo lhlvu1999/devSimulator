@@ -35,6 +35,7 @@ import {
   ShopDesk,
 } from "./ui/PersonalDesk";
 import { Placement } from "./ui/Placement";
+import { IntroSteps, TitleScreen } from "./ui/Intro";
 import { GameView, type NavTab, type ScenePanel } from "./ui/GameView";
 import { MeScreen } from "./ui/MeScreen";
 import { TopHud } from "./ui/TopHud";
@@ -90,6 +91,8 @@ export function App() {
   const [market, setMarket] = useState<MarketId>("ATLS");
   const [interview, setInterview] = useState<JobPost | null>(null);
   const [mode, setMode] = useState<Mode>("play");
+  /** A new life opens on the title screen until the player taps Start. */
+  const [started, setStarted] = useState(false);
   const scene = useSceneLayout();
 
   useEffect(() => {
@@ -102,6 +105,7 @@ export function App() {
 
   function restart() {
     clearGame();
+    setStarted(false);
     setCareer(createCareer());
     setPanel(null);
   }
@@ -142,7 +146,9 @@ export function App() {
           </button>
         </nav>
       ) : null}
-      {devTools && mode === "sandbox" ? (
+      {career.section === "placement" && !started && !(devTools && mode === "sandbox") ? (
+        <TitleScreen onStart={() => setStarted(true)} />
+      ) : devTools && mode === "sandbox" ? (
         <Sandbox
           boxes={scene.boxes}
           onEdit={scene.edit}
@@ -223,6 +229,7 @@ export function App() {
           ) : null}
           {career.section === "offers" ? (
             <section className="screen">
+              <IntroSteps step={3} />
               <h1>{t("Offers")}</h1>
               <p className="ask">{career.placementBlurb}</p>
               <div className="offer-list">

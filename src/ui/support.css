@@ -1,0 +1,98 @@
+.support-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-top: 14px;
+  padding: 26px 18px;
+  border: 2px dashed rgba(63, 52, 44, 0.35);
+  border-radius: 16px;
+  text-align: center;
+  color: #5e574c;
+}
+
+.support-locked strong {
+  color: #1f1a14;
+}
+
+.support-locked p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.support-lock {
+  width: 34px;
+  height: 34px;
+  fill: none;
+  stroke: #3f342c;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+.support-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 2px solid #3f342c;
+  border-radius: 16px;
+  background: #fffdf8;
+  box-shadow: 0 4px 0 rgba(63, 52, 44, 0.15);
+}
+
+.support-card h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.support-card p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.support-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0;
+}
+
+.support-qr img {
+  width: min(100%, 260px);
+  height: auto;
+  border-radius: 14px;
+  border: 1px solid #e5ddd0;
+}
+
+.support-qr figcaption,
+.support-hint {
+  font-size: 0.8rem;
+  color: #6b5e52;
+  text-align: center;
+}
+
+.support-hint a {
+  font-weight: 650;
+  color: #9a3412;
+}
+
+.support-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ece4d6;
+}
+
+.support-feedback p {
+  flex-basis: 100%;
+}
+
+.support-email {
+  font-weight: 650;
+  color: #9a3412;
+  word-break: break-all;
+}

@@ -59,7 +59,7 @@ import {
 } from "./life";
 import { t as tr, tn } from "../i18n";
 import { nextUnit, roundByChance } from "./rng";
-import { skillRating } from "./skill";
+import { skillRating, scaleSkill } from "./skill";
 import { cvMatch, cvOf, screenChance, taskScaleFor, type Cv } from "./cv";
 import {
   SIDE_SESSION,
@@ -957,7 +957,9 @@ function canSpend(state: CareerState, spend: Spend): boolean {
   );
 }
 
-function spend(state: CareerState, cost: Spend, effects: Partial<Stats>): CareerState {
+/** Free-time effects. Skill scales with your title, like every gain outside tickets. */
+function spend(state: CareerState, cost: Spend, raw: Partial<Stats>): CareerState {
+  const effects = scaleSkill(raw, state.level);
   return {
     ...state,
     stats: addStats(state.stats, { ...effects, money: -cost.cost + (effects.money ?? 0), energy: -cost.energy + (effects.energy ?? 0) }),
@@ -1062,7 +1064,7 @@ export function setSleep(state: CareerState, mode: SleepMode): CareerState {
   return { ...state, sleep: mode, nightSlots };
 }
 
-function addEffects(a: Partial<Stats>, b: Partial<Stats>): Partial<Stats> {
+export function addEffects(a: Partial<Stats>, b: Partial<Stats>): Partial<Stats> {
   const total: Partial<Stats> = { ...a };
   for (const key of Object.keys(b) as (keyof Stats)[]) {
     total[key] = (total[key] ?? 0) + (b[key] ?? 0);

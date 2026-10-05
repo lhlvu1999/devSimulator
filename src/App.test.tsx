@@ -40,12 +40,16 @@ it("keeps Start over behind a confirm on the Me tab", () => {
   fireEvent.click(screen.getByRole("button", { name: "Me" }));
   fireEvent.click(screen.getByRole("button", { name: /Start a new life/ }));
   fireEvent.click(screen.getByRole("button", { name: "Start over" }));
-  expect(screen.getByRole("heading", { name: "Placement" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Dev Simulator" })).toBeTruthy();
 });
 
-it("starts on the tic-tac-toe placement board", () => {
+it("opens on the title screen, then the entry test", () => {
   render(<App />);
-  expect(screen.getByRole("heading", { name: "Placement" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Dev Simulator" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Start" }));
+  expect(screen.getByRole("heading", { name: "Entry test" })).toBeTruthy();
   fireEvent.click(screen.getByRole("button", { name: "Center" }));
-  expect(screen.getByRole("button", { name: "Center" }).textContent).toBe("X");
+  expect(screen.getByRole("button", { name: "Center: X" }).dataset.mark).toBe(
+    "X",
+  );
 });

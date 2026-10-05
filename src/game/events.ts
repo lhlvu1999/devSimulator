@@ -11,7 +11,7 @@ import {
 } from "./market";
 import { payPackage } from "./pay";
 import { nextUnit } from "./rng";
-import { skillRating } from "./skill";
+import { scaleSkill, skillRating } from "./skill";
 import { addStats } from "./stats";
 import { formatMoney } from "./format";
 import { t as tr, type Params } from "../i18n";
@@ -680,7 +680,7 @@ export function applyEvent(
   };
   /** Outcome with a note that is already in the player's language. */
   const bumpText = (effects: Partial<Stats>, note: string) => ({
-    state: { ...paid, stats: addStats(paid.stats, effects) },
+    state: { ...paid, stats: addStats(paid.stats, scaleSkill(effects, state.level)) },
     note,
     laidOff: false,
   });
