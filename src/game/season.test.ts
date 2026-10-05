@@ -1,3 +1,4 @@
+import { scaleSkill } from "./skill";
 import { describe, expect, it } from "vitest";
 import {
   acceptOffer,
@@ -60,7 +61,9 @@ describe("seasons and holidays", () => {
     const morning = nextMorning(night);
     const after = resolveEvent(morning, "learn");
     expect(after.stats.money).toBe(morning.stats.money + bonus);
-        expect(after.stats.skill).toBe(morning.stats.skill + 30);
+        expect(after.stats.skill).toBe(
+      morning.stats.skill + scaleSkill({ skill: 30 }, morning.level).skill,
+    );
     expect(after.event).toBeNull();
   });
 

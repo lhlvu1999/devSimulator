@@ -71,6 +71,8 @@ Pick a sleep habit for the week. It can be changed any time you still have the e
 | Normal | —          | —                                                           |
 | Late   | +1         | −3 health, and next week starts at 80 energy instead of 100 |
 
+**\* Skill outside tickets scales with your title.** Every skill amount marked \* in this README, from free time, courses, the side project, and events, is the Senior amount. It's multiplied by 0.3 for a Fresher, 0.5 Junior, 0.75 Engineer, 1.4 Staff, 1.8 Principal, 0.9 Team lead, 1 Engineering manager, and 1.2 Director (`OFF_WORK_SKILL_SCALE` in `src/game/skill.ts`), and the free-time screen shows the scaled amount. Each title needs more skill than the last (80 to leave Fresher, 380 to leave Senior), so this keeps a weekend hackathon at +12 for a fresher, about a week of tickets, instead of half a promotion.
+
 #### Weeknights
 
 | Plan                | Cost | Energy | Effect                              |
@@ -79,7 +81,7 @@ Pick a sleep habit for the week. It can be changed any time you still have the e
 | Quiet night in      | Free | 0      | +3 health, +4 mood                  |
 | Dinner with friends | $40  | 10     | +8 mood                             |
 | Team drinks         | $35  | 10     | +3 relationship, +3 mood, −2 health |
-| Tech meetup         | $20  | 10     | +2 reputation, +10 skill            |
+| Tech meetup         | $20  | 10     | +2 reputation, +10 skill*           |
 
 #### Weekend
 
@@ -88,7 +90,7 @@ Pick a sleep habit for the week. It can be changed any time you still have the e
 | Date day          | 1    | $80  | 10     | +12 mood, +1 health                          |
 | Get outside       | 1    | $10  | 15     | +7 health, +5 mood                           |
 | Visit family      | 1    | $30  | 10     | +10 mood, +2 health                          |
-| Weekend hackathon | 2    | Free | 30     | +40 skill, +2 reputation, −2 mood, −3 health |
+| Weekend hackathon | 2    | Free | 30     | +40 skill*, +2 reputation, −2 mood, −3 health |
 | Vacation          | 2    | $900 | 0      | +25 mood, +10 health                         |
 
 #### Pursuits
@@ -99,8 +101,8 @@ Things that build up over many weeks.
 
   | Course                | Lessons | Per lesson     | Each lesson     | Certificate                    |
   | --------------------- | ------- | -------------- | --------------- | ------------------------------ |
-  | Frontend fundamentals | 6       | $60, 12 energy | +8 skill        | +80 skill, +2 reputation       |
-  | System design         | 10      | $90, 15 energy | +12 skill       | +200 skill, +4 reputation      |
+  | Frontend fundamentals | 6       | $60, 12 energy | +6 skill*       | +40 skill*, +2 reputation      |
+  | System design         | 10      | $90, 15 energy | +8 skill*       | +100 skill*, +4 reputation     |
   | Leading people        | 8       | $80, 12 energy | +1 relationship | +8 relationship, +4 reputation |
 
 - **Hobbies** fit a weeknight or a weekend day. Doing one in back-to-back weeks builds a streak, and each extra week adds +1 to its main stat, up to +4. Missing a week starts the streak over.
@@ -111,7 +113,7 @@ Things that build up over many weeks.
   | Guitar  | $10  | 5      | +4 mood            | Mood           |
   | Cooking | $25  | 8      | +2 health, +2 mood | Mood           |
 
-- **Side project** sessions fit a weeknight or a weekend day, cost 20 energy, and give +6 skill and −1 mood. It grows through stages as you put in sessions, and once launched it pays each week, give or take a fifth, as long as you worked on it in the last 3 weeks.
+- **Side project** sessions fit a weeknight or a weekend day, cost 20 energy, and give +6 skill* and −1 mood. It grows through stages as you put in sessions, and once launched it pays each week, give or take a fifth, as long as you worked on it in the last 3 weeks.
 
   | Stage     | Sessions | Weekly income |
   | --------- | -------- | ------------- |
@@ -143,7 +145,7 @@ From week 5, each new week has a 35% chance to start with an event card. It sits
 | Startup ran out of money | Seed employer                                                               | Laid off, no severance                                                                                                     |
 | Being bought             | Listed employer                                                             | Its stock +30%, +5 mood                                                                                                    |
 | New manager              | Any job                                                                     | Coffee chat ($10, −4 relationship, +2 mood) or head down (−12 relationship)                                                |
-| Conference invite        | Any job                                                                     | Go ($400, +4 skill, +4 reputation, +3 mood) or skip                                                                        |
+| Conference invite        | Any job                                                                     | Go ($400, +40 skill*, +4 reputation, +3 mood) or skip                                                                        |
 | Recruiter message        | Reputation 25+, not at the top                                              | Adds a stretch role to the top of Workline for 4 weeks                                                                     |
 | Market crash             | You hold any investment                                                     | Stocks −15%, crypto −35%. Hold (−3 mood) or sell everything                                                                |
 | Family needs help        | $500+ cash                                                                  | Give 10% of cash, at least $500 (+6 mood), or say no (−8 mood)                                                             |
@@ -156,12 +158,12 @@ From week 5, each new week has a 35% chance to start with an event card. It sits
 
 | Workplace            | Event                        | Choices                                                                                                                                                                          |
 | -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Startup              | Demo day crunch              | All-nighter (+30 skill, +4 reputation, −6 health, −15 energy, −2 mood) or cut the scope (−3 relationship, +1 reputation)                                                         |
+| Startup              | Demo day crunch              | All-nighter (+30 skill*, +4 reputation, −6 health, −15 energy, −2 mood) or cut the scope (−3 relationship, +1 reputation)                                                         |
 | Startup, no agencies | Payday is late               | Wait (+3 reputation, +6 relationship; the next payday is held a week, then paid in full, or lost if the job ends first) or quietly look (a shortlisted stretch role in Workline) |
-| Startup              | You're also DevOps now       | Take it on (+45 skill, −12 energy, −2 mood) or decline (−6 relationship, +2 mood)                                                                                                |
+| Startup              | You're also DevOps now       | Take it on (+45 skill*, −12 energy, −2 mood) or decline (−6 relationship, +2 mood)                                                                                                |
 | Startup              | A message at 11pm            | Answer now (+5 relationship, −3 health, −3 mood) or in the morning (−3 relationship, +3 mood)                                                                                    |
 | Startup, no agencies | The round closed             | +8% salary at this company, +8 mood, +3 relationship                                                                                                                             |
-| Big company          | Reorg                        | Roll with it (−8 relationship, −2 mood, +10 skill) or ask to stay with your old lead (−2 relationship at relationship 60+, otherwise −10 and −4 mood)                            |
+| Big company          | Reorg                        | Roll with it (−8 relationship, −2 mood, +10 skill*) or ask to stay with your old lead (−2 relationship at relationship 60+, otherwise −10 and −4 mood)                            |
 | Big company          | Performance calibration      | Bold self-review (+6 reputation, +4 mood at reputation 50+, otherwise −3 and −4) or modest (+1 reputation)                                                                       |
 | Big company          | Compliance training          | 4 work hours this week, or a weekend day and −2 mood; +2 reputation either way                                                                                                   |
 | Big company          | Team building weekend        | Go (a weekend day, +7 relationship, +4 mood, −8 energy) or skip (−4 relationship, +2 mood)                                                                                       |
@@ -182,7 +184,7 @@ The year runs Winter (weeks 49–9), Spring (10–22), Summer (23–35), and Aut
 
 | Week | Holiday             | What happens                                                                                                                                |
 | ---- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1    | New Year            | New Year bonus, then pick a resolution: get healthier (+5 health), learn (+3 skill), see friends (+6 mood), or speak up (+3 reputation)     |
+| 1    | New Year            | New Year bonus, then pick a resolution: get healthier (+5 health), learn (+30 skill*), see friends (+6 mood), or speak up (+3 reputation)     |
 | 6    | Lunar New Year      | Lucky money of half a cash payday after 26+ weeks at the company. Go home ($300, +12 mood) or stay (+3 mood)                                |
 | 27   | Summer trip         | With a job: company beach trip (+10 mood, +5 relationship, +2 health) or skip (−2 relationship). Without: beach ($400, +12 mood, +3 health) |
 | 38   | Mid-Autumn Festival | Mooncakes for the team ($60, +4 relationship, +2 mood) or for yourself ($25, +3 mood)                                                       |

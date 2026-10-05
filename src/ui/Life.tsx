@@ -1,8 +1,10 @@
 import { formatMoney } from "../game/format";
+import { scaleSkill } from "../game/skill";
 import { IntroSteps } from "./Intro";
 import { ACHIEVEMENTS } from "../game/achievements";
 import { useState } from "react";
 import {
+  addEffects,
   doActivity,
   netWorth,
   practiceHobby,
@@ -214,7 +216,7 @@ export function FreeTime({
                   <small>{t(activity.blurb)}</small>
                   <EffectTags
                     effects={{
-                      ...activity.effects,
+                      ...scaleSkill(activity.effects, state.level),
                       ...(activity.energy ? { energy: -activity.energy } : {}),
                     }}
                   />
@@ -319,7 +321,7 @@ function PursuitList({
                     ? t("Certificate earned")
                     : t("Lesson {done} of {lessons}", { done, lessons: course.lessons })}
                 </small>
-                {finished ? null : <EffectTags effects={done + 1 >= course.lessons ? { ...course.lesson, ...course.finish } : course.lesson} />}
+                {finished ? null : <EffectTags effects={scaleSkill(done + 1 >= course.lessons ? addEffects(course.lesson, course.finish) : course.lesson, state.level)} />}
               </span>
               <button
                 type="button"
@@ -394,7 +396,7 @@ function PursuitList({
                   : t("Stalled. Work on it to win users back.")
                 : t("Earns nothing yet. Launch comes at 12 sessions.")}
             </small>
-            <EffectTags effects={{ ...SIDE_SESSION.effects, energy: -SIDE_SESSION.energy }} />
+            <EffectTags effects={{ ...scaleSkill(SIDE_SESSION.effects, state.level), energy: -SIDE_SESSION.energy }} />
           </span>
           <WhenButtons
             state={state}

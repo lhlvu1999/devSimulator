@@ -8,7 +8,7 @@ import { payPackage } from "./pay";
 import { addStats } from "./stats";
 import type { Stats } from "./types";
 import { recruiterPost } from "./workline";
-import { skillRating } from "./skill";
+import { scaleSkill, skillRating } from "./skill";
 
 /** Events that only happen at one kind of workplace, so a startup week feels different from a big company or a remote one. */
 export type WorkplaceEventId =
@@ -405,13 +405,13 @@ export function applyWorkplaceEvent(
     laidOff: false,
   });
   const bump = (effects: Partial<Stats>, note: string, params?: Params) =>
-    done({ ...paid, stats: addStats(paid.stats, effects) }, note, params);
+    done(withStats(paid, effects), note, params);
   const withStats = (
     state: CareerState,
     effects: Partial<Stats>,
   ): CareerState => ({
     ...state,
-    stats: addStats(state.stats, effects),
+    stats: addStats(state.stats, scaleSkill(effects, paid.level)),
   });
   const loseHours = (state: CareerState, hours: number): CareerState => ({
     ...state,

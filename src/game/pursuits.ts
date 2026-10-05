@@ -32,8 +32,8 @@ export const COURSES: readonly Course[] = [
     lessons: 6,
     cost: 60,
     energy: 12,
-    lesson: { skill: 8 },
-    finish: { skill: 80, reputation: 2 },
+    lesson: { skill: 6 },
+    finish: { skill: 40, reputation: 2 },
   },
   {
     id: "systems",
@@ -42,8 +42,8 @@ export const COURSES: readonly Course[] = [
     lessons: 10,
     cost: 90,
     energy: 15,
-    lesson: { skill: 12 },
-    finish: { skill: 200, reputation: 4 },
+    lesson: { skill: 8 },
+    finish: { skill: 100, reputation: 4 },
   },
   {
     id: "leadership",
