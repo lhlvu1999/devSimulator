@@ -143,9 +143,6 @@ export const VI_UI: Record<string, string> = {
   Settings: "Cài đặt",
   Language: "Ngôn ngữ",
   "Changes every screen right away.": "Đổi ngay trên mọi màn hình.",
-  Music: "Nhạc nền",
-  "Soft keys and typing from the room.":
-    "Tiếng phím và giai điệu nhẹ trong phòng.",
   "Start a brand new life? This save is gone for good.":
     "Bắt đầu lại từ đầu? Bản lưu này sẽ mất vĩnh viễn.",
   "Start over": "Chơi lại",
@@ -513,4 +510,12 @@ export const VI_UI: Record<string, string> = {
   "Have feedback, an idea, or found a bug? I'd love to hear from you:": "Có góp ý, ý tưởng hay gặp lỗi? Mình rất muốn nghe từ bạn:",
   "Copied": "Đã chép",
   "Copy email": "Chép email",
+
+  // Background sound
+  "Background sound": "Âm thanh nền",
+  "Pick one, both, or none.": "Chọn một, cả hai, hoặc tắt hết.",
+  "Lofi music": "Nhạc lofi",
+  "A slow beat in the background.": "Giai điệu chậm rãi phía sau.",
+  "Keyboard sounds": "Tiếng gõ phím",
+  "Typing from the desk.": "Lạch cạch từ bàn làm việc.",
 };

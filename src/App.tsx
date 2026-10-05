@@ -39,7 +39,7 @@ import { IntroSteps, TitleScreen } from "./ui/Intro";
 import { GameView, type NavTab, type ScenePanel } from "./ui/GameView";
 import { MeScreen } from "./ui/MeScreen";
 import { TopHud } from "./ui/TopHud";
-import { useMusic } from "./ui/music";
+import { useSoundMix } from "./ui/music";
 import { t, useLang } from "./i18n";
 import { Sandbox } from "./ui/Sandbox";
 import { useSceneLayout } from "./ui/useSceneLayout";
@@ -82,7 +82,7 @@ function panelFor(tab: NavTab, current: ScenePanel): ScenePanel {
 const devTools = import.meta.env.DEV && !Capacitor.isNativePlatform();
 
 export function App() {
-  const [music, setMusic] = useMusic();
+  const [sound, setSound] = useSoundMix();
   useLang();
   const [career, setCareer] = useState<CareerState>(
     () => loadGame() ?? createCareer(),
@@ -331,8 +331,8 @@ export function App() {
                   : undefined
               }
               onRestart={restart}
-              music={music}
-              onMusic={setMusic}
+              sound={sound}
+              onSound={setSound}
             />
           ) : null}
           {shown === "shop" ? (

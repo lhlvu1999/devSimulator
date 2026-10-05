@@ -1,115 +1,151 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-/** Bump when the track changes so browsers and the iOS web view fetch the new one. */
-const MUSIC_SRC = "./art/audio/room-theme.m4a?v=1";
-const MUSIC_VOLUME = 0.35;
+/**
+ * Two background layers the player can mix: lofi music and keyboard typing.
+ * Either, both, or none. Each is saved on the device.
+ */
+export type SoundLayer = "lofi" | "keys";
+
+export const SOUND_LAYERS: readonly SoundLayer[] = ["lofi", "keys"];
+
+export type SoundMix = Record<SoundLayer, boolean>;
+
+/**
+ * Both files are loudness-matched when encoded (lofi −20 LUFS, keys −25), so these set the mix:
+ * typing sits under the music. Rate slows a layer without changing its pitch.
+ */
+const LAYERS: Record<
+  SoundLayer,
+  { src: string; volume: number; rate: number; key: string }
+> = {
+  lofi: {
+    src: "./art/audio/lofi.m4a?v=1",
+    volume: 0.45,
+    rate: 1,
+    key: "dev-simulator-sound-lofi",
+  },
+  keys: {
+    src: "./art/audio/keyboard.m4a?v=1",
+    volume: 0.14,
+    rate: 0.6,
+    key: "dev-simulator-sound-keys",
+  },
+};
+
 /** Seconds for fades in and out. */
 const FADE = 0.4;
-const MUSIC_KEY = "dev-simulator-music";
-/** The earlier "room sound" setting, read once so a player's choice carries over. */
-const OLD_SOUND_KEY = "dev-simulator-sound";
+/** The single "Music" switch from before. Off there means both layers start off. */
+const OLD_MUSIC_KEY = "dev-simulator-music";
+const OLDER_SOUND_KEY = "dev-simulator-sound";
 
-type Player = { context: AudioContext; gain: GainNode };
+type Track = { element: HTMLAudioElement; gain: GainNode };
 
-let player: Player | null = null;
-let starting: Promise<Player | null> | null = null;
-/** Whether music should be audible right now. A fade-out only suspends if this is still false. */
-let wanted = false;
+let context: AudioContext | null = null;
+const tracks: Partial<Record<SoundLayer, Track>> = {};
+/** Which layers should be audible right now. A fade-out only pauses if its layer is still unwanted. */
+const wanted: SoundMix = { lofi: false, keys: false };
 
 /**
- * Web Audio loops the track with no gap, which a media element can't promise.
- * The context has to be created inside a tap on iOS, so this does that before its first await.
+ * The tracks are minutes long, so they stream from audio elements instead of being decoded
+ * into memory. Web Audio sits behind them only for gain, because iOS ignores element volume.
+ * The context and elements are created inside a tap, which iOS requires before any sound.
  */
-function startPlayer(): Promise<Player | null> {
-  if (player) {
-    void player.context.resume();
-    return Promise.resolve(player);
-  }
-  if (starting) return starting;
-  if (typeof AudioContext === "undefined") return Promise.resolve(null);
-  const context = new AudioContext();
-  void context.resume();
+function trackFor(layer: SoundLayer): Track | null {
+  const ready = tracks[layer];
+  if (ready) return ready;
+  if (typeof AudioContext === "undefined" || typeof Audio === "undefined")
+    return null;
+  context ??= new AudioContext();
+  const element = new Audio(LAYERS[layer].src);
+  element.loop = true;
+  element.preload = "auto";
+  element.defaultPlaybackRate = LAYERS[layer].rate;
+  element.playbackRate = LAYERS[layer].rate;
+  element.preservesPitch = true;
   const gain = context.createGain();
   gain.gain.value = 0;
+  context.createMediaElementSource(element).connect(gain);
   gain.connect(context.destination);
-  starting = fetch(MUSIC_SRC)
-    .then((response) => response.arrayBuffer())
-    .then((data) => context.decodeAudioData(data))
-    .then((buffer) => {
-      const source = context.createBufferSource();
-      source.buffer = buffer;
-      source.loop = true;
-      source.connect(gain);
-      source.start();
-      player = { context, gain };
-      return player;
-    })
-    .catch(() => {
-      starting = null;
-      void context.close();
-      return null;
-    });
-  return starting;
+  const track = { element, gain };
+  tracks[layer] = track;
+  return track;
 }
 
-function fadeTo(target: number): void {
-  if (!player) return;
-  const { gain, context } = player;
-  gain.gain.cancelScheduledValues(context.currentTime);
-  gain.gain.setTargetAtTime(target, context.currentTime, FADE / 3);
+function fade(track: Track, target: number): void {
+  if (!context) return;
+  track.gain.gain.cancelScheduledValues(context.currentTime);
+  track.gain.gain.setTargetAtTime(target, context.currentTime, FADE / 3);
 }
 
-function playMusic(): void {
-  wanted = true;
-  void startPlayer().then((ready) => {
-    if (ready && wanted) fadeTo(MUSIC_VOLUME);
-  });
+function play(layer: SoundLayer): void {
+  wanted[layer] = true;
+  const track = trackFor(layer);
+  if (!track || !context) return;
+  void context.resume();
+  void track.element.play().catch(() => undefined);
+  fade(track, LAYERS[layer].volume);
 }
 
-/** Fade out, then suspend the audio so it stops using the CPU and battery. */
-function stopMusic(): void {
-  wanted = false;
-  fadeTo(0);
-  window.setTimeout(() => {
-    if (!wanted && player) void player.context.suspend();
-  }, FADE * 1000 * 2);
+/** Fade out, then pause the layer. With nothing playing, suspend the context to save battery. */
+function stop(layer: SoundLayer): void {
+  wanted[layer] = false;
+  const track = tracks[layer];
+  if (!track) return;
+  fade(track, 0);
+  window.setTimeout(
+    () => {
+      if (wanted[layer]) return;
+      track.element.pause();
+      if (!SOUND_LAYERS.some((each) => wanted[each])) void context?.suspend();
+    },
+    FADE * 1000 * 2,
+  );
 }
 
-function readSetting(): boolean {
+function readMix(): SoundMix {
   try {
-    const saved =
-      localStorage.getItem(MUSIC_KEY) ?? localStorage.getItem(OLD_SOUND_KEY);
-    return saved !== "off";
+    const old =
+      localStorage.getItem(OLD_MUSIC_KEY) ??
+      localStorage.getItem(OLDER_SOUND_KEY);
+    const fallback = old !== "off";
+    const read = (layer: SoundLayer) => {
+      const saved = localStorage.getItem(LAYERS[layer].key);
+      return saved === null ? fallback : saved === "on";
+    };
+    return { lofi: read("lofi"), keys: read("keys") };
   } catch {
-    return true;
+    return { lofi: true, keys: true };
   }
 }
 
 /**
- * The game's music: on by default, saved on the device. Browsers only allow
+ * The background sound mix: both layers on by default. Browsers only allow
  * sound after a tap, so it starts on the player's first tap or key press.
  */
-export function useMusic(): [boolean, (on: boolean) => void] {
-  const [on, setOn] = useState(readSetting);
-  const onRef = useRef(on);
+export function useSoundMix(): [
+  SoundMix,
+  (layer: SoundLayer, on: boolean) => void,
+] {
+  const [mix, setMix] = useState(readMix);
+  const mixRef = useRef(mix);
   useEffect(() => {
-    onRef.current = on;
-  }, [on]);
+    mixRef.current = mix;
+  }, [mix]);
 
-  const update = useCallback((next: boolean) => {
-    setOn(next);
+  const update = useCallback((layer: SoundLayer, on: boolean) => {
+    setMix((current) => ({ ...current, [layer]: on }));
     try {
-      localStorage.setItem(MUSIC_KEY, next ? "on" : "off");
+      localStorage.setItem(LAYERS[layer].key, on ? "on" : "off");
     } catch {
       // Private mode or full storage: the choice lasts for this session only.
     }
-    if (next) playMusic();
-    else stopMusic();
+    if (on) play(layer);
+    else stop(layer);
   }, []);
 
   useEffect(() => {
     const first = () => {
-      if (onRef.current) playMusic();
+      for (const layer of SOUND_LAYERS) if (mixRef.current[layer]) play(layer);
     };
     window.addEventListener("pointerdown", first, { once: true });
     window.addEventListener("keydown", first, { once: true });
@@ -121,13 +157,14 @@ export function useMusic(): [boolean, (on: boolean) => void] {
 
   useEffect(() => {
     const onVisibility = () => {
-      if (!player) return;
-            if (document.hidden) void player.context.suspend();
-      else if (wanted) void player.context.resume();
+      if (!context) return;
+      if (document.hidden) void context.suspend();
+      else if (SOUND_LAYERS.some((layer) => wanted[layer]))
+        void context.resume();
     };
     document.addEventListener("visibilitychange", onVisibility);
     return () => document.removeEventListener("visibilitychange", onVisibility);
   }, []);
 
-  return [on, update];
+  return [mix, update];
 }

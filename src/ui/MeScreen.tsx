@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { SOUND_LAYERS, type SoundLayer, type SoundMix } from "./music";
 import type { CareerStatus } from "../game/career";
 import { formatMoney } from "../game/format";
 import { skillRating, skillTier } from "../game/skill";
@@ -38,6 +39,11 @@ const STAT_NAME: Record<StatKey, string> = {
   relationship: "Relationship",
 };
 
+const SOUND_LABEL: Record<SoundLayer, { name: string; blurb: string }> = {
+  lofi: { name: "Lofi music", blurb: "A slow beat in the background." },
+  keys: { name: "Keyboard sounds", blurb: "Typing from the desk." },
+};
+
 /** Stats, career, life, and settings: everything about you, in one tab. */
 export function MeScreen({
   stats,
@@ -45,16 +51,16 @@ export function MeScreen({
   lifeCard,
   onSwitchTrack,
   onRestart,
-  music,
-  onMusic,
+  sound,
+  onSound,
 }: {
   stats: Stats;
   career?: CareerStatus;
   lifeCard?: ReactNode;
   onSwitchTrack?: () => void;
   onRestart: () => void;
-  music: boolean;
-  onMusic: (on: boolean) => void;
+  sound: SoundMix;
+  onSound: (layer: SoundLayer, on: boolean) => void;
 }) {
   const [tip, setTip] = useState<StatKey | null>(null);
   const toggleTip = (key: StatKey) =>
@@ -115,19 +121,19 @@ export function MeScreen({
         </div>
       ) : null}
       {lifeCard ? <div className="me-card">{lifeCard}</div> : null}
-      <Settings onRestart={onRestart} music={music} onMusic={onMusic} />
+      <Settings onRestart={onRestart} sound={sound} onSound={onSound} />
     </section>
   );
 }
 
 function Settings({
   onRestart,
-  music,
-  onMusic,
+  sound,
+  onSound,
 }: {
   onRestart: () => void;
-  music: boolean;
-  onMusic: (on: boolean) => void;
+  sound: SoundMix;
+  onSound: (layer: SoundLayer, on: boolean) => void;
 }) {
   const [confirming, setConfirming] = useState(false);
   const lang = useLang();
@@ -154,19 +160,28 @@ function Settings({
           ))}
         </div>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={music}
-        className="settings-toggle"
-        onClick={() => onMusic(!music)}
-      >
-        <span>
-          {t("Music")}
-          <small>{t("Soft keys and typing from the room.")}</small>
+      <div className="settings-sound" role="group" aria-label={t("Background sound")}>
+        <span className="settings-sound-title">
+          {t("Background sound")}
+          <small>{t("Pick one, both, or none.")}</small>
         </span>
-        <i className={music ? "on" : undefined} aria-hidden="true" />
-      </button>
+        {SOUND_LAYERS.map((layer) => (
+          <button
+            key={layer}
+            type="button"
+            role="switch"
+            aria-checked={sound[layer]}
+            className="settings-toggle"
+            onClick={() => onSound(layer, !sound[layer])}
+          >
+            <span>
+              {t(SOUND_LABEL[layer].name)}
+              <small>{t(SOUND_LABEL[layer].blurb)}</small>
+            </span>
+            <i className={sound[layer] ? "on" : undefined} aria-hidden="true" />
+          </button>
+        ))}
+      </div>
       {confirming ? (
         <div className="settings-confirm">
           <span>
