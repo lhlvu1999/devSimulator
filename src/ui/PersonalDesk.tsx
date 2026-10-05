@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SupportPanel } from "./Support";
 import {
   dealRound,
   handValue,
@@ -848,12 +849,13 @@ function PlayingCard({ card, index }: { card: Card; index: number }) {
   );
 }
 
-type ShopTab = "pantry" | "machines" | "home";
+type ShopTab = "pantry" | "machines" | "home" | "support";
 
 const SHOP_TABS: { id: ShopTab; label: string }[] = [
   { id: "pantry", label: "Pantry" },
   { id: "machines", label: "Machines" },
   { id: "home", label: "Home" },
+  { id: "support", label: "Support" },
 ];
 
 
@@ -897,7 +899,7 @@ export function ShopDesk({
             className={tab === item.id ? "on" : ""}
                         onClick={() => setTab(item.id)}
           >
-            {t(item.label)}
+            {item.id === "support" ? tc("shop", item.label) : t(item.label)}
           </button>
         ))}
       </div>
@@ -909,6 +911,8 @@ export function ShopDesk({
       {onSale && tab === "machines" ? (
         <p className="sale-banner">{t("Black Friday: 30% off machines this week.")}</p>
       ) : null}
+
+      {tab === "support" ? <SupportPanel level={state.level} /> : null}
 
       {tab === "pantry" ? (
         <>

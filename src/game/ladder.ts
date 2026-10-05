@@ -102,23 +102,23 @@ export type Milestone = {
  */
 export const MILESTONES: Partial<Record<Level, Milestone>> = {
   fresher: {
-        tickets: { tidy: 15, spot: 15 },
+    tickets: { tidy: 15, spot: 15 },
     gate: { stat: "skill", value: 80 },
   },
   junior: {
-        tickets: { spot: 30, wires: 15 },
+    tickets: { spot: 30, wires: 15 },
     gate: { stat: "skill", value: 220 },
   },
   mid: {
-        tickets: { wires: 30, ship: 30 },
+    tickets: { wires: 30, ship: 30 },
     gate: { stat: "reputation", value: 30 },
   },
   senior: {
-        tickets: { ship: 40, inbox: 40 },
+    tickets: { ship: 40, inbox: 40 },
     gate: { stat: "reputation", value: 50 },
   },
   staff: {
-        tickets: { wires: 55, inbox: 55 },
+    tickets: { wires: 55, inbox: 55 },
     gate: { stat: "reputation", value: 65 },
   },
   lead: {
@@ -150,6 +150,14 @@ export function emptyProgress(): Progress {
     sprint: 0,
     roadmap: 0,
   };
+}
+
+/** Senior or above on either track. The manager track starts beside Senior. */
+export function isSeniorOrAbove(level: Level): boolean {
+  return (
+    trackOf(level) === "manager" ||
+    LEVELS.indexOf(level) >= LEVELS.indexOf("senior")
+  );
 }
 
 export function nextLevel(level: Level): Level | null {
@@ -185,9 +193,9 @@ export function requirements(input: {
   const tickets = (Object.keys(milestone.tickets) as WorkGame[]).map(
     (game) => ({
       id: game,
-            label: tr("Clean {game}", { game: tr(input.gameLabel[game]) }),
+      label: tr("Clean {game}", { game: tr(input.gameLabel[game]) }),
       have: input.progress[game],
-            need: Math.max(1, Math.ceil((milestone.tickets[game] ?? 0) * scale)),
+      need: Math.max(1, Math.ceil((milestone.tickets[game] ?? 0) * scale)),
     }),
   );
   const gateLabel =
@@ -196,7 +204,7 @@ export function requirements(input: {
     ...tickets,
     {
       id: "gate",
-            label: tr(gateLabel),
+      label: tr(gateLabel),
       have: input.stats[milestone.gate.stat],
       need: milestone.gate.value,
     },

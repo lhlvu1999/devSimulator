@@ -497,4 +497,20 @@ export const VI_UI: Record<string, string> = {
   "You start with {money}, skill {skill}, and reputation {reputation}.": "Bạn bắt đầu với {money}, kỹ năng {skill} và uy tín {reputation}.",
   "Next: choose your goal": "Tiếp theo: chọn mục tiêu",
   "{place}: {mark}": "{place}: {mark}",
+
+  // Support tab
+  "Support|shop": "Ủng hộ",
+  "Dev Simulator feedback": "Dev Simulator feedback",
+  "Unlocks at Senior engineer": "Mở khóa khi lên Kỹ sư Senior",
+  "A thank-you from the person who made this game is waiting here.": "Một lời cảm ơn từ người làm ra game này đang chờ bạn ở đây.",
+  "You're {title} now.": "Bạn đang là {title}.",
+  "Thank you for playing": "Cảm ơn bạn đã chơi",
+  "You made it to Senior. Thank you for spending so much of your time here. Dev Simulator is a small game made with a lot of love, and if it gave you a few good evenings, you can buy me a coffee ♥": "Bạn đã lên tới Senior rồi. Cảm ơn bạn đã dành nhiều thời gian ở đây. Dev Simulator là một game nhỏ được làm bằng cả tấm lòng, và nếu nó mang lại cho bạn vài buổi tối vui vẻ, bạn có thể mời mình một ly cà phê nhé ♥",
+  "Bank transfer QR code for a coffee": "Mã QR chuyển khoản mời mình ly cà phê",
+  "Scan with any banking app that supports VietQR.": "Quét bằng bất kỳ ứng dụng ngân hàng nào hỗ trợ VietQR.",
+  "Playing on the phone you bank with? Save the QR to your photos, then open it from the scan screen in your banking app.": "Đang chơi trên chính điện thoại dùng ngân hàng? Lưu mã QR vào ảnh, rồi mở ảnh từ màn hình quét mã trong ứng dụng ngân hàng.",
+  "Save the QR": "Lưu mã QR",
+  "Have feedback, an idea, or found a bug? I'd love to hear from you:": "Có góp ý, ý tưởng hay gặp lỗi? Mình rất muốn nghe từ bạn:",
+  "Copied": "Đã chép",
+  "Copy email": "Chép email",
 };

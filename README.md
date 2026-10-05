@@ -597,11 +597,12 @@ Bet from $10 up to all your cash. A win pays the bet. Blackjack with your first 
 
 ## Shop
 
-The Shop has three tabs. Every row has one button that says what tapping it does: a price to buy, **Use** for a machine you own, or **In use**. After a purchase, a receipt line shows what changed.
+The Shop has four tabs. Every row has one button that says what tapping it does: a price to buy, **Use** for a machine you own, or **In use**. After a purchase, a receipt line shows what changed.
 
 - **Pantry:** see the table above. Items are used right away.
 - **Machines:** add seconds to every ticket.
 - **Home:** the $180,000 house, with how much you have saved toward it.
+- **Support:** a thank-you from the developer, with a VietQR code to buy them a coffee (`public/art/support/donate-qr.png`), a tip for saving the QR when you play on the phone you bank with, and a clickable feedback email (`FEEDBACK_EMAIL` in `src/ui/Support.tsx`). It stays locked, with a note saying so, until you reach Senior engineer or the manager track.
 
 ## Settings
 
