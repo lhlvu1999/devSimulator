@@ -668,11 +668,17 @@ The glass of the character's main monitor is set in `src/content/sceneVideo.ts` 
 
 Each clip's corners were read off a zoomed pixel grid of the monitor the character faces (in the product office, the right-hand one of his two), then checked at the start, middle, and end of the loop so they hold while the camera drifts. In the startup and enterprise offices that monitor is seen from the side and is only about 15–25 points wide on a phone. There the tap area is padded evenly on both sides to 44 points, Apple's minimum comfortable tap size, while the open animation still starts from the glass itself. With reduced motion turned on, the clip pauses on the poster.
 
-The clip is silent. Its sound became the game's music: `public/art/audio/room-theme.m4a`, played by `src/ui/music.ts`.
+The clips are silent. Background sound comes in two layers, played by `src/ui/music.ts`, and the player can turn on either, both, or none:
 
-- It uses Web Audio, so the loop has no gap, and it plays at normal speed even though the clip runs at 75%.
-- Browsers only allow sound after a tap, so music starts on the player's first tap or key press and fades in.
-- **Me → Settings → Music** turns it off with a fade, and the choice is saved on the device. The music pauses while the app is in the background.
+| Layer | File | Volume | Speed |
+| --- | --- | --- | --- |
+| Lofi music | `public/art/audio/lofi.m4a` (about 11 minutes, AAC 96 kbps, −20 LUFS) | 0.45 | 1× |
+| Keyboard sounds | `public/art/audio/keyboard.m4a` (about 4.6 minutes, mono AAC 56 kbps, −25 LUFS) | 0.14 | 0.6×, same pitch |
+
+- The tracks are long, so each streams from an audio element and loops there. Decoding them whole would take hundreds of megabytes. Both start and end softly, so the loop doesn't click.
+- Web Audio sits behind each element for its volume and fades, because iOS ignores an audio element's own volume.
+- Browsers only allow sound after a tap, so the chosen layers start on the player's first tap or key press and fade in.
+- **Me → Settings → Background sound** has a switch per layer. Turning one off fades it out and pauses it; with both off, the audio stops completely to save battery. Each choice is saved on the device, and a player who had the old Music switch off starts with both off. Sound pauses while the app is in the background.
 
 When you swap in a new clip, bump `CLIP_VERSION` in `sceneVideo.ts` so the browser and the iOS app fetch the new file. Generated clips rarely end where they start, so the office clips cross-fade their last second into their first, which makes the loop seamless. Skip any opening frames that don't belong in the loop first: the first 4 frames of each source are slightly off, and the startup and product sources open on a white monitor that switches to code at 1.5 s and 4.3 s, so they start after the switch. With `START` as the first frame to keep and `END` as the source's frame count minus `START` minus 24, the 24-frame fade starts at `(END - 24) / 24` seconds:
 
@@ -685,13 +691,14 @@ ffmpeg -ss 2 -i public/art/video/startup.mp4 -frames:v 1 -q:v 4 public/art/video
 
 `home.mp4` came in before this and was only cut 0.5 s in, past a magenta intro, so its loop still has a small jump.
 
-To make music from a clip, cross-fade its last half-second into its first so the loop is seamless, then bump `MUSIC_SRC` in `music.ts`:
+To replace a sound layer, match its loudness when encoding, then bump the `?v=` in its `src` in `music.ts`. The current files were made with:
 
 ```sh
-ffmpeg -i source.mp4 -vn -filter_complex \
-  "[0:a]atrim=0:0.5,asetpts=PTS-STARTPTS[head];[0:a]atrim=0.5,asetpts=PTS-STARTPTS[body];[body][head]acrossfade=d=0.5[out]" \
-  -map "[out]" -c:a aac -b:a 128k public/art/audio/room-theme.m4a
+ffmpeg -i lofi.mp3 -af "volume=-4.1dB" -c:a aac -b:a 96k -movflags +faststart public/art/audio/lofi.m4a
+ffmpeg -i keyboard.mp3 -af "volume=16.7dB,alimiter=limit=0.89" -ac 1 -c:a aac -b:a 56k -movflags +faststart public/art/audio/keyboard.m4a
 ```
+
+Measure a source's loudness with `ffmpeg -i file -af ebur128=framelog=quiet -f null -` and pick the volume change that lands on the target.
 
 ### Documentation
 

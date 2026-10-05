@@ -4627,3 +4627,34 @@ button.primary:disabled {
   font-weight: 400;
   color: #6b5e52;
 }
+
+/* Background sound: one card like Language, with a switch per layer. */
+.settings-sound {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px 4px;
+  border: 1.5px solid rgba(63, 52, 44, 0.2);
+  border-radius: 10px;
+}
+
+.settings-sound-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 4px;
+  font-weight: 650;
+}
+
+.settings-sound-title small {
+  font-size: 0.74rem;
+  font-weight: 400;
+  color: #6b5e52;
+}
+
+.settings-sound .settings-toggle {
+  padding: 8px 0;
+  border: 0;
+  border-top: 1px solid rgba(63, 52, 44, 0.1);
+  border-radius: 0;
+}
